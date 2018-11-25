@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hosts\SimpleHost\EmulatorHost.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Compiler\ReactiveMachine.Compiler.csproj" />
+    <ProjectReference Include="..\Bank.Service\Bank.Service.csproj" />
+    <ProjectReference Include="..\Bank.Tests\Bank.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

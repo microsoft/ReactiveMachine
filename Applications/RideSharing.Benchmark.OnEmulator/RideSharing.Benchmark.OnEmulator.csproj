@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hosts\SimpleHost\EmulatorHost.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Compiler\ReactiveMachine.Compiler.csproj" />
+    <ProjectReference Include="..\RideSharing.Benchmark\RideSharing.Benchmark.csproj" />
+    <ProjectReference Include="..\RideSharing.Service\RideSharing.Service.csproj" />
+  </ItemGroup>
+
+</Project>

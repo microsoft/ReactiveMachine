@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hosts\SimpleHost\EmulatorHost.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Compiler\ReactiveMachine.Compiler.csproj" />
+    <ProjectReference Include="..\Counter.Benchmark\Counter.Benchmark.csproj" />
+  </ItemGroup>
+
+</Project>

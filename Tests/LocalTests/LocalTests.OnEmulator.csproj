@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>LocalTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Applications\Bank.Tests\Bank.Tests.csproj" />
+    <ProjectReference Include="..\..\Applications\Counter.Service\Counter.Service.csproj" />
+    <ProjectReference Include="..\..\Hosts\SimpleHost\EmulatorHost.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Compiler\ReactiveMachine.Compiler.csproj" />
+  </ItemGroup>
+
+</Project>

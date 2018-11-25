@@ -1,0 +1,19 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
+using ReactiveMachine;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Bank
+{
+    public class BankTestsService : IServiceBuildDefinition
+    {
+        public void Build(IServiceBuilder builder)
+        {
+            builder.BuildService<BankService>();
+            builder.ScanThisDLL();
+        }
+    }
+}

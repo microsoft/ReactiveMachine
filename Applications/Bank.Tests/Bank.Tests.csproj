@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
+    <ProjectReference Include="..\Bank.Service\Bank.Service.csproj" />
+  </ItemGroup>
+
+</Project>

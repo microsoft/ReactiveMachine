@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>ReactiveMachine.Compiler</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PackageId>Microsoft.ReactiveMachine.Compiler</PackageId>
+    <PackageVersion>1.0.0-alpha</PackageVersion>
+    <Authors>Microsoft</Authors>
+    <Description>Compiles Reactive Machine services into a reliable deterministic state machine.</Description>
+    <RepositoryUrl>https://github.com/Microsoft/ReactiveMachine/</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseUrl>https://github.com/Microsoft/ReactiveMachine/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://reactive-machine.org/</PackageProjectUrl>
+    <PackageIconUrl>https://reactive-machine.org/img/logo-icon.png</PackageIconUrl>
+    <PackageTags>.NET C# Distributed-Systems Cloud-Computing Orchestrations Events Reactive Workflow</PackageTags>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <Target Name="CopyPackage" AfterTargets="Pack">
+    <Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="..\Artifacts\$(Configuration)\" />
+  </Target>
+
+</Project>

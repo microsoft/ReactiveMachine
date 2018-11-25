@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
+    <ProjectReference Include="..\Harness\Harness.csproj" />
+    <ProjectReference Include="..\RideSharing.Service\RideSharing.Service.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
+    <ProjectReference Include="..\..\ReactiveMachine.Compiler\ReactiveMachine.Compiler.csproj" />
+    <ProjectReference Include="..\..\Telemetry\TelemetryBlobWriter\TelemetryBlobWriter.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PackageId>Microsoft.ReactiveMachine.EmulatorHost</PackageId>
+    <PackageVersion>1.0.0-alpha</PackageVersion>
+    <Authors>Microsoft</Authors>
+    <Description>Emulates Reactive Machine services on a single process.</Description>
+    <RepositoryUrl>https://github.com/Microsoft/ReactiveMachine/</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseUrl>https://github.com/Microsoft/ReactiveMachine/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://reactive-machine.org/</PackageProjectUrl>
+    <PackageIconUrl>https://reactive-machine.org/img/logo-icon.png</PackageIconUrl>
+    <PackageTags>.NET C# Distributed-Systems Cloud-Computing Orchestrations Events Reactive Workflow</PackageTags>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <Target Name="CopyPackage" AfterTargets="Pack">
+    <Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="..\..\Artifacts\$(Configuration)\" />
+  </Target>
+
+</Project>
