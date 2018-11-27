@@ -39,7 +39,7 @@ namespace FunctionsHost
                 var cloudBlobContainer = await AzureBlobStorageStateManager.GetCloudBlobContainer(
                      storageConnectionString: configuration.StorageConnectionString,
                      logger: logger,
-                     createIfNotExists: true
+                     initialize: true
                 );
 
                 // check the current position in all the queues, and start from there
@@ -74,7 +74,7 @@ namespace FunctionsHost
             }
             catch(Exception e)
             {
-                logger.LogError($"Bootstrap failed: {e}");
+                logger.LogError($"Initialize failed: {e}");
                 throw;
             }
         }
@@ -84,39 +84,37 @@ namespace FunctionsHost
             list.Add(body());
         }
 
-        public static async Task Doorbell(IStaticApplicationInfo applicationInfo, Microsoft.Azure.WebJobs.ExecutionContext executionContext, ILogger logger, DoorbellMessage doorbellMessage, int batchsize)
+        public static async Task Doorbell(IStaticApplicationInfo applicationInfo, Microsoft.Azure.WebJobs.ExecutionContext executionContext, ILogger logger, EventData[] messages)
         {
             var stopwatch = new System.Diagnostics.Stopwatch();
             stopwatch.Start();
 
-            var processId = doorbellMessage.ProcessId;
+            var msg = DoorbellMessage.Deserialize(messages[0].Body.Array);
+            
+            var processId = msg.ProcessId;
             var configuration = applicationInfo.GetHostConfiguration();
 
             var hostlogger = new LoggerWrapper(logger, $"[p{processId:d3} doorbell] ");
 
+            var lastRing = messages[messages.Length - 1].SystemProperties.SequenceNumber;
+
+
             try
             {
-                var cloudBlobContainer = await AzureBlobStorageStateManager.GetCloudBlobContainer(
-                    storageConnectionString: configuration.StorageConnectionString,
-                    logger: hostlogger,
-                    createIfNotExists: false
-                );
-
-                if (cloudBlobContainer == null)
-                    return;
+                var cloudBlobContainer = await AzureBlobStorageStateManager.GetCloudBlobContainer(configuration.StorageConnectionString, hostlogger);
 
                 var stateBlob = cloudBlobContainer.GetBlockBlobReference(AzureBlobStorageStateManager.BlobName(processId));
 
                 var leaseManager = new LeaseManager(stateBlob);
 
-                if (await leaseManager.TryGetLease())
+                if (await leaseManager.TryGetLease(hostlogger))
                 {
-                    hostlogger.LogInformation($"Rings x{batchsize} on {Environment.MachineName}, lease acquired");
+                    hostlogger.LogInformation($"{DateTime.UtcNow:o} Rings x{messages.Length} on {Environment.MachineName}, through #{lastRing}, lease acquired");
                     await RunHost(applicationInfo, configuration, processId, hostlogger, logger, leaseManager, stopwatch, executionContext.InvocationId);
                 }
                 else
                 {
-                    hostlogger.LogInformation($"Rings x{batchsize} on {Environment.MachineName}, ignored");
+                    hostlogger.LogInformation($"{DateTime.UtcNow:o} Rings x{messages.Length} on {Environment.MachineName}, through #{lastRing}, ignored");
                 }
             }
             catch (Exception e)

@@ -32,7 +32,7 @@ namespace FunctionsHost
 
         public static string LeaseId;
 
-        public static async Task<CloudBlobContainer> GetCloudBlobContainer(String storageConnectionString, ILogger logger, bool createIfNotExists)
+        public static async Task<CloudBlobContainer> GetCloudBlobContainer(String storageConnectionString, ILogger logger, bool initialize = false)
         {
             if (CloudStorageAccount.TryParse(storageConnectionString, out var storageAccount))
             {
@@ -42,17 +42,36 @@ namespace FunctionsHost
                 // Create a container called 'quickstartblobs' and append a GUID value to it to make the name unique. 
                 var cloudBlobContainer = cloudBlobClient.GetContainerReference(ApplicationStateContainer);
 
-                if (createIfNotExists)
+                if (initialize)
                 {
-                    await cloudBlobContainer.CreateIfNotExistsAsync();
+                    await cloudBlobContainer.DeleteIfExistsAsync();
 
-                    // Set the permissions so the blobs are public. 
-                    var permissions = new BlobContainerPermissions
+                    int retries = 30;
+                    while (retries > 0)
                     {
-                        PublicAccess = BlobContainerPublicAccessType.Blob
-                    };
-                    await cloudBlobContainer.SetPermissionsAsync(permissions);
-                }
+                        try
+                        {
+                            await cloudBlobContainer.CreateIfNotExistsAsync();
+
+                            break;
+                        }
+                        catch (StorageException e)
+                        {
+                            if (retries-- >= 0
+                                && (e.RequestInformation.HttpStatusCode == 409)
+                                && (e.RequestInformation.ExtendedErrorInformation.ErrorCode.Equals(BlobErrorCodeStrings.ContainerBeingDeleted)))
+                            {
+                                await Task.Delay(2000);// The container is currently being deleted. Try again a bit later.
+                                continue;
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                    }                        
+                }           
+            
 
                 return cloudBlobContainer;
             }
@@ -101,7 +120,7 @@ namespace FunctionsHost
 
         public static async Task<ProcessState> Load(String storageConnectionString, ILogger logger, uint processId)
         {
-            var cloudBlobContainer = await GetCloudBlobContainer(storageConnectionString, logger, true);
+            var cloudBlobContainer = await GetCloudBlobContainer(storageConnectionString, logger);
 
             // If the connection string is valid, proceed with operations against Blob storage here.
             if (cloudBlobContainer != null)
@@ -120,11 +139,6 @@ namespace FunctionsHost
                     logger.LogInformation($"Loaded {cs} from {cloudBlockBlob.Name}");
                     return cs;
                 }
-                catch (StorageException ex) when (IsBlobNotFound(ex))
-                {
-                    logger.LogCritical($"No checkpoint found");
-                    throw;
-                }
                 catch (Exception exception)
                 {
                     logger.LogCritical($"Exception: {exception.Message}");
@@ -133,7 +147,7 @@ namespace FunctionsHost
             }
             else
             {
-                logger.LogCritical($"No checkpoint container found");
+                logger.LogCritical($"Could not load checkpoint");
                 return null;
             }
         }

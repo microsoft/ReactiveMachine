@@ -57,7 +57,7 @@ namespace FunctionsHost
 
             await sender.SendAsync(new EventData(messageBytes));
 
-            logger.LogTrace($"Sent {message} ({messageBytes.Length / 1024}kB) to {destination}!");
+            logger.LogTrace($"{DateTime.UtcNow:o} Sent {message}->{destination} ({messageBytes.Length / 1024}kB)");
 
             if (lastSendOrDoorbell + configuration.ReceiveWaitTime < now)
             {
@@ -69,7 +69,7 @@ namespace FunctionsHost
                 };
                 var doorbell = connections.GetDoorbellSender(destination);
                 await doorbell.SendAsync(new EventData(DoorbellMessage.Serialize(doorbellMessage)));
-                logger.LogTrace($"Sent {doorbellMessage}");
+                logger.LogTrace($"{DateTime.UtcNow:o} Sent {doorbellMessage}");
             }
 
             lastSendOrDoorbell = now;

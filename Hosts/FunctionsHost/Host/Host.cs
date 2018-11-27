@@ -213,10 +213,12 @@ namespace FunctionsHost
                         bool outOfTime = stopwatch.Elapsed > configuration.TimeLimit;
 
                         IEnumerable<EventData> eventData = outOfTime ? null :
-                              await Connections.Receiver.ReceiveAsync(configuration.MaxReceiveBatchSize, iterationCount == 1 ? TimeSpan.Zero : configuration.ReceiveWaitTime);
+                              await Connections.Receiver.ReceiveAsync(configuration.MaxReceiveBatchSize, iterationCount == 1 ? TimeSpan.FromSeconds(1) : configuration.ReceiveWaitTime);
 
                         if (eventData == null)
                         {
+                            HostLogger.LogTrace($"{ DateTime.UtcNow:o} Received nothing. {Connections.Receiver.RuntimeInfo.LastSequenceNumber}");
+                            
                             if (process.RequestsOutstanding() && !outOfTime)
                             {
                                 HostLogger.LogDebug($"continue for outstanding requests.");
@@ -245,7 +247,7 @@ namespace FunctionsHost
                             var body = ed.Body;
                             var message = ProcessMessage.Deserialize(body.Array);
 
-                            HostLogger.LogTrace($"Received {message}");
+                            HostLogger.LogTrace($"{DateTime.UtcNow:o} Received {message}");
 
                             if (message.DeploymentTimestamp < deploymentTimestamp)
                             {
@@ -343,14 +345,20 @@ namespace FunctionsHost
 
         public async Task FinalRecheck()
         {
-            IEnumerable<EventData> eventData = await
-                Connections.Receiver.ReceiveAsync(1, TimeSpan.FromMilliseconds(1));
+            var eventData = await Connections.Receiver.ReceiveAsync(1, TimeSpan.FromMilliseconds(1));
             if (eventData != null)
             {
-                // send a ping to ourselves before shutting down
-                // so we will wake up and resume
-                HostLogger.LogDebug($"detected a new message after already releasing lease - ring my own doorbell");
-                await RingMyself();
+                var eventEnumerator = eventData.GetEnumerator();
+                if (eventEnumerator.MoveNext())
+                {
+                    // there was a race... we missed a message 
+                    var msg = ProcessMessage.Deserialize(eventEnumerator.Current.Body.Array);
+
+                    // send a ping to ourselves before shutting down
+                    // so we will wake up and resume
+                    HostLogger.LogDebug($"{DateTime.UtcNow:o} detected a new message {msg}->{processId} at position {eventEnumerator.Current.SystemProperties.SequenceNumber} after already releasing lease - ring my own doorbell");
+                    await RingMyself();
+                }
             }
         }
 
@@ -387,7 +395,7 @@ namespace FunctionsHost
         {
             process.SaveState(out var serialized, out var label);
 
-            var cloudBlobContainer = await AzureBlobStorageStateManager.GetCloudBlobContainer(storageConnectionString, HostLogger, false);
+            var cloudBlobContainer = await AzureBlobStorageStateManager.GetCloudBlobContainer(storageConnectionString, HostLogger, initialize:false);
 
             await AzureBlobStorageStateManager
                 .Save(cloudBlobContainer, deploymentId, HostLogger, processId,

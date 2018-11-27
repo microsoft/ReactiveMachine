@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.Blob.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +31,7 @@ namespace FunctionsHost
 
         private Task ignoredTask;
 
-        public async Task<bool> TryGetLease()
+        public async Task<bool> TryGetLease(ILogger logger)
         {
             try
             {
@@ -44,12 +46,22 @@ namespace FunctionsHost
             catch (StorageException ex)
             {
                 var information = ex.RequestInformation.ExtendedErrorInformation;
-                if (information == null || information.ErrorCode != "LeaseAlreadyPresent")
+                if (information != null && information.ErrorCode == "LeaseAlreadyPresent")
                 {
-                    throw;
-                }             
+                    return false;
+                }
+                if ((ex.RequestInformation.HttpStatusCode == 404) && (information.ErrorCode.Equals(BlobErrorCodeStrings.ContainerNotFound)))
+                {
+                    logger.LogWarning("Invalid application state (Container not found). Ignoring Doorbell.");
+                    return false;
+                }
+                if ((ex.RequestInformation.HttpStatusCode == 404) && (information.ErrorCode.Equals(BlobErrorCodeStrings.BlobNotFound)))
+                {
+                    logger.LogWarning("Invalid application state (Blob not found). Ignoring Doorbell.");
+                    return false;
+                }
 
-                return false;
+                throw;
             }
         }
 

@@ -52,7 +52,7 @@ namespace FunctionsHost
 
             await sender.SendAsync(new EventData(messageBytes));
 
-            logger.LogTrace($"Sent {message} ({messageBytes.Length / 1024}kB) to {destination}!");
+            logger.LogTrace($"{DateTime.UtcNow:o} Sent {message}->{destination} ({messageBytes.Length / 1024}kB)");
 
         }
     }
