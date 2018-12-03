@@ -61,7 +61,7 @@ namespace Counter.Benchmark.OnEmulator
 
                 ConsoleLogLevel = LogLevel.Information,
                 FileLogLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.None,
-                LocalLogDirectory = "E:\\traces\\",
+                LocalLogDirectory = "C:\\logs\\",
 
                 ApplicationLogLevel = LogLevel.Trace, // log through runtime
                 HostLogLevel = LogLevel.Trace,

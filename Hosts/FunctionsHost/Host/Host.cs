@@ -213,7 +213,7 @@ namespace FunctionsHost
                         bool outOfTime = stopwatch.Elapsed > configuration.TimeLimit;
 
                         IEnumerable<EventData> eventData = outOfTime ? null :
-                              await Connections.Receiver.ReceiveAsync(configuration.MaxReceiveBatchSize, iterationCount == 1 ? TimeSpan.FromSeconds(1) : configuration.ReceiveWaitTime);
+                              await Connections.Receiver.ReceiveAsync(configuration.MaxReceiveBatchSize, iterationCount == 1 ? TimeSpan.FromSeconds(10) : configuration.ReceiveWaitTime);
 
                         if (eventData == null)
                         {
