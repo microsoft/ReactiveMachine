@@ -27,10 +27,9 @@ namespace FunctionsHost
         protected readonly DataContractSerializer payloadSerializer;
         protected readonly ILogger logger;
         protected readonly PartitionSender sender;
-        protected readonly DateTime deploymentTimestamp;
 
         public BatchSender(uint destination, EventHubsConnections connections, ILogger logger,
-            DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration, DateTime deploymentTimestamp)
+            DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration)
         {
             this.destination = destination;
             this.connections = connections;
@@ -38,7 +37,6 @@ namespace FunctionsHost
             this.configuration = configuration;
             this.logger = new LoggerWrapper(logger, $" [sender{destination:d3}] ");
             this.sender = connections.GetProcessSender(destination);
-            this.deploymentTimestamp = deploymentTimestamp;
         }
 
         private const int maxBatchSize = 100; // TODO look at bytes, not count

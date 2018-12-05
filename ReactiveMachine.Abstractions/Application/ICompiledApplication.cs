@@ -25,6 +25,11 @@ namespace ReactiveMachine
         IProcess MakeProcess(uint processId);
 
         /// <summary>
+        /// creates a request message
+        /// </summary>
+        IMessage MakeRequest(IOrchestration orchestration);
+
+        /// <summary>
         /// encapsulates host services
         /// </summary>
         IHostServices HostServices { get; }

@@ -101,6 +101,14 @@ namespace ReactiveMachine
             return process;
         }
 
+        public IMessage MakeRequest(IOrchestration orchestration)
+        {
+            return new ExternalRequest()
+            {
+                Orchestration = orchestration
+            };
+        }
+
     
     
     }

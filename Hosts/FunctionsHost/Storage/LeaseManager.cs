@@ -16,7 +16,6 @@ namespace FunctionsHost
 {
     internal class LeaseManager : IDisposable
     {
-
         public string LeaseId { get; private set; }
 
         private readonly CancellationTokenSource cts = new CancellationTokenSource();

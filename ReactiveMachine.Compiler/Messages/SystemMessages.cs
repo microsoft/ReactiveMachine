@@ -25,14 +25,40 @@ namespace ReactiveMachine.Compiler
             foreach (var orchestration in process.StartupOrchestrations)
             {
                 var opInfo = process.Orchestrations[orchestration.GetType()];
-                var opid2 = process.NextOpid;
+                var opid = process.NextOpid;
                 opInfo.CanExecuteLocally(orchestration, out var dest);
-                var msg2 = opInfo.CreateForkMessage(orchestration);
-                msg2.Opid = opid2;
-                msg2.Clock = 0;
-                msg2.Parent = 0;
-                process.Send(dest, msg2);
+                var msg = opInfo.CreateForkMessage(orchestration);
+                msg.Opid = opid;
+                msg.Clock = 0;
+                msg.Parent = 0;
+                process.Send(dest, msg);
             }
+        }
+    }
+
+    [DataContract]
+    internal class ExternalRequest : RequestMessage
+    {
+        [DataMember]
+        public IOrchestration Orchestration;
+
+        public override string ToString()
+        {
+            return $"{base.ToString()} ExternalRequest";
+        }
+
+        internal override MessageType MessageType => MessageType.ExternalRequest;
+
+        internal override void Apply(Process process)
+        {
+            var opInfo = process.Orchestrations[Orchestration.GetType()];
+            var opid = process.NextOpid;
+            opInfo.CanExecuteLocally(Orchestration, out var dest);
+            var msg = opInfo.CreateForkMessage(Orchestration);
+            msg.Opid = opid;
+            msg.Clock = 0;
+            msg.Parent = 0;
+            process.Send(dest, msg);
         }
     }
 
@@ -43,8 +69,6 @@ namespace ReactiveMachine.Compiler
         public Guid InstanceId;
 
         internal override MessageType MessageType => MessageType.RespondToActivity;
-
-        public override bool Sequenced => false;
 
         public override string ToString()
         {
@@ -57,7 +81,4 @@ namespace ReactiveMachine.Compiler
                 orchestrationState.Continue(Opid, Clock, MessageType.RespondToActivity, Result);
         }
     }
-
-
-   
 }

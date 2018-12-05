@@ -36,6 +36,7 @@ namespace ReactiveMachine.Compiler
         AckFinish,
 
         EnqueueStartup,
+        ExternalRequest
     }
 
     internal static class MessageTypeExtensions

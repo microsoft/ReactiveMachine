@@ -157,5 +157,14 @@ namespace FunctionsHost
                 hostlogger.LogDebug($"Control returned");
             }
         }
+
+        public static async Task ForkOrchestration(IOrchestration orchestration, IStaticApplicationInfo applicationInfo, ILogger logger)
+        {
+            var client = ClientConnection.Get(applicationInfo, logger);
+
+            await client.Fork(orchestration);
+        }
+
+       
     }
 }

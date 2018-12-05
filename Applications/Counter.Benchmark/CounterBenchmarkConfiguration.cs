@@ -28,7 +28,6 @@ namespace Counter.Benchmark
         [DataMember]
         public uint NumberCounters;
 
-
         [DataMember]
         [JsonConverter(typeof(StringEnumConverter))]
         public CounterImplementation Implementation;

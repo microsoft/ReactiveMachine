@@ -14,33 +14,33 @@ using Microsoft.Azure.EventHubs;
 
 namespace FunctionsHost
 {
+
     [DataContract]
-    public class ProcessMessage
+    public class ResponseMessage
     {
         [DataMember]
-        public DateTime DeploymentTimestamp;
-
-        [DataMember]
-        public uint Source;
-
-        [DataMember]
-        public long? LastClock;
+        public Guid Guid;
 
         [DataMember]
         public byte[] Payload;
 
-        private static DataContractSerializer Serializer = new DataContractSerializer(typeof(ProcessMessage));
+        public override string ToString()
+        {
+            return $"resp.{Guid}";
+        }
 
-        public static ProcessMessage Deserialize(byte[] messageBytes)
+        private static DataContractSerializer Serializer = new DataContractSerializer(typeof(ResponseMessage));
+
+        public static ResponseMessage Deserialize(byte[] messageBytes)
         {
             MemoryStream stream = new MemoryStream(messageBytes);
             using (var binaryDictionaryReader = XmlDictionaryReader.CreateBinaryReader(stream, XmlDictionaryReaderQuotas.Max))
             {
-                return (ProcessMessage)Serializer.ReadObject(binaryDictionaryReader);
+                return (ResponseMessage)Serializer.ReadObject(binaryDictionaryReader);
             }
         }
 
-        public static byte[] Serialize(ProcessMessage message)
+        public static byte[] Serialize(ResponseMessage message)
         {
             MemoryStream stream = new MemoryStream();
             using (var binaryDictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(stream))
@@ -50,11 +50,6 @@ namespace FunctionsHost
             }
             return stream.ToArray();
         }
-
-        public override string ToString()
-        {
-            return LastClock.HasValue ? $"Sequenced p{Source:D3}.{LastClock}" : $"Loopback";
-        }
     }
-   
+
 }

@@ -25,9 +25,6 @@ namespace ReactiveMachine.Compiler
 
         [IgnoreDataMember]
         internal abstract MessageType MessageType { get; }
-
-        [IgnoreDataMember]
-        public virtual bool Sequenced => true;
     }
 
 

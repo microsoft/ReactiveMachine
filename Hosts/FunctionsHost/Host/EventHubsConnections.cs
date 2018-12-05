@@ -17,7 +17,6 @@ namespace FunctionsHost
         private readonly string connectionString;
         private ILogger logger;
 
-        public EventHubClient _eventHubClient;
         public EventHubClient _doorbellClient;
         private PartitionReceiver _eventHubReceiver;
 
@@ -30,7 +29,6 @@ namespace FunctionsHost
             this.processId = processId;
             this.logger = logger;
             this.connectionString = connectionString;
-            this._eventHubClient = GetEventHubClient(processId);
         }
 
         public EventHubClient GetEventHubClient(uint processId)
@@ -57,7 +55,8 @@ namespace FunctionsHost
         {
             EventPosition eventPosition = (position == -1) ?
                   EventPosition.FromStart() : EventPosition.FromSequenceNumber(position);
-          
+
+            var _eventHubClient = GetEventHubClient(processId);
             _eventHubReceiver = _eventHubClient.CreateReceiver("$Default", (processId / 8).ToString(), eventPosition);
         }
 

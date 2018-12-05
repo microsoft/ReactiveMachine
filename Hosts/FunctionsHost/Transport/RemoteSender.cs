@@ -19,14 +19,16 @@ namespace FunctionsHost
     internal class RemoteSender : BatchSender<KeyValuePair<long, IMessage>>
     {
         private readonly uint processId;
+        private readonly DateTime deploymentTimestamp;
         private readonly PartitionSender doorbell;
         private DateTime lastSendOrDoorbell = default(DateTime);
 
         public RemoteSender(uint processId, uint destination, EventHubsConnections connections,
             ILogger logger, DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration, DateTime deploymentTimestamp)
-            : base(destination, connections, logger, payloadSerializer, configuration, deploymentTimestamp)
+            : base(destination, connections, logger, payloadSerializer, configuration)
         {
             this.processId = processId;
+            this.deploymentTimestamp = deploymentTimestamp;
             doorbell = connections.GetDoorbellSender(destination);
         }
 

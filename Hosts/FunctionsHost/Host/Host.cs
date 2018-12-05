@@ -191,6 +191,7 @@ namespace FunctionsHost
                 int dedupCount = 0;
                 int receiveCount = 0;
                 int loopbackCount = 0;
+                int clientCount = 0;
 
                 TimeSpan lastReport = stopwatch.Elapsed;
                 long lastReportedPosition = 0;
@@ -202,7 +203,7 @@ namespace FunctionsHost
 
                     if (lastProcessedPosition > lastReportedPosition && stopwatch.Elapsed - lastReport > TimeSpan.FromSeconds(15))
                     {
-                        HostLogger.LogInformation($"progress to v{lastProcessedPosition} after {stopwatch.Elapsed.TotalSeconds:f2}s, {receiveCount + dedupCount + loopbackCount} messages ({receiveCount} new, {loopbackCount} loopback, {dedupCount} deduped) in {iterationCount} batches");
+                        HostLogger.LogInformation($"progress to v{lastProcessedPosition} after {stopwatch.Elapsed.TotalSeconds:f2}s, {receiveCount + dedupCount + loopbackCount + clientCount} messages ({receiveCount} new, {loopbackCount} loopback, {clientCount} client, {dedupCount} deduped) in {iterationCount} batches");
                         lastReportedPosition = lastProcessedPosition;
                         lastReport = stopwatch.Elapsed;
                         CombinedLogger.Flush();
@@ -236,7 +237,7 @@ namespace FunctionsHost
                             else
                             {
                                 // no more work to do here
-                                HostLogger.LogInformation($"{(outOfTime ? "out of time" : "done")} after {stopwatch.Elapsed.TotalSeconds}s, {receiveCount + dedupCount + loopbackCount} messages ({receiveCount} new, {loopbackCount} loopback, {dedupCount} deduped) in {iterationCount} batches");
+                                HostLogger.LogInformation($"{(outOfTime ? "out of time" : "done")} after {stopwatch.Elapsed.TotalSeconds}s, {receiveCount + dedupCount + loopbackCount + clientCount} messages ({receiveCount} new, {loopbackCount} loopback, {clientCount} client, {dedupCount} deduped) in {iterationCount} batches");
                                 CombinedLogger.Flush();
                                 return !outOfTime;
                             }
@@ -249,21 +250,38 @@ namespace FunctionsHost
 
                             HostLogger.LogTrace($"{DateTime.UtcNow:o} Received {message}");
 
-                            if (message.DeploymentTimestamp < deploymentTimestamp)
+                            if (!message.IsExternalRequest && message.DeploymentTimestamp < deploymentTimestamp)
                             {
                                 HostLogger.LogDebug($"Ignoring message from earlier deployment {message.DeploymentTimestamp}");
                             }
-                            else if (message.DeploymentTimestamp > deploymentTimestamp)
+                            else if (!message.IsExternalRequest && message.DeploymentTimestamp > deploymentTimestamp)
                             {
-                                HostLogger.LogError($"****** STATE ERROR process state is from older deployment, should have been initialized for new one! {message.DeploymentTimestamp} != {deploymentTimestamp}");
+                                HostLogger.LogError($"****** MISSING STATE ERROR process state is from older deployment, should have been initialized for new one! {message.DeploymentTimestamp} != {deploymentTimestamp}");
                             }
-                            else if (message.LastClock.HasValue
+                            else if (message.IsSequenced
                                  && seenClock.HasSeen(message.Source, message.LastClock.Value))
                             {
                                 dedupCount++;
                                 HostLogger.LogTrace($"Deduping: {message}");
                             }
-                            else if (message.Source == processId)
+                            else if (message.IsExternalRequest)
+                            {
+                                clientCount++;
+                                HostLogger.LogTrace($"Processing: {message}");
+
+                                // deserialize content
+                                List<IMessage> payload;
+                                MemoryStream stream = new MemoryStream(message.Payload);
+                                using (var binaryDictionaryReader = XmlDictionaryReader.CreateBinaryReader(stream, XmlDictionaryReaderQuotas.Max))
+                                {
+                                    payload = (List<IMessage>)payloadSerializerLoopback.ReadObject(binaryDictionaryReader);
+                                }
+
+                                // Iterate 
+                                foreach (var m in payload)
+                                    process.ProcessMessage(m);
+                            }
+                            else if (message.IsLoopback)
                             {
                                 loopbackCount++;
                                 HostLogger.LogTrace($"Processing: {message}");

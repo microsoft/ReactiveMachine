@@ -196,6 +196,8 @@ namespace ReactiveMachine.Compiler
             HostServices.SerializableTypeSet.Add(typeof(FinishState));
             HostServices.SerializableTypeSet.Add(typeof(AckFinish));
             HostServices.SerializableTypeSet.Add(typeof(RespondToActivity));
+            HostServices.SerializableTypeSet.Add(typeof(ExternalRequest));
+            HostServices.SerializableTypeSet.Add(typeof(EnqueueStartup));
 
             // finalize partition placement
             foreach (var keyInfo in Affinities.Values)

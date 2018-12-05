@@ -18,11 +18,13 @@ namespace FunctionsHost
 {
     internal class LoopbackSender : BatchSender<IMessage>
     {
+        private readonly DateTime deploymentTimestamp;
 
         public LoopbackSender(uint processId, EventHubsConnections connections,
             ILogger logger, DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration, DateTime deploymentTimestamp)
-                        : base(processId, connections, logger, payloadSerializer, configuration, deploymentTimestamp)
+                        : base(processId, connections, logger, payloadSerializer, configuration)
         {
+            this.deploymentTimestamp = deploymentTimestamp;
         }
 
         protected override async Task Send(List<IMessage> toSend)
