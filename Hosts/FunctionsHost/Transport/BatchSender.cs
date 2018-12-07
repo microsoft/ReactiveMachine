@@ -29,14 +29,14 @@ namespace FunctionsHost
         protected readonly PartitionSender sender;
 
         public BatchSender(uint destination, EventHubsConnections connections, ILogger logger,
-            DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration)
+            DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration, PartitionSender sender)
         {
             this.destination = destination;
             this.connections = connections;
             this.payloadSerializer = payloadSerializer;
             this.configuration = configuration;
             this.logger = new LoggerWrapper(logger, $" [sender{destination:d3}] ");
-            this.sender = connections.GetProcessSender(destination);
+            this.sender = sender;
         }
 
         private const int maxBatchSize = 100; // TODO look at bytes, not count

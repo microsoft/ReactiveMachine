@@ -24,7 +24,8 @@ namespace FunctionsHost
 
         public RequestSender(uint processId, EventHubsConnections connections,
             ILogger logger, DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration)
-            : base(processId, connections, logger, payloadSerializer, configuration)
+            : base(processId, connections, logger, payloadSerializer, configuration,
+                  connections.GetProcessSender(processId))
         {
             this.processId = processId;
             doorbell = connections.GetDoorbellSender(processId);

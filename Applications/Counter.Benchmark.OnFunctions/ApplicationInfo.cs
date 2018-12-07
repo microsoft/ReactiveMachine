@@ -15,6 +15,7 @@ using Counter.Benchmark;
 using ReactiveMachine;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Counter.Benchmark.OnFunctions
 {
@@ -115,6 +116,11 @@ namespace Counter.Benchmark.OnFunctions
                 TimeLimit = TimeSpan.FromMinutes(4.5),
                 MaxReceiveBatchSize = 10000,
             };
+        }
+
+        public IEnumerable<Type> GetResultTypes()
+        {
+            yield break;
         }
     }
 }

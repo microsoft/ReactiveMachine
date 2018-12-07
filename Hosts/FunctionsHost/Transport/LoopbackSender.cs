@@ -22,7 +22,8 @@ namespace FunctionsHost
 
         public LoopbackSender(uint processId, EventHubsConnections connections,
             ILogger logger, DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration, DateTime deploymentTimestamp)
-                        : base(processId, connections, logger, payloadSerializer, configuration)
+                        : base(processId, connections, logger, payloadSerializer, configuration,
+                              connections.GetProcessSender(processId))
         {
             this.deploymentTimestamp = deploymentTimestamp;
         }

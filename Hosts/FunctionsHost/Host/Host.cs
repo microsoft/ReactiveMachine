@@ -20,7 +20,7 @@ using TelemetryBlobWriter;
 
 namespace FunctionsHost
 {
-    internal class Host
+    internal class Host<TStaticApplicationInfo> where TStaticApplicationInfo: IStaticApplicationInfo, new()
     {
         private readonly IStaticApplicationInfo applicationInfo;
         private readonly FunctionsHostConfiguration configuration;
@@ -66,7 +66,7 @@ namespace FunctionsHost
             ApplicationLogger = new LoggerWrapper(CombinedLogger, $"[p{processId:d3} application] ", configuration.ApplicationLogLevel);
             RuntimeLogger = new LoggerWrapper(CombinedLogger, $"[p{processId:d3} runtime] ", configuration.RuntimeLogLevel);
 
-            this.application = applicationInfo.Build(new ReactiveMachine.ApplicationCompiler().SetConfiguration(configuration));
+            this.application = Compilation.Compile<TStaticApplicationInfo>(applicationInfo, configuration);
 
             this.invocationId = invocationId;
             this.payloadSerializer = new DataContractSerializer(typeof(List<KeyValuePair<long,IMessage>>), application.SerializableTypes);
@@ -214,11 +214,11 @@ namespace FunctionsHost
                         bool outOfTime = stopwatch.Elapsed > configuration.TimeLimit;
 
                         IEnumerable<EventData> eventData = outOfTime ? null :
-                              await Connections.Receiver.ReceiveAsync(configuration.MaxReceiveBatchSize, iterationCount == 1 ? TimeSpan.FromSeconds(10) : configuration.ReceiveWaitTime);
+                              await Connections.ProcessReceiver.ReceiveAsync(configuration.MaxReceiveBatchSize, iterationCount == 1 ? TimeSpan.FromSeconds(10) : configuration.ReceiveWaitTime);
 
                         if (eventData == null)
                         {
-                            HostLogger.LogTrace($"{ DateTime.UtcNow:o} Received nothing. {Connections.Receiver.RuntimeInfo.LastSequenceNumber}");
+                            HostLogger.LogTrace($"{ DateTime.UtcNow:o} Received nothing. {Connections.ProcessReceiver.RuntimeInfo.LastSequenceNumber}");
                             
                             if (process.RequestsOutstanding() && !outOfTime)
                             {
@@ -363,7 +363,7 @@ namespace FunctionsHost
 
         public async Task FinalRecheck()
         {
-            var eventData = await Connections.Receiver.ReceiveAsync(1, TimeSpan.FromMilliseconds(1));
+            var eventData = await Connections.ProcessReceiver.ReceiveAsync(1, TimeSpan.FromMilliseconds(1));
             if (eventData != null)
             {
                 var eventEnumerator = eventData.GetEnumerator();
