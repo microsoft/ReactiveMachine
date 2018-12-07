@@ -23,16 +23,15 @@ namespace Counter.Service
  
     [DataContract]
     public class IncrementUpdate :
-       IUpdate<Counter2, UnitType>,
+       IUpdate<Counter2, int>,
        ICounterAffinity
     {
         [DataMember]
         public uint CounterId { get; set; }
 
-        public UnitType Execute(IUpdateContext<Counter2> context)
+        public int Execute(IUpdateContext<Counter2> context)
         {
-            context.State.Count++;
-            return UnitType.Value;
+            return ++(context.State.Count);
         }
     }
 
