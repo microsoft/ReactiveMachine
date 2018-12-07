@@ -13,7 +13,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 using ReactiveMachine;
 
-namespace TelemetryBlobWriter
+namespace ReactiveMachine.TelemetryBlobWriter
 {
     public class TelemetryCollector : ITelemetryListener
     {

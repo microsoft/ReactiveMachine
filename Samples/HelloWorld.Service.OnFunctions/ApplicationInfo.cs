@@ -27,7 +27,7 @@ namespace HelloWorld.Test.OnFunctions
                 NumberRepetitions = 100
             };
 
-            var telemetryConfig = new TelemetryBlobWriter.Configuration()
+            var telemetryConfig = new ReactiveMachine.TelemetryBlobWriter.Configuration()
             {
                 CollectHostEvents = true,
                 CollectApplicationEvents = true,

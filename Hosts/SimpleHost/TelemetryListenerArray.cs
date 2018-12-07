@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using TelemetryBlobWriter;
+using ReactiveMachine.TelemetryBlobWriter;
 
 namespace EmulatorHost
 {
@@ -16,7 +16,7 @@ namespace EmulatorHost
         private string deploymentId;
         private DateTime deploymentTimestamp;
 
-        public TelemetryListenerArray(TelemetryBlobWriter.Configuration config, ICompiledApplication application, Type hosttype, string deploymentId, DateTime deploymentTimestamp)
+        public TelemetryListenerArray(ReactiveMachine.TelemetryBlobWriter.Configuration config, ICompiledApplication application, Type hosttype, string deploymentId, DateTime deploymentTimestamp)
         {
             listeners = new TelemetryCollector[application.NumberProcesses];
             for (uint i = 0; i < application.NumberProcesses; i++)

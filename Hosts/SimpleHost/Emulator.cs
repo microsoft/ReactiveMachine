@@ -61,7 +61,7 @@ namespace EmulatorHost
             }
 
             if (Debugger.IsAttached)
-                TelemetryBlobWriter.TaskoMeterLauncher.Launch(application, deploymentId);
+                ReactiveMachine.TelemetryBlobWriter.TaskoMeterLauncher.Launch(application, deploymentId);
 
             if (streamWriter != null)
             {

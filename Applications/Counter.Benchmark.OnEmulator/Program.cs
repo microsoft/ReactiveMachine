@@ -68,7 +68,7 @@ namespace Counter.Benchmark.OnEmulator
                 RuntimeLogLevel = LogLevel.Trace
             };
 
-            var telemetryConfig = new TelemetryBlobWriter.Configuration()
+            var telemetryConfig = new ReactiveMachine.TelemetryBlobWriter.Configuration()
             {
                 CollectHostEvents = false,
                 CollectApplicationEvents = (System.Diagnostics.Debugger.IsAttached || appConfig.IsFixedRateExperiment),
