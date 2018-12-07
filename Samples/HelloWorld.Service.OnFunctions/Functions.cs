@@ -39,9 +39,7 @@ namespace HelloWorld.Test.OnFunctions
             ExecutionContext executionContext,
             ILogger logger)
         {
-            var msg = DoorbellMessage.Deserialize(myEventHubMessages[0].Body.Array);
-
-            return HostManager.Doorbell(new ApplicationInfo(), executionContext, logger, msg, myEventHubMessages.Length);
+            return HostManager.Doorbell(new ApplicationInfo(), executionContext, logger, myEventHubMessages);
         }
     }
 }
