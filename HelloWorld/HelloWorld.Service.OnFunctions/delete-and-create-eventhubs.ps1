@@ -1,7 +1,6 @@
 ﻿#  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT license.
 
-
 # Replace these to match your project
 
 $NameSpace = 'the-eventhubs-namespace'
@@ -11,6 +10,7 @@ $ResourceGroup = 'the-resource-group-containing-the-eventhubs-namespace'
 
 echo "Deleting existing EventHubs..."
 az eventhubs eventhub delete --namespace-name $NameSpace --resource-group $ResourceGroup --name Doorbell
+az eventhubs eventhub delete --namespace-name $NameSpace --resource-group $ResourceGroup --name Responses
 az eventhubs eventhub delete --namespace-name $NameSpace --resource-group $ResourceGroup --name Group0
 az eventhubs eventhub delete --namespace-name $NameSpace --resource-group $ResourceGroup --name Group1
 az eventhubs eventhub delete --namespace-name $NameSpace --resource-group $ResourceGroup --name Group2
@@ -22,6 +22,7 @@ az eventhubs eventhub delete --namespace-name $NameSpace --resource-group $Resou
 
 echo "Creating fresh EventHubs..."
 az eventhubs eventhub create --namespace-name $NameSpace --resource-group $ResourceGroup --name Doorbell --message-retention 1 --partition-count 32
+az eventhubs eventhub create --namespace-name $NameSpace --resource-group $ResourceGroup --name Responses --message-retention 1 --partition-count 32
 az eventhubs eventhub create --namespace-name $NameSpace --resource-group $ResourceGroup --name Group0 --message-retention 1 --partition-count 4
 az eventhubs eventhub create --namespace-name $NameSpace --resource-group $ResourceGroup --name Group1 --message-retention 1 --partition-count 4
 az eventhubs eventhub create --namespace-name $NameSpace --resource-group $ResourceGroup --name Group2 --message-retention 1 --partition-count 4

@@ -14,7 +14,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Test.OnEmulator"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Test", "HelloWorld.Test\HelloWorld.Test.csproj", "{B58CC879-2BA0-4A23-BD63-891DB55F5B38}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Test.OnFunctions", "HelloWorld.Service.OnFunctions\HelloWorld.Test.OnFunctions.csproj", "{6AFF9147-E65C-4A2B-8CE3-A41DDA4DF0E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Service.OnFunctions", "HelloWorld.Service.OnFunctions\HelloWorld.Service.OnFunctions.csproj", "{6AFF9147-E65C-4A2B-8CE3-A41DDA4DF0E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
