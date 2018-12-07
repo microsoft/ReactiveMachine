@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ReactiveMachine.Extensions
 {
     [DataContract]
-    public class ForkedRaise : IOrchestration<UnitType>
+    public class ForkedEvent : IOrchestration<UnitType>
     {
         [DataMember]
         public IEvent Event;
@@ -21,9 +21,9 @@ namespace ReactiveMachine.Extensions
         public override string ToString()
         {
             if (Delay != TimeSpan.Zero)
-                return $"ForkedRaise-{Event}";
+                return $"Forked-{Event}";
             else
-                return $"ForkedRaise-{Delay}-{Event}";
+                return $"Forked-{Delay}-{Event}";
         }
 
         public async Task<UnitType> Execute(IOrchestrationContext context)

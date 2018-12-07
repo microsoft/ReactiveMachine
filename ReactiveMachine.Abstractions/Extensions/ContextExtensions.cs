@@ -42,7 +42,7 @@ namespace ReactiveMachine
         public static void ScheduleEvent<TEvent>(this IContextWithForks context, TimeSpan delay, IEvent evt)
         {
             CheckTimeArgument(delay);
-            context.ForkOrchestration(new Extensions.ForkedRaise()
+            context.ForkOrchestration(new Extensions.ForkedEvent()
             {
                 Delay = delay,
                 Event = evt
