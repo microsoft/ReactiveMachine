@@ -9,28 +9,28 @@ using System.Text;
 namespace ReactiveMachine.Compiler
 {
     [DataContract]
-    internal abstract class ExceptionResult
+    public abstract class ExceptionResult
     {
         [DataMember]
         public string Description;
     }
 
     [DataContract]
-    internal class DataContractSerializedExceptionResult : ExceptionResult
+    public class DataContractSerializedExceptionResult : ExceptionResult
     {
         [DataMember]
         public byte[] Content;
     }
 
     [DataContract]
-    internal class ClassicallySerializedExceptionResult : ExceptionResult
+    public class ClassicallySerializedExceptionResult : ExceptionResult
     {
         [DataMember]
         public byte[] Content;
     }
 
     [DataContract]
-    internal class NonserializedExceptionResult : ExceptionResult
+    public class NonserializedExceptionResult : ExceptionResult
     {
     }
 }
