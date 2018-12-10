@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>
+The Reactive Machine docs | States
+</title>
+    
+<link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
+<link rel="stylesheet" href="/css/syntax.de5a118cd688caecccb0905dc27fdf35ea42b86621e7f077f96723087430564e.css">
+<link rel="shortcut icon" href="/img/logo-icon.png">
+
+  </head>
+  <body class="page has-navbar-fixed-top">
+    <main class="main">
+      
+<nav class="navbar is-fixed-top">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="http://reactive-machine.org">
+        <img src="/img/logo-icon.png">
+      </a>
+
+      <a class="navbar-item has-text-primary has-text-weight-bold" href="http://reactive-machine.org">
+        Reactive Machine
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar-menu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="/docs">
+          Docs
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+      
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+        States
+      </p>
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        Storing and evolving application state using events
+      </p>
+    </div>
+  </div>
+</section>
+  
+
+<nav class="tabs">
+  <div class="container">
+    <ul>
+      <li>
+        <a href="/docs/">
+          Overview
+        </a>
+      </li>
+      <li>
+        <a href="/docs/motivation/">
+          Motivation &amp; Vision
+        </a>
+      </li>
+      <li>
+        <a href="/docs/orchestrations/">
+          Orchestrations
+        </a>
+      </li>
+      <li>
+        <a href="/docs/activities/">
+          Activities
+        </a>
+      </li>
+      <li class="is-active">
+        <a href="/docs/states/">
+          States
+        </a>
+      </li>
+      <li>
+        <a href="/docs/affinities/">
+          Affinities
+        </a>
+      </li>
+      <li>
+        <a href="/docs/example-hello/">
+          Example: Hello World
+        </a>
+      </li>
+      <li>
+        <a href="/docs/example-echo/">
+          Example: Echo Service
+        </a>
+      </li>
+      <li>
+        <a href="/docs/example-counter/">
+          Example: Counter Service
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container docs-container">
+  <div class="content">
+    
+
+<h1 id="states">States</h1>
+
+<p>States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.</p>
+
+<h2 id="bank-example">Bank Example</h2>
+
+<p>We start by defining an affinity for how our data should be partitioned.  To do this, we implement an affinity based on the users identity.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">interface</span> <span class="n">IUserAffinity</span> <span class="p">:</span> 
+        <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">IUserAffinity</span><span class="p">,</span><span class="kt">string</span><span class="p">&gt;</span>
+    <span class="p">{</span>
+        <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>We create an event that our state will subscribe to: the <code>UserSignedUp</code> event.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataContract]</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">UserSignedUp</span> <span class="p">:</span> 
+        <span class="n">IEvent</span><span class="p">,</span>
+        <span class="n">IUserAffinity</span><span class="p">,</span>
+        <span class="n">IMultiple</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span><span class="n">Guid</span><span class="p">&gt;</span>
+    <span class="p">{</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">FullName</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">InitialCredentials</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="n">DateTime</span> <span class="n">Timestamp</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="n">Guid</span> <span class="n">SavingsAccountId</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="n">Guid</span> <span class="n">CheckingAccountId</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;</span> <span class="n">DeclareAffinities</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="k">yield</span> <span class="k">return</span> <span class="n">SavingsAccountId</span><span class="p">;</span>
+            <span class="k">yield</span> <span class="k">return</span> <span class="n">CheckingAccountId</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Now, we can create a partitioned state that&rsquo;s derived from the <code>UserSignedUp</code> events.  These events are subscribed to by implementing the <code>ISubscribe</code> interface and specifying which events you wish to subscribe to.  The <code>IPartitionedState</code> interface designates how the partitioning key should be used to partition the state across the nodes.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataContract]</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">UserState</span> <span class="p">:</span>
+         <span class="n">IPartitionedState</span><span class="p">&lt;</span><span class="n">IUserAffinity</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;,</span>
+         <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">UserSignedUp</span><span class="p">,</span> <span class="n">IUserAffinity</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span>
+    <span class="p">{</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="n">DateTime</span><span class="p">?</span> <span class="n">Created</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">FullName</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">InitialCredentials</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="n">HashSet</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;</span> <span class="n">Accounts</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;();</span>
+
+        <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">,</span> <span class="n">UserSignedUp</span> <span class="n">evt</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Created</span> <span class="p">=</span> <span class="n">evt</span><span class="p">.</span><span class="n">Timestamp</span><span class="p">;</span>
+            <span class="n">FullName</span> <span class="p">=</span> <span class="n">evt</span><span class="p">.</span><span class="n">FullName</span><span class="p">;</span>
+            <span class="n">InitialCredentials</span> <span class="p">=</span> <span class="n">evt</span><span class="p">.</span><span class="n">InitialCredentials</span><span class="p">;</span>
+            <span class="n">Accounts</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">evt</span><span class="p">.</span><span class="n">SavingsAccountId</span><span class="p">);</span>
+            <span class="n">Accounts</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">evt</span><span class="p">.</span><span class="n">CheckingAccountId</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>We can now create an operation for reading the state.  To do this, we implement the <code>IRead</code> interface.  We specify that we are reading <code>UserState</code> and returning a <code>bool</code>.  Our operation implements the <code>IUserAffinity</code> partitioning key, and therefore needs to carry a <code>UserId</code> for routing to the correct partition.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataContract]</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">CheckUseridAvailable</span> <span class="p">:</span>
+        <span class="n">IRead</span><span class="p">&lt;</span><span class="n">UserState</span><span class="p">,</span> <span class="kt">bool</span><span class="p">&gt;,</span>
+        <span class="n">IUserAffinity</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+        <span class="k">public</span> <span class="kt">bool</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IReadContext</span><span class="p">&lt;</span><span class="n">UserState</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="p">!</span> <span class="n">context</span><span class="p">.</span><span class="n">State</span><span class="p">.</span><span class="n">Created</span><span class="p">.</span><span class="n">HasValue</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+  </div>
+</div>
+
+
+    </main>
+
+    
+<footer class="footer has-background-dark">
+  <div class="container has-text-centered">
+    <p class="is-size-5 is-size-6-mobile has-text-white-bis">
+      &copy; 2018 Microsoft Corporation
+    </p>
+  </div>
+</footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="/js/app.min.e119cad0205945173c83cdb2ffec7a581007a612e088c70bd62c7245ad7e58cb.js" integrity=""></script>
+
+  </body>
+</html>

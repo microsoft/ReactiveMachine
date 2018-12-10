@@ -1,0 +1,15 @@
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light{{ if .Params.description }} is-spaced{{ end }}">
+        {{ .Title }}
+      </p>
+      {{- with .Params.description }}
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        {{ . | markdownify }}
+      </p>
+      {{- end }}
+    </div>
+  </div>
+</section>
+  

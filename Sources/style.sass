@@ -1,0 +1,211 @@
+{{- $fonts    := .Site.Params.fonts }}
+{{- $fontSlice := (slice) }}
+{{- range $fonts }}
+{{- $fontSlice = $fontSlice | append (printf "%s:%s" (replace .name " " "+") (delimit .sizes ",")) }}
+{{- end }}
+{{- $fontsUrl := printf "https://fonts.googleapis.com/css?family=%s" (delimit $fontSlice "|") }}
+{{- $sansSerifFont := .Site.Params.sansSerifFont }}
+{{- $monospaceFont := .Site.Params.monospaceFont }}
+{{- $fontAwesomeVersion := .Site.Params.fontAwesomeVersion }}
+{{- $fontAwesomeUrl     := printf "https://use.fontawesome.com/releases/v%s/css/all.css" $fontAwesomeVersion }}
+
+@charset "utf-8"
+@import url({{ $fontsUrl }})
+@import url({{ $fontAwesomeUrl }})
+
+// Project-specific colors and variables
+$twitter-blue: #1da1f2
+$slack-green: #74cdb0
+
+@import "bulma/sass/utilities/initial-variables"
+@import "bulma/sass/utilities/functions"
+
+// Bulma variable overwrites
+$link: $black
+$family-sans-serif: "{{ $sansSerifFont }}", BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif
+$family-code: "{{ $monospaceFont }}", monospace
+$navbar-dropdown-radius: none
+$navbar-dropdown-arrow: $grey-light
+$navbar-burger-color: $grey-dark
+$navbar-dropdown-border-top: none
+$dropdown-item-active-background-color: $grey-dark
+$badge-border-radius: 0
+
+$hr-height: 1.5px
+
+@import "bulma/sass/utilities/derived-variables"
+
+$colors: mergeColorMaps(("orange": (lighten($orange, 5%), $orange-invert)), $colors)
+
+@import "bulma/bulma"
+
+.highlight
+  .chroma
+    font-size: 1.2rem
+
+.dropdown
+  a
+    text-decoration: none
+
+  .is-dropdown-toc
+    padding: 1.25rem
+
+    #TableOfContents
+      ul, ul li
+        list-style-type: none
+
+      li
+        line-height: 125%
+        font-size: 14px
+
+        a
+          color: $grey-dark
+
+        & + li
+          margin-top: .6rem
+
+      ul
+        padding: 0
+        margin: 0
+
+.is-borderless
+  border: none
+
+.has-background-twitter-blue
+  background-color: $twitter-blue
+
+.has-background-slack-green
+  background-color: $slack-green
+
+.is-inner-content
+  a
+    font-weight: 600
+    color: $dark
+
+.is-page-article
+  margin-top: 2rem
+
+.is-downloads-article
+  margin-top: 1.5rem
+
+.is-page-article, .is-docs-article, .is-downloads-article
+  margin-bottom: 2.5rem
+
+  +touch
+    margin: 0 2.5%
+
+.page
+  display: flex
+  min-height: 100vh
+  flex-direction: column
+
+  &.is-home-page
+    .section
+      ul
+        li
+          line-height: 125%
+
+        li + li
+          border-top: 1px solid $grey-light
+          margin-top: 1rem
+          padding-top: 1rem
+
+    .is-about-section
+      hr
+        margin-top: 2rem
+        height: 4px
+        background-color: black
+        width: 10%
+
+  .main
+    flex: 1
+
+.footer
+  // This prevents the problem where the fixed TOC bleeds into the footer
+  z-index: 1
+
+  .is-footer-logo
+    height: 2rem
+
+.is-home-logo
+  +tablet
+    width: 50%
+
+  +mobile
+    width: 80%
+
+.is-cncf-logo
+  +desktop
+    width: 30%
+
+  +touch
+    width: 50%
+
+.content
+  ul, ul li
+    list-style-type: square
+
+  +touch
+    margin: 1rem 0
+
+.section
+  &.is-grey
+    background-color: $grey
+    color: $white
+
+    .title
+      color: $white
+
+.is-home-diagram
+  width: 70%
+
+.is-toc-container
+  margin-left: 1rem
+  background-color: white
+  padding-left: 1rem
+  padding: .75rem 0 .75rem 1rem
+  display: inline-block
+
+  .is-toc-title
+    margin-bottom: 1rem
+
+  &.is-active
+    position: fixed
+    max-width: 100%
+
+  #TableOfContents
+    li
+      line-height: 100%
+      font-size: .9rem
+
+      a
+        color: $grey-dark
+
+      & + li
+        margin-top: .5rem
+
+.anchorjs-link
+  color: $grey-light !important
+
+.notification
+  ul li
+    margin-left: -1rem
+
+  &.is-requirement
+    background-color: $purple
+    color: $orange-invert
+
+.tippy-backdrop
+  background-color: $light
+
+.tippy-tooltip
+  border: 1px solid $grey-lighter
+  color: $dark
+
+.is-release-version
+  display: flex
+  justify-content: space-between
+  flex-wrap: wrap
+
+  a
+    margin-bottom: .5rem

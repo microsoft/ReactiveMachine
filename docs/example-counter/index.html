@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>
+The Reactive Machine docs | Example: Counter Service
+</title>
+    
+<link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
+<link rel="stylesheet" href="/css/syntax.de5a118cd688caecccb0905dc27fdf35ea42b86621e7f077f96723087430564e.css">
+<link rel="shortcut icon" href="/img/logo-icon.png">
+
+  </head>
+  <body class="page has-navbar-fixed-top">
+    <main class="main">
+      
+<nav class="navbar is-fixed-top">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="http://reactive-machine.org">
+        <img src="/img/logo-icon.png">
+      </a>
+
+      <a class="navbar-item has-text-primary has-text-weight-bold" href="http://reactive-machine.org">
+        Reactive Machine
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar-menu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="/docs">
+          Docs
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+      
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+        Example: Counter Service
+      </p>
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        Building a partitioned, distributed incrementable counter
+      </p>
+    </div>
+  </div>
+</section>
+  
+
+<nav class="tabs">
+  <div class="container">
+    <ul>
+      <li>
+        <a href="/docs/">
+          Overview
+        </a>
+      </li>
+      <li>
+        <a href="/docs/motivation/">
+          Motivation &amp; Vision
+        </a>
+      </li>
+      <li>
+        <a href="/docs/orchestrations/">
+          Orchestrations
+        </a>
+      </li>
+      <li>
+        <a href="/docs/activities/">
+          Activities
+        </a>
+      </li>
+      <li>
+        <a href="/docs/states/">
+          States
+        </a>
+      </li>
+      <li>
+        <a href="/docs/affinities/">
+          Affinities
+        </a>
+      </li>
+      <li>
+        <a href="/docs/example-hello/">
+          Example: Hello World
+        </a>
+      </li>
+      <li>
+        <a href="/docs/example-echo/">
+          Example: Echo Service
+        </a>
+      </li>
+      <li class="is-active">
+        <a href="/docs/example-counter/">
+          Example: Counter Service
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container docs-container">
+  <div class="content">
+    
+
+<h1 id="counter-service">Counter Service</h1>
+
+<p>Our counter example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.</p>
+
+<h2 id="events">Events</h2>
+
+<p>To begin designing our distributed counter, we start by modeling events that comprise the counter: increment events.  These events are automatically partitioned using the <code>ICounterAffinity</code> affinity which requires that the event supply a partitioning key,  <code>CounterId</code>.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">IncrementEvent</span> <span class="p">:</span>
+    <span class="n">IEvent</span><span class="p">,</span>
+    <span class="n">ICounterAffinity</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">uint</span> <span class="n">CounterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="affinity">Affinity</h2>
+
+<p>To specify how our events should be partitioned on the nodes running the application, we describe the partitioning with the <code>ICounterAffinity</code>.  The <code>RoundRobinPlacement</code> annotation specifies how the counter should be partitioned on the nodes according to the <code>CounterId</code>.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">ICounterAffinity</span> <span class="p">:</span>
+    <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">,</span> <span class="kt">uint</span><span class="p">&gt;</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [RoundRobinPlacement]</span>
+    <span class="kt">uint</span> <span class="n">CounterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="state">State</h2>
+
+<p>We define application state as a view over the events in the system.</p>
+
+<p>Here, we define <code>Counter1</code>.  <code>Counter1</code> is a counter whose state is derived from summing the increment operations.  There will automatically be a single <code>Counter1</code> object for each different <code>CounterId</code> in the system, and that state will be automatically partitioned based on the affinity.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">Counter1</span> <span class="p">:</span>
+    <span class="n">IPartitionedState</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">,</span> <span class="kt">uint</span><span class="p">&gt;,</span>
+    <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">IncrementEvent</span><span class="p">,</span> <span class="n">ICounterAffinity</span><span class="p">,</span> <span class="kt">uint</span><span class="p">&gt;</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Count</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span><span class="p">&lt;</span><span class="kt">uint</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">,</span> <span class="n">IncrementEvent</span> <span class="n">evt</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Count</span><span class="p">++;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>The <code>ISubscribe</code> specifies how you subscribe to events.  In this case, <code>Counter1</code> will subscribe to all <code>IncrementEvents</code> and ensure that an instance of the <code>On</code> method is specified for handling how each event modifies the local state, <code>Count</code>.</p>
+
+<p>Instead of modeling the distributed counter as individual increment operations, we could model the counter using state and operations that transform that state.</p>
+
+<p>Here, <code>Counter2</code> is partitioned state containing one member: <code>Count</code>.  It is partitioned using the same partitioning key and affinity as <code>Counter1</code>.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">Counter2</span> <span class="p">:</span>
+    <span class="n">IPartitionedState</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">,</span><span class="kt">uint</span><span class="p">&gt;</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Count</span><span class="p">;</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="operations">Operations</h2>
+
+<p>We can then define an increment operation that performs updates.  The <code>IUpdate</code> interface specifies an update operation that is required to have one method, <code>Execute</code>, that takes an execution context, <code>Counter2</code> and performs an operation that transforms the state of the counter object.  These operations are automatically routed to the correct node based on the object&rsquo;s affinity.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">IncrementUpdate</span> <span class="p">:</span>
+    <span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">Counter2</span><span class="p">,</span> <span class="n">UnitType</span><span class="p">&gt;,</span>
+    <span class="n">ICounterAffinity</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">uint</span> <span class="n">CounterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">UnitType</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IUpdateContext</span><span class="p">&lt;</span><span class="n">Counter2</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">State</span><span class="p">.</span><span class="n">Count</span><span class="p">++;</span>
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Since operations can be composed, we can define an operation that performs an
+increment operation and then reads the value after.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">IncrementThenRead</span> <span class="p">:</span> 
+    <span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">Counter2</span><span class="p">,</span> <span class="n">UnitType</span><span class="p">&gt;,</span> 
+    <span class="n">ICounterAffinity</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">uint</span> <span class="n">CounterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="k">public</span> <span class="n">UnitType</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IUpdateContext</span><span class="p">&lt;</span><span class="n">Counter2</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">PerformUpdate</span><span class="p">(</span><span class="k">new</span> <span class="n">IncrementUpdate</span><span class="p">()</span> <span class="p">{</span> <span class="n">CounterId</span> <span class="p">=</span> <span class="n">CounterId</span> <span class="p">});</span>
+
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogDebug</span><span class="p">(</span><span class="s">$&#34;IncrementThenRead({context.State.Count}) End&#34;</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+  </div>
+</div>
+
+
+    </main>
+
+    
+<footer class="footer has-background-dark">
+  <div class="container has-text-centered">
+    <p class="is-size-5 is-size-6-mobile has-text-white-bis">
+      &copy; 2018 Microsoft Corporation
+    </p>
+  </div>
+</footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="/js/app.min.e119cad0205945173c83cdb2ffec7a581007a612e088c70bd62c7245ad7e58cb.js" integrity=""></script>
+
+  </body>
+</html>

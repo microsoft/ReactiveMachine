@@ -1,0 +1,34 @@
+{{- $features := .Site.Data.features }}
+{{- $numFeatures := len $features }}
+<section class="hero is-medium is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <div class="columns is-variable is-6 is-vcentered">
+        <div class="column">
+          <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+            {{ .Site.Title }}
+          </p>
+          <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+            {{ .Site.Params.description }}
+          </p>
+        </div>
+        <div class="column">
+          <ul>
+            {{- range $idx, $feature := $features }}
+            {{- $notLast := ne $numFeatures (add 1 $idx) }}
+            <li class="is-size-4 is-size-5-mobile has-text-weight-light">
+              <a href="#{{ urlize .title }}">
+                {{ $feature.title }}
+              </a>
+            </li>
+
+            {{- if $notLast }}
+            <hr />
+            {{- end }}
+            {{- end }}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

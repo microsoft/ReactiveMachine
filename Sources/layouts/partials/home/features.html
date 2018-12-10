@@ -1,0 +1,31 @@
+{{- $features    := .Site.Data.features }}
+{{- $numFeatures := len $features }}
+{{- $imgUrl      := .Site.Params.home.imgUrl | relURL }}
+<section class="section">
+  <div class="container">
+    <div class="columns is-variable is-6 is-vcentered">
+      <div class="column has-text-centered">
+        <p class="title is-size-2">
+          The Reactive Machine Strategy
+        </p>
+        <hr />
+        <img src="{{ $imgUrl }}">
+      </div>
+      <div class="column">
+        {{- range $idx, $feature := $features }}
+        {{- $notLast := ne $numFeatures (add 1 $idx) }}
+        <a id="{{ urlize .title }}"></a>
+        <p class="title is-size-3 is-size-4-mobile is-spaced">
+          {{ $feature.title }}
+        </p>
+        <p class="subtitle">
+          {{ $feature.description | markdownify }}
+        </p>
+        {{- if $notLast }}
+        <hr class="has-background-primary" />
+        {{- end }}
+        {{- end }}
+      </div>
+    </div>
+  </div>
+</section>

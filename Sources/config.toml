@@ -1,0 +1,19 @@
+baseURL = "http://reactive-machine.org"
+languageCode = "en-us"
+title = "Reactive Machine"
+pygmentsUseClasses = true
+pygmentsCodefences = true
+enableRobotsTXT = true
+disableKinds = ["taxonomy", "taxonomyTerm"]
+publishDir = "../"
+
+[params]
+description = "Microservices without faults or servers."
+
+[params.home]
+imgUrl = "/img/tactic.PNG"
+
+[[params.navbar.nav]]
+text = "Docs"
+link = "docs"
+

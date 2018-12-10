@@ -1,0 +1,6 @@
+{{ define "main" }}
+{{- $title       := .Site.Title }}
+{{- $description := .Site.Params.description | markdownify }}
+{{ partial "home/hero.html" . }}
+{{ partial "home/features.html" . }}
+{{ end }}

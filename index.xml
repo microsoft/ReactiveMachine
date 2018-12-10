@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reactive Machine</title>
+    <link>http://reactive-machine.org/</link>
+    <description>Recent content on Reactive Machine</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    
+	<atom:link href="http://reactive-machine.org/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Motivation &amp; Vision</title>
+      <link>http://reactive-machine.org/docs/motivation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/motivation/</guid>
+      <description>Motivation &amp;amp; Vision With the promise of developer agility, independent operations, and elastic scalability, microservice based development has become the &amp;ldquo;new normal&amp;rdquo; in distributed application development. Developers build application services such as dashboards, client services, and user-accesible APIs by &amp;ldquo;composing&amp;rdquo; existing cloud services, such as storage, databases, queues, and other microservices.
+Stateless Microservices However, many modern approaches to elastic scalability rely on an application tier that stateless and volatile. Application state must be loaded at the start of each request, persisted to cloud storage at the end of each request, and cached locally, if the application developer is sure that it will not introduce consistency anomalies.</description>
+    </item>
+    
+    <item>
+      <title>Orchestrations</title>
+      <link>http://reactive-machine.org/docs/orchestrations/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/orchestrations/</guid>
+      <description>Orchestrations Orchestrations describe operations that are composed of one or more other operations. They are written in async/await style, and execute deterministically and reliably. When executing an operation, orchestrations can either perform it (meaning they wait for its completion) or fork it (meaning it executes completely independently of its parent).
+Orchestrations can be composed of:
+ Operations: application-specific operations that alter state within the system; Activities: application-specific operations that contain side-effects; Orchestrations: other orchestrations.</description>
+    </item>
+    
+    <item>
+      <title>Activities</title>
+      <link>http://reactive-machine.org/docs/activities/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/activities/</guid>
+      <description>Activities Activities are operations that can be unreliable or nondeterministic, such as calls to external services. In the Reactive Machine, the replay and recoverability of the system relies on the system remaining deterministic. That means that any nondeterminism required in your application needs to be determinized through a record/replay mechanism.
+Sources of nondeterminism Nondeterminism can creep into your application in many ways. Here&amp;rsquo;s some of them:
+ Accessing the clock Setting a timer that will fire after a particular amount of time Random number generation Accessing external services Incoming web requests CPU intensive computations that make take an arbitrary amount of time to return  &amp;ldquo;Determinizing&amp;rdquo; nondeterminism Activites allow nondeterminism to be effectively &amp;ldquo;determinized.</description>
+    </item>
+    
+    <item>
+      <title>States</title>
+      <link>http://reactive-machine.org/docs/states/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/states/</guid>
+      <description>States States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.
+Bank Example We start by defining an affinity for how our data should be partitioned. To do this, we implement an affinity based on the users identity.
+namespace Bank.Service { public interface IUserAffinity : IPartitionedAffinity&amp;lt;IUserAffinity,string&amp;gt; { string UserId { get; } } } We create an event that our state will subscribe to: the UserSignedUp event.</description>
+    </item>
+    
+    <item>
+      <title>Affinities</title>
+      <link>http://reactive-machine.org/docs/affinities/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/affinities/</guid>
+      <description>Affinities Affinities define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.
+Singletons If we wish to place an object in only one location, the ISingletonAffinity interface can be used to force placement only at a single partition.</description>
+    </item>
+    
+    <item>
+      <title>Example: Hello World</title>
+      <link>http://reactive-machine.org/docs/example-hello/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/example-hello/</guid>
+      <description>Hello World The Hello World example serves to verify that you&amp;rsquo;ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model.
+Definining a service We begin by defining a new service: HelloWorld.Service using the Reactive Machine&amp;rsquo;s service builder definition. This builder will scan the current DLL and generate a service based on the definitions included.</description>
+    </item>
+    
+    <item>
+      <title>Example: Echo Service</title>
+      <link>http://reactive-machine.org/docs/example-echo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/example-echo/</guid>
+      <description>Echo Service The Echo service demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
+Affinity We begin by defining an affinity for the client and the server. We use the singleton affinities to route everything to a single node.
+public interface IClientAffinity : ISingletonAffinity&amp;lt;IClientAffinity&amp;gt; { } public interface IServerAffinity : ISingletonAffinity&amp;lt;IServerAffinity&amp;gt; { } Events We define two events:</description>
+    </item>
+    
+    <item>
+      <title>Example: Counter Service</title>
+      <link>http://reactive-machine.org/docs/example-counter/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/example-counter/</guid>
+      <description>Counter Service Our counter example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.
+Events To begin designing our distributed counter, we start by modeling events that comprise the counter: increment events. These events are automatically partitioned using the ICounterAffinity affinity which requires that the event supply a partitioning key, CounterId.</description>
+    </item>
+    
+  </channel>
+</rss>
