@@ -16,7 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
-using TelemetryBlobWriter;
+using ReactiveMachine.TelemetryBlobWriter;
 
 namespace FunctionsHost
 {
@@ -73,7 +73,7 @@ namespace FunctionsHost
             this.payloadSerializerLoopback = new DataContractSerializer(typeof(List<IMessage>), application.SerializableTypes);
             this.Connections = new EventHubsConnections(processId, HostLogger, configuration.ehConnectionString);
 
-            if (application.TryGetConfiguration<TelemetryBlobWriter.Configuration>(out var config))
+            if (application.TryGetConfiguration<ReactiveMachine.TelemetryBlobWriter.Configuration>(out var config))
             {
                 this.collectHostEvents = config.CollectHostEvents;
                 this.blobTelemetryListener = new TelemetryCollector(config, application, processId, this.GetType());

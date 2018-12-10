@@ -20,7 +20,7 @@ namespace HelloWorld.Emulator
             {
                 NumberRepetitions = 100
             });
-            compiler.SetConfiguration(new TelemetryBlobWriter.Configuration()
+            compiler.SetConfiguration(new ReactiveMachine.TelemetryBlobWriter.Configuration()
             {
                 CollectHostEvents = true,
                 CollectApplicationEvents = true,

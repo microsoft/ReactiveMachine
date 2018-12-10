@@ -45,9 +45,9 @@ namespace EmulatorHost
         public void Run(ICompiledApplication application)
         {
             TelemetryListenerArray telemetry = null;
-            if (application.Configurations.TryGetValue(typeof(TelemetryBlobWriter.Configuration), out var c))
+            if (application.Configurations.TryGetValue(typeof(ReactiveMachine.TelemetryBlobWriter.Configuration), out var c))
             {
-                telemetry = new TelemetryListenerArray((TelemetryBlobWriter.Configuration)c, application, this.GetType(), deploymentId, deploymentTimestamp);
+                telemetry = new TelemetryListenerArray((ReactiveMachine.TelemetryBlobWriter.Configuration)c, application, this.GetType(), deploymentId, deploymentTimestamp);
                 application.HostServices.RegisterTelemetryListener(telemetry);
             }
 

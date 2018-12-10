@@ -10,7 +10,7 @@ using System.Runtime.Serialization;
 using Microsoft.Azure.EventHubs;
 using ReactiveMachine;
 using System.Collections.Generic;
-using TelemetryBlobWriter;
+using ReactiveMachine.TelemetryBlobWriter;
 using Microsoft.Extensions.Logging;
 using ReactiveMachine.Util;
 

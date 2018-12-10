@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace TelemetryBlobWriter
+namespace ReactiveMachine.TelemetryBlobWriter
 {
     public static class TaskoMeterLauncher
     {

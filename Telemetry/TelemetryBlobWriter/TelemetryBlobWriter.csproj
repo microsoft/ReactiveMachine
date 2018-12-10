@@ -27,8 +27,8 @@
     <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Product>ReactiveMachine</Product>
-    <AssemblyName>AssemblyName</AssemblyName>
-    <RootNamespace>AssemblyName</RootNamespace>
+    <AssemblyName>ReactiveMachine.TelemetryBlobWriter</AssemblyName>
+    <RootNamespace>ReactiveMachine.TelemetryBlobWriter</RootNamespace>
   </PropertyGroup>
   <Target Name="CopyPackage" AfterTargets="Pack">
     <Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="..\..\Artifacts\$(Configuration)\" />

@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace TelemetryBlobWriter
+namespace ReactiveMachine.TelemetryBlobWriter
 {
     public class Configuration
     {
