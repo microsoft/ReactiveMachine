@@ -29,7 +29,7 @@ namespace Counter.Service.OnFunctions
                 SendLogLevel = LogLevel.Debug,
             };
 
-            var telemetryConfig = new TelemetryBlobWriter.Configuration()
+            var telemetryConfig = new ReactiveMachine.TelemetryBlobWriter.Configuration()
             {
                 CollectHostEvents = true,
                 CollectApplicationEvents = true,
