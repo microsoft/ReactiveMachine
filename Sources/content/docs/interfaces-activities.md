@@ -2,6 +2,10 @@
 title: "Activities"
 description: Interacting with the outside world
 weight: 6
+menu:
+  main: 
+    parent: "Interfaces"
+    weight: 20
 ---
 
 # Activities

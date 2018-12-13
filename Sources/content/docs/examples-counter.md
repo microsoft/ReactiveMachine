@@ -1,7 +1,11 @@
 ---
-title: "Example: Counter Service"
+title: "Counter Service"
 description: Building a partitioned, distributed incrementable counter
 weight: 13
+menu:
+  main: 
+    parent: "Examples"
+    weight: 20
 ---
 
 # Counter Service

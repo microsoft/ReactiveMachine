@@ -2,6 +2,10 @@
 title: "Orchestrations"
 description: Composing operations together
 weight: 5
+menu:
+  main: 
+    parent: "Interfaces"
+    weight: 20
 ---
 
 # Orchestrations

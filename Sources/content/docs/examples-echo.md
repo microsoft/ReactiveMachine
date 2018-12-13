@@ -1,7 +1,11 @@
 ---
-title: "Example: Echo Service"
+title: "Echo Service"
 description: Building an echo service
 weight: 12
+menu:
+  main: 
+    parent: "Examples"
+    weight: 20
 ---
 
 # Echo Service

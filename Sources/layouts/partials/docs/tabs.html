@@ -4,13 +4,17 @@
   <div class="container">
     <ul>
       {{- range $docs }}
-      {{- $title         := cond (isset .Params "short") .Params.short .Title }}
-      {{- $isCurrentPage := eq .URL $currentUrl }}
-      <li{{ if $isCurrentPage }} class="is-active"{{ end }}>
-        <a href="{{ .URL }}">
-          {{ $title }}
-        </a>
-      </li>
+        {{- $title         := cond (isset .Params "short") .Params.short .Title }}
+        {{- $isCurrentPage := eq .URL $currentUrl }}
+        {{- $isTopLevel    := eq .Params.menu.main.parent nil }}
+
+        {{- if $isTopLevel }} 
+          <li{{ if $isCurrentPage }} class="is-active"{{ end }}>
+            <a href="{{ .URL }}">
+              {{ $title }}
+            </a>
+          </li>
+        {{- end }}
       {{- end }}
     </ul>
   </div>

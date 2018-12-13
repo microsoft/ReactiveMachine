@@ -2,6 +2,10 @@
 title: "Affinities"
 description: Application-aware partitioning and horizontal scalability
 weight: 8
+menu:
+  main: 
+    parent: "Interfaces"
+    weight: 20
 ---
 
 # Affinities
