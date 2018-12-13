@@ -5,7 +5,7 @@ weight: 8
 menu:
   main: 
     parent: "Interfaces"
-    weight: 20
+    weight: 18
 ---
 
 # Affinities

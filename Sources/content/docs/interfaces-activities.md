@@ -5,7 +5,7 @@ weight: 6
 menu:
   main: 
     parent: "Interfaces"
-    weight: 20
+    weight: 16
 ---
 
 # Activities
