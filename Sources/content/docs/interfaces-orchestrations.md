@@ -47,6 +47,8 @@ public class WriteBlob : IAtLeastOnceActivity<UnitType>
     ...
 ```
 
+## Example Orchestration: Read / Write Activity
+
 To use these activities, we create an orchestration.  Our ```CopyBlob``` orchestration returns ```UnitType```, and performs a read and subsequent write.
 
 ```c#
