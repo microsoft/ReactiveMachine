@@ -1,12 +1,16 @@
 ---
-title: "Example: Counter Service"
+title: "Counter Service"
 description: Building a partitioned, distributed incrementable counter
 weight: 13
+menu:
+  main: 
+    parent: "Examples"
+    weight: 23
 ---
 
 # Counter Service
 
-Our counter example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.
+The counter service example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.
 
 ## Events
 

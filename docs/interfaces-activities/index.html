@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>
+The Reactive Machine | Activities
+</title>
+    
+<link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
+<link rel="stylesheet" href="/css/syntax.de5a118cd688caecccb0905dc27fdf35ea42b86621e7f077f96723087430564e.css">
+<link rel="shortcut icon" href="/img/logo-icon.png">
+
+  </head>
+  <body class="page has-navbar-fixed-top">
+    <main class="main">
+      
+
+<nav class="navbar is-fixed-top">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="http://reactive-machine.org">
+        <img src="/img/logo-icon.png">
+      </a>
+
+      <a class="navbar-item has-text-primary has-text-weight-bold" href="http://reactive-machine.org">
+        Reactive Machine
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar-menu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="/docs">
+          Docs
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+      
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+        Activities
+      </p>
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        Interacting with the outside world
+      </p>
+    </div>
+  </div>
+</section>
+  
+
+<nav class="tabs">
+  <div class="container">
+
+    <ul> 
+          <li>
+            <a href="/docs/">
+              Overview
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/motivation/">
+              Motivation &amp; Vision
+            </a>
+          </li> 
+          <li class="is-active">
+            <a href="/docs/interfaces/">
+              Interfaces
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/examples/">
+              Examples
+            </a>
+          </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+    
+       
+      
+    
+
+    
+       
+      
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        
+                <li class="">
+                    <a href="/docs/interfaces-orchestrations/">Orchestrations</a>
+                </li>
+        
+                <li class="is-active">
+                    <a href="/docs/interfaces-activities/">Activities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-states/">States</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-affinities/">Affinities</a>
+                </li>
+        
+              </ul>
+            </div>
+          </nav>
+      
+    
+
+
+<div class="container docs-container">
+  <div class="content">
+    
+
+<h1 id="activities">Activities</h1>
+
+<p>Activities are operations that can be unreliable or nondeterministic, such as calls to external services.  In the Reactive Machine, the replay and recoverability of the system relies on the system remaining deterministic.  That means that any nondeterminism required in your application needs to be determinized through a record/replay mechanism.</p>
+
+<h2 id="sources-of-nondeterminism">Sources of nondeterminism</h2>
+
+<p>Nondeterminism can creep into your application in many ways.  Here&rsquo;s some of them:</p>
+
+<ul>
+<li>Accessing the clock</li>
+<li>Setting a timer that will fire after a particular amount of time</li>
+<li>Random number generation</li>
+<li>Accessing external services</li>
+<li>Incoming web requests</li>
+<li>CPU intensive computations that make take an arbitrary amount of time to return</li>
+</ul>
+
+<h2 id="determinizing-nondeterminism">&ldquo;Determinizing&rdquo; nondeterminism</h2>
+
+<p>Activites allow nondeterminism to be effectively &ldquo;determinized.&rdquo;  Activities are logged by the system prior to execution and the return values of activities are logged when the operation completes.  Under replay, requests are not reissued if they have already been issued and a value returned: instead, the return value in the log is used as the return value for the operation, ensuring that under replay completed activities are deterministic.  Activities provide at-least or at-most once semantics: under replay, the application developer can choose to <em>always</em> reissue the request, or the developer can choose to <em>never</em> reissue the request if the system knows that the request has already been previously issued: if so, an execption can be thrown and the application developer can handle this in a application-specific manner.</p>
+
+<h2 id="miner-service">Miner Service</h2>
+
+<p>To demonstrate, we provide an example of an activity from a hash-space mining service.  With this example, searching for a hash collision inside of a space can take an arbitrary amount of time to return, with an arbitrary result, otherwise, the time limit expires.  Therefore, we wrap this in an activity to ensure that it remains deterministic.  To ensure at-least once execution under failure, we use the <code>IAtLeastOnceActivity</code> interface.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Miner.Service</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataContract]</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">SearchPortion</span> <span class="p">:</span> <span class="n">IAtLeastOnceActivity</span><span class="p">&lt;</span><span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;&gt;</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="n">TimeSpan</span> <span class="n">TimeLimit</span> <span class="p">=&gt;</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromSeconds</span><span class="p">(</span><span class="m">30</span><span class="p">);</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">int</span> <span class="n">Target</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">long</span> <span class="n">Start</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">        [DataMember]</span>
+        <span class="k">public</span> <span class="kt">long</span> <span class="n">Count</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IContext</span> <span class="n">context</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Starting portion [{Start},{Start + Count})&#34;</span><span class="p">);</span>
+
+            <span class="kt">var</span> <span class="n">results</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;();</span>
+            <span class="c1">// search given range for a hash collision
+</span><span class="c1"></span>            <span class="k">for</span> <span class="p">(</span><span class="kt">var</span> <span class="n">i</span> <span class="p">=</span> <span class="n">Start</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">Start</span> <span class="p">+</span> <span class="n">Count</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span>
+            <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">GetHashCode</span><span class="p">()</span> <span class="p">==</span> <span class="n">Target</span><span class="p">)</span>
+                    <span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Finished portion [{Start},{Start + Count})&#34;</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+  </div>
+</div>
+
+
+    </main>
+
+    
+<footer class="footer has-background-dark">
+  <div class="container has-text-centered">
+    <p class="is-size-5 is-size-6-mobile has-text-white-bis">
+      &copy; 2018 Microsoft Corporation
+    </p>
+  </div>
+</footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="/js/app.min.e119cad0205945173c83cdb2ffec7a581007a612e088c70bd62c7245ad7e58cb.js" integrity=""></script>
+
+  </body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <title>
-The Reactive Machine
+The Reactive Machine | Interfaces
 </title>
     
 <link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
@@ -48,10 +48,10 @@ The Reactive Machine
   <div class="hero-body">
     <div class="container">
       <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
-        The Reactive Machine
+        Interfaces
       </p>
       <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
-        Elastic microservies for serverless environments
+        Interfaces for the Reactive Machine
       </p>
     </div>
   </div>
@@ -62,7 +62,7 @@ The Reactive Machine
   <div class="container">
 
     <ul> 
-          <li class="is-active">
+          <li>
             <a href="/docs/">
               Overview
             </a>
@@ -72,7 +72,7 @@ The Reactive Machine
               Motivation &amp; Vision
             </a>
           </li> 
-          <li>
+          <li class="is-active">
             <a href="/docs/interfaces/">
               Interfaces
             </a>
@@ -94,6 +94,30 @@ The Reactive Machine
     
 
     
+      
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        
+                <li class="">
+                    <a href="/docs/interfaces-orchestrations/">Orchestrations</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-activities/">Activities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-states/">States</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-affinities/">Affinities</a>
+                </li>
+        
+              </ul>
+            </div>
+          </nav>
        
       
     
@@ -103,45 +127,15 @@ The Reactive Machine
   <div class="content">
     
 
-<h1 id="overview">Overview</h1>
+<h1 id="interfaces">Interfaces</h1>
 
-<p>Reactive Machine is a serverless programming model for writing reliable elastic microservices.</p>
-
-<p>The idea is to express the application logic at a level of abstraction that hides platform failures (machines or connections going down) and configuration choices (e.g. the number of servers). This high-level representation is then compiled and deployed on a back-end host of choice. Importantly, the host can recover from failures transparently and consistently, because our compiler produces a deterministic state machine that makes it possible to reliably track the application state by logging messages and/or persisting snapshots to durable storage.</p>
-
-<p>We plan to build and experiment with many back-ends: all can provide the same application semantics, and are therefore easily interchangeable. But they can exhibit large differences in non-semantic characteristics, such as cost, scalability, latency, throughput, and recovery speed.</p>
-
-<h2 id="programming-model">Programming Model</h2>
-
-<p>Reactive machine programs are built on task abstraction that we call an <em>operation</em>. The model offers a number of different operations:</p>
+<p>The Reactive Machine interfaces: understanding how to build your application.</p>
 
 <ul>
 <li><strong>Orchestrations</strong> describe operations that are composed of one or more other operations. They are written in async/await style, and execute deterministically and reliably. When executing an operation, orchestrations can either perform it (meaning they wait for its completion) or fork it (meaning it executes completely independently of its parent).</li>
 <li><strong>Activities</strong> are operations that can be unreliable or nondeterministic, such as calls to external services.</li>
 <li><strong>States</strong> represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.</li>
-<li><strong>Affinities</strong> define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking).
-Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</li>
-</ul>
-
-<h2 id="status">Status</h2>
-
-<p>We are currently at 1.0.0-alpha, meaning that this is preview of what we expect to release in the first release (1.0.0). It includes:</p>
-
-<ul>
-<li>The C# version of the reactive machine programming model and compiler, on .NET standard 2.0</li>
-<li>A local emulator host</li>
-<li>An Azure Functions host</li>
-<li>Application examples to demonstrate the features of the programming model</li>
-<li>A Hello World sample to demonstrate how to use the 2 hosts</li>
-</ul>
-
-<p>What remains to be done for 1.0.0 is:</p>
-
-<ul>
-<li>Feature for serving external requests (to the ICompiledApplication abstraction, and to the Azure functions host)</li>
-<li>Fix known bugs in existing tests, and add more tests</li>
-<li>Build and test on Linux</li>
-<li>Set up continuous integration</li>
+<li><strong>Affinities</strong> define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</li>
 </ul>
 
   </div>

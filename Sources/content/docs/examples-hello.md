@@ -1,7 +1,11 @@
 ---
-title: "Example: Hello World"
+title: "Hello World"
 description: Writing your first reactive machine application
 weight: 11
+menu:
+  main: 
+    parent: "Examples"
+    weight: 20
 ---
 
 # Hello World

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>
+The Reactive Machine | Orchestrations
+</title>
+    
+<link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
+<link rel="stylesheet" href="/css/syntax.de5a118cd688caecccb0905dc27fdf35ea42b86621e7f077f96723087430564e.css">
+<link rel="shortcut icon" href="/img/logo-icon.png">
+
+  </head>
+  <body class="page has-navbar-fixed-top">
+    <main class="main">
+      
+
+<nav class="navbar is-fixed-top">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="http://reactive-machine.org">
+        <img src="/img/logo-icon.png">
+      </a>
+
+      <a class="navbar-item has-text-primary has-text-weight-bold" href="http://reactive-machine.org">
+        Reactive Machine
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar-menu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="/docs">
+          Docs
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+      
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+        Orchestrations
+      </p>
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        Composing operations together
+      </p>
+    </div>
+  </div>
+</section>
+  
+
+<nav class="tabs">
+  <div class="container">
+
+    <ul> 
+          <li>
+            <a href="/docs/">
+              Overview
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/motivation/">
+              Motivation &amp; Vision
+            </a>
+          </li> 
+          <li class="is-active">
+            <a href="/docs/interfaces/">
+              Interfaces
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/examples/">
+              Examples
+            </a>
+          </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+    
+       
+      
+    
+
+    
+       
+      
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        
+                <li class="is-active">
+                    <a href="/docs/interfaces-orchestrations/">Orchestrations</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-activities/">Activities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-states/">States</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/interfaces-affinities/">Affinities</a>
+                </li>
+        
+              </ul>
+            </div>
+          </nav>
+      
+    
+
+
+<div class="container docs-container">
+  <div class="content">
+    
+
+<h1 id="orchestrations">Orchestrations</h1>
+
+<p>Orchestrations describe operations that are composed of one or more other operations. They are written in async/await style, and execute deterministically and reliably. When executing an operation, orchestrations can either perform it (meaning they wait for its completion) or fork it (meaning it executes completely independently of its parent).</p>
+
+<p>Orchestrations can be composed of:</p>
+
+<ul>
+<li><strong>Operations</strong>: application-specific operations that alter state within the system;</li>
+<li><strong>Activities</strong>: application-specific operations that contain side-effects;</li>
+<li><strong>Orchestrations</strong>: other orchestrations.</li>
+</ul>
+
+<h2 id="example-activities-read-write-blob">Example Activities: Read / Write Blob</h2>
+
+<p>To demonstrate orchestrations, we begin by defining two activities for reading and writing from external storage.</p>
+
+<p>First, we define the <code>ReadBlob</code> activity.  This activity defines a return value of <code>string</code> and the activity uses the at-least-once retry strategy under failure.  The class defines instance variables for the input for the activity an execute method that is used to perform the action.  It returns a <code>Task&lt;string&gt;</code> as its output value.</p>
+
+<p>The <code>WriteBlob</code> activity is mostly the same, but demonstrates that activities can return void by returning a <code>UnitType</code> value.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">ReadBlob</span> <span class="p">:</span> <span class="n">IAtLeastOnceActivity</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Path</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IActivityContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">&#34;Reading From Storage&#34;</span><span class="p">);</span>
+        <span class="kt">var</span> <span class="n">content</span> <span class="p">=</span> <span class="k">await</span> <span class="n">Utils</span><span class="p">.</span><span class="n">GetBlob</span><span class="p">(</span><span class="n">Path</span><span class="p">).</span><span class="n">DownloadTextAsync</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">content</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">WriteBlob</span> <span class="p">:</span> <span class="n">IAtLeastOnceActivity</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Path</span><span class="p">;</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Content</span><span class="p">;</span>
+
+    <span class="p">...</span></code></pre></div>
+<h2 id="example-orchestration-read-write-activity">Example Orchestration: Read / Write Activity</h2>
+
+<p>To use these activities, we create an orchestration.  Our <code>CopyBlob</code> orchestration returns <code>UnitType</code>, and performs a read and subsequent write.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">CopyBlob</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">From</span><span class="p">;</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">To</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">content</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">ReadBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">From</span> <span class="p">});</span>
+            
+        <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">WriteBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">To</span><span class="p">,</span> <span class="n">Content</span> <span class="p">=</span> <span class="n">content</span><span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>This orchestration is <strong>guaranteed</strong> to execute: programmers do not need to worry about the resilience of the orchestration, only the interaction with the external services, defined by activities.</p>
+
+  </div>
+</div>
+
+
+    </main>
+
+    
+<footer class="footer has-background-dark">
+  <div class="container has-text-centered">
+    <p class="is-size-5 is-size-6-mobile has-text-white-bis">
+      &copy; 2018 Microsoft Corporation
+    </p>
+  </div>
+</footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="/js/app.min.e119cad0205945173c83cdb2ffec7a581007a612e088c70bd62c7245ad7e58cb.js" integrity=""></script>
+
+  </body>
+</html>

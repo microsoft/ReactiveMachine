@@ -1,12 +1,16 @@
 ---
-title: "Example: Echo Service"
+title: "Echo Service"
 description: Building an echo service
 weight: 12
+menu:
+  main: 
+    parent: "Examples"
+    weight: 22
 ---
 
 # Echo Service
 
-The Echo service demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
+The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
 
 ## Affinity
 

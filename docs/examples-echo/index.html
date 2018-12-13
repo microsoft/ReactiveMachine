@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>
+The Reactive Machine | Echo Service
+</title>
+    
+<link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
+<link rel="stylesheet" href="/css/syntax.de5a118cd688caecccb0905dc27fdf35ea42b86621e7f077f96723087430564e.css">
+<link rel="shortcut icon" href="/img/logo-icon.png">
+
+  </head>
+  <body class="page has-navbar-fixed-top">
+    <main class="main">
+      
+
+<nav class="navbar is-fixed-top">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="http://reactive-machine.org">
+        <img src="/img/logo-icon.png">
+      </a>
+
+      <a class="navbar-item has-text-primary has-text-weight-bold" href="http://reactive-machine.org">
+        Reactive Machine
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar-menu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="/docs">
+          Docs
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+      
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+        Echo Service
+      </p>
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        Building an echo service
+      </p>
+    </div>
+  </div>
+</section>
+  
+
+<nav class="tabs">
+  <div class="container">
+
+    <ul> 
+          <li>
+            <a href="/docs/">
+              Overview
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/motivation/">
+              Motivation &amp; Vision
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/interfaces/">
+              Interfaces
+            </a>
+          </li> 
+          <li class="is-active">
+            <a href="/docs/examples/">
+              Examples
+            </a>
+          </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+    
+       
+      
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        
+                <li class="">
+                    <a href="/docs/examples-hello/">Hello World</a>
+                </li>
+        
+                <li class="is-active">
+                    <a href="/docs/examples-echo/">Echo Service</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/examples-counter/">Counter Service</a>
+                </li>
+        
+              </ul>
+            </div>
+          </nav>
+      
+    
+
+    
+       
+      
+    
+
+
+<div class="container docs-container">
+  <div class="content">
+    
+
+<h1 id="echo-service">Echo Service</h1>
+
+<p>The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.</p>
+
+<h2 id="affinity">Affinity</h2>
+
+<p>We begin by defining an affinity for the client and the server.  We use the singleton affinities to route everything to a single node.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">IClientAffinity</span> <span class="p">:</span>
+    <span class="n">ISingletonAffinity</span><span class="p">&lt;</span><span class="n">IClientAffinity</span><span class="p">&gt;</span>
+<span class="p">{</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">interface</span> <span class="n">IServerAffinity</span> <span class="p">:</span>
+    <span class="n">ISingletonAffinity</span><span class="p">&lt;</span><span class="n">IServerAffinity</span><span class="p">&gt;</span>
+<span class="p">{</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="events">Events</h2>
+
+<p>We define two events:</p>
+
+<ul>
+<li><code>PingEvent</code>: issued by the client against the server, using the <code>IServerAffinity</code></li>
+<li><code>PongEvent</code>: issued by the server against the client, using the <code>IClientAffinity</code></li>
+</ul>
+
+<p>Here&rsquo;s the definition of the <code>PingEvent</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">PingEvent</span> <span class="p">:</span>
+    <span class="n">IEvent</span><span class="p">,</span>
+    <span class="n">IServerAffinity</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Message</span><span class="p">;</span>
+<span class="p">}</span></code></pre></div>
+<p>Here&rsquo;s the definition of the <code>PongEvent</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">PongEvent</span> <span class="p">:</span>
+    <span class="n">IEvent</span><span class="p">,</span>
+    <span class="n">IClientAffinity</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Message</span><span class="p">;</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="server">Server</h2>
+
+<p>Our server is responsible for subscribing to <code>PingEvent</code> events and when one is received, generates a new <code>PongEvent</code>.  <code>ForkEvent</code> is used to generate the event and asynchronously schedules the event to be transmitted without blocking.  The local state <code>count</code> is advanced for each message.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">ServerState</span> <span class="p">:</span>
+    <span class="n">ISingletonState</span><span class="p">&lt;</span><span class="n">IServerAffinity</span><span class="p">&gt;,</span>
+    <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">PingEvent</span><span class="p">,</span> <span class="n">IServerAffinity</span><span class="p">&gt;</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">PingEvent</span> <span class="n">pingEvent</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">count</span><span class="p">++;</span>
+
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Received: {pingEvent.Message}&#34;</span><span class="p">);</span>
+
+        <span class="n">context</span><span class="p">.</span><span class="n">ForkEvent</span><span class="p">(</span><span class="k">new</span> <span class="n">PongEvent</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="n">Message</span> <span class="p">=</span> <span class="s">$&#34;Echo {pingEvent.Message}&#34;</span><span class="p">,</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="client">Client</h2>
+
+<p>Our client is responsible for subscribing to <code>PongEvent</code> events and when one is received, generates a new <code>PingEvent</code>.  <code>ForkEvent</code> is used to generate the event and asynchronously schedules the event to be transmitted without blocking.  The local state <code>count</code> is advanced for each message.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="na">[DataContract]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">ClientState</span> <span class="p">:</span>
+    <span class="n">ISingletonState</span><span class="p">&lt;</span><span class="n">IClientAffinity</span><span class="p">&gt;,</span>
+    <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">PongEvent</span><span class="p">,</span> <span class="n">IClientAffinity</span><span class="p">&gt;</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [DataMember]</span>
+    <span class="kt">int</span> <span class="n">count</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">PongEvent</span> <span class="n">pongEvent</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">count</span><span class="p">++;</span>
+
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Received: {pongEvent.Message}&#34;</span><span class="p">);</span>
+
+        <span class="c1">// Send a ping event unless we have reach max count
+</span><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">count</span> <span class="p">&lt;</span> <span class="n">SendFirstPing</span><span class="p">.</span><span class="n">NumberOfEvents</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">context</span><span class="p">.</span><span class="n">ForkEvent</span><span class="p">(</span><span class="k">new</span> <span class="n">PingEvent</span><span class="p">()</span>
+            <span class="p">{</span>
+                <span class="n">Message</span> <span class="p">=</span> <span class="s">$&#34;Ping #{count + 1}&#34;</span><span class="p">,</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="orchestrations">Orchestrations</h2>
+
+<p>We can define an orchestration called <code>SendFirstPing</code> that forks a new event, Ping, that starts the echo example.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">SendFirstPing</span> <span class="p">:</span> 
+    <span class="n">IStartupOrchestration</span><span class="p">,</span>
+    <span class="n">IClientAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">static</span> <span class="kt">int</span> <span class="n">NumberOfEvents</span> <span class="p">=</span> <span class="m">100</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">startTime</span> <span class="p">=</span> <span class="n">DateTime</span><span class="p">.</span><span class="n">Now</span><span class="p">;</span>
+
+        <span class="n">context</span><span class="p">.</span><span class="n">ForkEvent</span><span class="p">(</span><span class="k">new</span> <span class="n">PingEvent</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="n">Message</span> <span class="p">=</span> <span class="s">$&#34;Ping!&#34;</span><span class="p">,</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">CompletedTask</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+  </div>
+</div>
+
+
+    </main>
+
+    
+<footer class="footer has-background-dark">
+  <div class="container has-text-centered">
+    <p class="is-size-5 is-size-6-mobile has-text-white-bis">
+      &copy; 2018 Microsoft Corporation
+    </p>
+  </div>
+</footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="/js/app.min.e119cad0205945173c83cdb2ffec7a581007a612e088c70bd62c7245ad7e58cb.js" integrity=""></script>
+
+  </body>
+</html>

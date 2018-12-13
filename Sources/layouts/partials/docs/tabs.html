@@ -2,15 +2,22 @@
 {{- $currentUrl := .URL }}
 <nav class="tabs">
   <div class="container">
+    {{- $selectedParent := .Params.Menu.main.Parent }}
+
     <ul>
       {{- range $docs }}
-      {{- $title         := cond (isset .Params "short") .Params.short .Title }}
-      {{- $isCurrentPage := eq .URL $currentUrl }}
-      <li{{ if $isCurrentPage }} class="is-active"{{ end }}>
-        <a href="{{ .URL }}">
-          {{ $title }}
-        </a>
-      </li>
+        {{- $title         := cond (isset .Params "short") .Params.short .Title }}
+        {{- $isCurrentPage := eq .URL $currentUrl }}
+        {{- $isTopLevel    := eq .Params.Menu.main.parent nil }}
+        {{- $isTopSelected := eq $title $selectedParent }} 
+
+        {{- if $isTopLevel }} 
+          <li{{ if (or $isCurrentPage $isTopSelected) }} class="is-active"{{ end }}>
+            <a href="{{ .URL }}">
+              {{ $title }}
+            </a>
+          </li>
+        {{- end }}
       {{- end }}
     </ul>
   </div>

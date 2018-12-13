@@ -2,6 +2,10 @@
 title: "Orchestrations"
 description: Composing operations together
 weight: 5
+menu:
+  main: 
+    parent: "Interfaces"
+    weight: 15
 ---
 
 # Orchestrations
@@ -42,6 +46,8 @@ public class WriteBlob : IAtLeastOnceActivity<UnitType>
 
     ...
 ```
+
+## Example Orchestration: Read / Write Activity
 
 To use these activities, we create an orchestration.  Our ```CopyBlob``` orchestration returns ```UnitType```, and performs a read and subsequent write.
 

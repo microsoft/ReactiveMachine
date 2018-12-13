@@ -1,3 +1,35 @@
+{{ $currentPage := . }}
+{{ range .Site.Menus.main }}
+    {{ if .HasChildren }}
+      {{ if $currentPage.IsMenuCurrent "main" . }}
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        {{ range .Children }}
+                <li class="{{ if $currentPage.IsMenuCurrent "main" . }}is-active{{ end }}">
+                    <a href="{{ .URL }}">{{ .Name }}</a>
+                </li>
+        {{ end }}
+              </ul>
+            </div>
+          </nav>
+      {{ end }} 
+      {{ if $currentPage.HasMenuCurrent "main" . }}
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        {{ range .Children }}
+                <li class="{{ if $currentPage.IsMenuCurrent "main" . }}is-active{{ end }}">
+                    <a href="{{ .URL }}">{{ .Name }}</a>
+                </li>
+        {{ end }}
+              </ul>
+            </div>
+          </nav>
+      {{ end }}
+    {{ end }}
+{{ end }}
+
 <div class="container docs-container">
   <div class="content">
     {{ .Content }}
