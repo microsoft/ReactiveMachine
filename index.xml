@@ -26,7 +26,8 @@ Stateless Microservices However, many modern approaches to elastic scalability r
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/interfaces/</guid>
-      <description>Interfaces Here&amp;rsquo;s a overview of the submenu items.</description>
+      <description>Interfaces The Reactive Machine interfaces: understanding how to build your application.
+ Orchestrations describe operations that are composed of one or more other operations. They are written in async/await style, and execute deterministically and reliably. When executing an operation, orchestrations can either perform it (meaning they wait for its completion) or fork it (meaning it executes completely independently of its parent). Activities are operations that can be unreliable or nondeterministic, such as calls to external services.</description>
     </item>
     
     <item>
@@ -88,7 +89,7 @@ Definining a service We begin by defining a new service: HelloWorld.Service usin
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/examples-echo/</guid>
-      <description>Echo Service The Echo service demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
+      <description>Echo Service The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
 Affinity We begin by defining an affinity for the client and the server. We use the singleton affinities to route everything to a single node.
 public interface IClientAffinity : ISingletonAffinity&amp;lt;IClientAffinity&amp;gt; { } public interface IServerAffinity : ISingletonAffinity&amp;lt;IServerAffinity&amp;gt; { } Events We define two events:</description>
     </item>
@@ -99,7 +100,7 @@ public interface IClientAffinity : ISingletonAffinity&amp;lt;IClientAffinity&amp
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/examples-counter/</guid>
-      <description>Counter Service Our counter example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.
+      <description>Counter Service The counter service example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.
 Events To begin designing our distributed counter, we start by modeling events that comprise the counter: increment events. These events are automatically partitioned using the ICounterAffinity affinity which requires that the event supply a partitioning key, CounterId.</description>
     </item>
     
@@ -109,7 +110,8 @@ Events To begin designing our distributed counter, we start by modeling events t
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/examples/</guid>
-      <description>Examples Here&amp;rsquo;s a overview of the submenu items.</description>
+      <description>Examples We have several example applications written using the Reactive Machine.
+ Hello World The Hello World example serves to verify that you’ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model. Echo Service The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.</description>
     </item>
     
   </channel>

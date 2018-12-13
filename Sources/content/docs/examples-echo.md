@@ -10,7 +10,7 @@ menu:
 
 # Echo Service
 
-The Echo service demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
+The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
 
 ## Affinity
 
