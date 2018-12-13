@@ -2,7 +2,7 @@
 {{ range .Site.Menus.main }}
     {{ if .HasChildren }}
       {{ if $currentPage.IsMenuCurrent "main" . }}
-          <nav class="tabs">
+          <nav class="tabs" style="margin-top: -25px;">
             <div class="container">
               <ul>
         {{ range .Children }}
@@ -15,7 +15,7 @@
           </nav>
       {{ end }} 
       {{ if $currentPage.HasMenuCurrent "main" . }}
-          <nav class="tabs">
+          <nav class="tabs" style="margin-top: -25px;">
             <div class="container">
               <ul>
         {{ range .Children }}
