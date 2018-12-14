@@ -44,4 +44,4 @@ The Reactive Machine provides the developers of microservice applications with a
 
 A unique feature of the Reactive Machine is that applications can be retargeted without altering application behavior, only the cost / performance trade-off differences between where the application is deployed.
 
-![Reactive Machine Strategy](/img/tactic.PNG)
+![Reactive Machine Strategy](/img/tactic.svg)

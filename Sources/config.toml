@@ -11,7 +11,7 @@ publishDir = "../"
 description = "Microservices without faults or servers."
 
 [params.home]
-imgUrl = "/img/tactic.PNG"
+imgUrl = "/img/tactic.svg"
 
 [[params.navbar.nav]]
 text = "Docs"
