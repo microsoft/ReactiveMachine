@@ -24,10 +24,10 @@ namespace ReactiveMachine.Compiler
 
         public bool BuildComplete { get; private set; }
 
-        public ServiceInfo(Process process, IServiceBuilder serviceBuilder)
+        public ServiceInfo(Process process, ServiceBuilder serviceBuilder)
         {
             this.process = process;
-            process.Services[typeof(TService)] = this;
+            serviceBuilder.Services[typeof(TService)] = this;
             instance = new TService();
 
             BuildComplete = false;

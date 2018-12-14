@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ReactiveMachine.Compiler
 {
-    internal interface IActivityInfo
+    internal interface IActivityInfo : ISchemaElement
     {
         IEnumerable<Type> SerializableTypes();
 
@@ -31,7 +31,7 @@ namespace ReactiveMachine.Compiler
         AtMostOnce,
     }
 
-    internal class ActivityInfo<TRequest, TReturn> : IActivityInfo, IActivityInfo<TReturn>, IContext, ILogger
+    internal class ActivityInfo<TRequest, TReturn> : SchemaElement<TRequest>, IActivityInfo, IActivityInfo<TReturn>, IContext, ILogger
         where TRequest : IActivityBase<TReturn>
     {
         private readonly Process process;
@@ -52,6 +52,8 @@ namespace ReactiveMachine.Compiler
             yield return typeof(TRequest);
             yield return typeof(TReturn);
         }
+
+        public override bool AllowVersionReplace => true;
 
         public void DefineExtensions(IServiceBuilder serviceBuilder)
         {
@@ -106,6 +108,7 @@ namespace ReactiveMachine.Compiler
         }
 
         ILogger IContext.Logger => this;
+
 
         void ILogger.Log<TState1>(LogLevel logLevel, EventId eventId, TState1 state, Exception exception, Func<TState1, Exception, string> formatter)
         {

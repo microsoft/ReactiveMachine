@@ -18,17 +18,16 @@ namespace ReactiveMachine.Compiler
     internal class Process : IProcess
     {
         // service
-        public Dictionary<Type, IServiceInfo> Services = new Dictionary<Type, IServiceInfo>();
         public Dictionary<Type, IAffinityInfo> Affinities = new Dictionary<Type, IAffinityInfo>();
-        public Dictionary<Type, IPartitionLock> PartitionLocks = new Dictionary<Type, IPartitionLock>();
-        public Dictionary<Type, IStateInfo> States = new Dictionary<Type, IStateInfo>();
         public Dictionary<Type, IOrchestrationInfo> Orchestrations = new Dictionary<Type, IOrchestrationInfo>();
         public Dictionary<Type, IActivityInfo> Activities = new Dictionary<Type, IActivityInfo>();
         public Dictionary<Type, IEventInfo> Events = new Dictionary<Type, IEventInfo>();
-        public List<IOrchestration> StartupOrchestrations = new List<IOrchestration>();
+        public Dictionary<Type, IStateInfo> States = new Dictionary<Type, IStateInfo>();
+        public Dictionary<Type, IPartitionLock> PartitionLocks = new Dictionary<Type, IPartitionLock>();
 
         // indexes
         public List<IAffinityInfo> AffinityIndex = new List<IAffinityInfo>();
+        public List<IOrchestration> StartupOrchestrations = new List<IOrchestration>();
 
         // topology
         public uint ProcessId;
