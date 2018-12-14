@@ -8,7 +8,7 @@ using System.Text;
 
 namespace ReactiveMachine.Compiler
 {
-    internal interface IAffinityInfo
+    internal interface IAffinityInfo : ISchemaElement
     {
         IEnumerable<Type> SerializableTypes();
 
@@ -37,7 +37,7 @@ namespace ReactiveMachine.Compiler
         uint LocateKey(TKey key);
     }
 
-    internal abstract class AffinityInfo<TAffinity, TKey> : IAffinityInfo, IAffinityInfoByKeyType<TKey>
+    internal abstract class AffinityInfo<TAffinity, TKey> : SchemaElement<TAffinity>, IAffinityInfo, IAffinityInfoByKeyType<TKey>
         where TAffinity : IAffinitySpec<TAffinity>
     {
         protected readonly Process process;
@@ -49,6 +49,9 @@ namespace ReactiveMachine.Compiler
         public uint FirstProcess { get; private set; } = 0;
 
         public Func<TKey,TKey,int> Comparator { get; protected set; }
+
+        public override bool AllowVersionReplace => false;
+
 
         public AffinityInfo(Process process)
         {

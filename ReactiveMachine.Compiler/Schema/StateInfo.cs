@@ -10,7 +10,7 @@ using System.Text;
 
 namespace ReactiveMachine.Compiler
 {
-    internal interface IStateInfo : ISaveable
+    internal interface IStateInfo : ISaveable, ISchemaElement
     {
         IEnumerable<Type> SerializableTypes();
 
@@ -39,7 +39,7 @@ namespace ReactiveMachine.Compiler
 
     }
 
-    internal class StateInfo<TState, TAffinity, TKey> : IStateInfo, IStateInfo<TState>, IStateInfoWithKey<TKey>
+    internal class StateInfo<TState, TAffinity, TKey> : SchemaElement<TState>, IStateInfo, IStateInfo<TState>, IStateInfoWithKey<TKey>
        where TState : IState<TAffinity>, new()
        where TAffinity : IAffinitySpec<TAffinity>
     {
@@ -67,6 +67,9 @@ namespace ReactiveMachine.Compiler
                 foreach (var t in o.SerializableTypes())
                     yield return t;
         }
+
+        public override bool AllowVersionReplace => true;
+
 
         public void SaveStateTo(Snapshot s)
         {

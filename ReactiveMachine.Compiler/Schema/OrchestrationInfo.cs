@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ReactiveMachine.Compiler
 {
-    interface IOrchestrationInfo
+    interface IOrchestrationInfo : ISchemaElement
     {
         IEnumerable<Type> SerializableTypes();
 
@@ -27,7 +27,7 @@ namespace ReactiveMachine.Compiler
         void DefineExtensions(IServiceBuilder serviceBuilder);
     }
 
-    class OrchestrationInfo<TRequest, TReturn> : IOrchestrationInfo
+    class OrchestrationInfo<TRequest, TReturn> : SchemaElement<TRequest>, IOrchestrationInfo
         where TRequest : IOrchestrationBase<TReturn>
     {
         private readonly Process process;
@@ -36,6 +36,8 @@ namespace ReactiveMachine.Compiler
         public IAffinityInfo PlacementAffinity { private get; set; }
 
         public List<IAffinityInfo> Affinities;
+
+        public override bool AllowVersionReplace => true;
 
         public OrchestrationInfo(Process process)
         {

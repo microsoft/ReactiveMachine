@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ReactiveMachine.Compiler
 {
-    internal interface IEventInfo
+    internal interface IEventInfo : ISchemaElement
     {
         IEnumerable<Type> SerializableTypes();
 
@@ -21,7 +21,7 @@ namespace ReactiveMachine.Compiler
     }
 
 
-    internal class EventInfo<TEvent> : IEventInfo
+    internal class EventInfo<TEvent> : SchemaElement<TEvent>, IEventInfo
         where TEvent : IEvent
     {
         private readonly Process process;
@@ -37,6 +37,8 @@ namespace ReactiveMachine.Compiler
         {
             yield return typeof(TEvent);
         }
+
+        public override bool AllowVersionReplace => false;
 
         public void Subscribe(IStateInfo subscriber)
         {

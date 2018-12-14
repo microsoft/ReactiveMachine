@@ -15,6 +15,7 @@ namespace ReactiveMachine.Compiler
     {
         private readonly Process process;
         internal readonly List<Action<IPlacementBuilder>> Placements = new List<Action<IPlacementBuilder>>();
+        internal readonly Dictionary<Type, IServiceInfo> Services = new Dictionary<Type, IServiceInfo>();
 
         public ServiceBuilder(Process process) 
         {
@@ -23,7 +24,7 @@ namespace ReactiveMachine.Compiler
 
         IServiceBuilder IServiceBuilder.BuildService<TService>()
         {
-            if (!process.Services.TryGetValue(typeof(TService), out var serviceInfo))
+            if (!Services.TryGetValue(typeof(TService), out var serviceInfo))
             {
                 serviceInfo = new ServiceInfo<TService>(process, this);
             }
