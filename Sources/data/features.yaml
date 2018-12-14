@@ -1,8 +1,8 @@
-- title: Author microservices without thinking about faults or servers
-  description: It's about the application logic, not the execution platform
-- title: Deploy on your back-end of choice
-  description: Keep your options open. For example, host on serverless functions with a consumption plan. Or run your own elastic K8s cluster. And of course, debug on your local emulator first
-- title: Orchestrations and actors and events
-  description: We put it all together in an intuitive task-oriented programming model. Write orchestrations using async/await, encapsulate state in virtual actors, and subscribe them to **globally ordered atomic events**
-- title: Always recoverable, always consistent
-  description: The runtime takes care of logging messages and persisting snapshots to durable cloud storage. So that when machines go down or connections fail, it can recover without missing a beat
+- title: Author microservices without thinking about faults or servers.
+  description: With Reactive Machine, you can focus on the application logic. Server or connection failures are recovered transparently. And locality is represented by partition keys, not servers.
+- title: Deploy on your back-end of choice.
+  description: Keep your options open. For example, host on serverless functions with a consumption plan. Or run your own elastic K8s cluster. And of course, debug on your local emulator first.
+- title: Boost productivity with convenient abstractions.
+  description: Orchestrations, actors, and events - we combine them all in an intuitive task-oriented programming model. Write orchestrations using async/await, encapsulate state in virtual actors, and subscribe them to globally ordered atomic events.
+- title: Be always recoverable, always consistent.
+  description: The runtime takes care of logging messages and persisting snapshots to durable cloud storage. So that when machines go down or connections fail, it can recover without missing a beat.

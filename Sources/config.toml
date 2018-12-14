@@ -17,3 +17,7 @@ imgUrl = "/img/tactic.PNG"
 text = "Docs"
 link = "docs"
 
+[[params.navbar.nav]]
+text = "GitHub"
+link = "https://github.com/Microsoft/ReactiveMachine"
+
