@@ -1,7 +1,7 @@
 ---
-title: "Affinities"
+title: "-Affinities"
 description: Application-aware partitioning and horizontal scalability
-weight: 8
+weight: 11
 menu:
   main: 
     parent: "Interfaces"

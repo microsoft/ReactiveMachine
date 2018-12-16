@@ -1,7 +1,7 @@
 ---
-title: "States"
+title: "-States"
 description: Storing and evolving application state using events
-weight: 7
+weight: 11
 menu:
   main: 
     parent: "Interfaces"
