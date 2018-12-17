@@ -7,3 +7,76 @@ menu:
     parent: "Orchestrations"
     weight: 61
 ---
+
+
+Activities are classes that define how to execute some task in an `Execute` method, and may include nondeterminism and I/O.
+
+For example, we can define an activity that reads the contents of a blob from Azure Storage:
+```c#
+public class ReadBlob : IAtLeastOnceActivity<string>
+{
+    // the input to the activity
+    public string Path;
+
+    // must specify a time limit
+    public TimeSpan TimeLimit => TimeSpan.FromSeconds(30);
+
+    public async Task<string> Execute(IContext context)
+    {
+        context.Logger.LogInformation("Reading From Storage");
+        CloudBlockBlob blobReference = Utils.GetAzureBlob(Path);
+        var content = await blobReference.DownloadTextAsync();
+        return content;
+    }
+}
+```
+**Timeouts**. Activities must specify a TimeLimit property. A timer is automatically started when the activity starts executing. If the activity does not finish before the time limit is reached, a `System.TimeoutException` is thrown. In general, using timeouts is helpful to guarantee that orchestrations can make progress.
+
+**Context object**. Just like for orchestrations, the `Execute` method is passed a context. However, this context has a lot fewer methods. Essentially, it just supports logging (via `context.Logger`) and accessing configuration information (via `context.GetConfiguration<TConfiguration>()`).
+
+## Activites vs. Orchestrations
+
+Activities complement orchestrations in terms of what you are allowed to do inside `Execute`:
+
+|                    | Activity  |  Orchestration |
+|--------------------|-----------|----------------|
+| Nondeterminism            | ✓  | ❌ |
+| External Calls            | ✓  | ❌ |
+| Any type of I/O           | ✓  | ❌ |
+| Long-running computations | ✓  | ❌ |
+| Perform an operation      | ❌ | ✓  |
+| Fork an operation         | ❌ | ✓  |
+| Schedule an operation     | ❌ | ✓  |
+
+Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
+
+## At-least-once or at-most-once
+
+Activites allow nondeterminism to be effectively "determinized."  Activities are logged by the system prior to starting execution, and the return values of activities are logged when the operation completes.  Under replay, requests are not reissued if they have already been issued and a value returned: instead, the return value in the log is used as the return value for the operation.  
+
+If a host resumes after failing in the middle of executing an activity, the system detects in the log that the activity started, but did not complete. The right thing to do in this case may depend on the specific purpose of the activity, i.e. it is application-dependent.
+
+In most cases, the right thing to do is to simply restart the activity. By using the interface `IAtLeastOnceActivity<string>`, we indicate to the runtime that this is always the desired course of action.
+
+Sometimes, it is desirable to take some special action rather than just restarting an activity. The interface `IAtMostOnceActivity<TReturn>` can be used for that:
+
+```c#
+public class MyActivity : IAtMostOnceActivity<string>
+{
+    public async Task<string> Execute(IContext context)
+    {
+       ... // regular execution
+    }
+    
+    // called if incomplete execution is detected during recovry
+    public Task<TReturn> AfterFault(IContext context)
+    {
+        ... // custom handling
+    }
+}
+```
+
+Inside the `AfterFault` handler we can, for example, perform some tests to figure out if the activity was already performed, and re-execute it only if those tests indicate so. This is appropriate when calling external services in a non-idempotent way, for example.
+ 
+
+
