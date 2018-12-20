@@ -17,7 +17,7 @@ using FunctionsHost;
 
 namespace HelloWorld.Service.OnFunctions
 {
-    public static class AdminFunctions
+    public static class PrivateFunctions
     {
         [FunctionName("Initialize")]
         public async static Task<IActionResult> Initialize(

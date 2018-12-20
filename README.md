@@ -18,22 +18,23 @@ Reactive machine programs are built on task abstraction we call *operation*. The
 - **Affinities** define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking).
 - **Events** provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous. 
 
-## Status
+## Status and Plan
 
-We are currently at 1.0.0-alpha, meaning that this is preview of what we expect to release in the first release (1.0.0).
-It includes:
+We are currently at 1.0.0-alpha, meaning that this is preview which should give you a pretty good idea of what this is all about once finished. What we have is:
 
-- The C# version of the reactive machine programming model and compiler, on .NET standard 2.0
-- A local emulator host
-- An Azure Functions host
+- A C# implementation of the reactive machine programming model and compiler
+- Two host implementations (emulator and functions)
 - Application examples to demonstrate the features of the programming model
 - A Hello World sample to demonstrate how to use the 2 hosts
 
-What remains to be done for 1.0.0 is:
-- Feature for serving external requests (to the ICompiledApplication abstraction, and to the Azure functions host)
-- Fix known bugs in existing tests, and add more tests
+Before we can release 1.0.0-beta, we need to:
+
+- Plug holes in the documentation
+- Implement support for code updates, placement updates, and changing the number of processes
+- Fix known bugs in existing tests
 - Build and test on Linux
-- Set up continuous integration
+
+Moving from 1.0.0-beta to 1.0.0 is then a matter of stability, i.e. we will remove the 'beta' tag once we feel comfortable with users placing trust on the stability of the code in a production environment.
 
 ## Contributing
 

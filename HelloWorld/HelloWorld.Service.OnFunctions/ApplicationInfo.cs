@@ -23,7 +23,7 @@ namespace HelloWorld.Service.OnFunctions
     {
         public ICompiledApplication Build(IApplicationCompiler compiler)
         {
-            var telemetryConfig = new TelemetryBlobWriter.Configuration()
+            var telemetryConfig = new ReactiveMachine.TelemetryBlobWriter.Configuration()
             {
                 CollectHostEvents = true,
                 CollectApplicationEvents = true,
