@@ -1,9 +1,10 @@
 ---
 title: "Examples"
-description: Example applications with the Reactive Machine
+description: illustrate Reactive Machine applications
+weight: 4
 menu:
   main: 
-    weight: 20
+    weight: 4
 ---
 
 # Examples

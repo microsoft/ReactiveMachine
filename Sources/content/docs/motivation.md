@@ -1,21 +1,22 @@
 ---
-title: Motivation & Vision
-description: Elastic microservies for serverless environments
-weight: 2
+title: "Motivation"
+description: and the overall vision
+weight: 5
 ---
+
 
 # Motivation & Vision
 
 With the promise of developer agility, independent operations, and elastic scalability, microservice based development has become the "new normal" in distributed application development.  Developers build application services such as dashboards, client services, and user-accesible APIs by "composing" existing cloud services, such as storage, databases, queues, and other microservices.
 
-![Motivation](/img/motivation.PNG)
+<img src="/img/motivation.PNG" alt="Motivation" style="width:8in; border:1px solid gray;"/>
 
 ## Stateless Microservices
 
 However, many modern approaches to elastic scalability rely on an application tier that stateless and volatile.  Application state must be loaded at the start of each request, persisted to cloud storage at the end of each request, and cached locally, if the application developer is sure that it will not introduce consistency anomalies.  
 
-![Stateless and Volatile](/img/stateless.PNG)
-
+<img src="/img/stateless.PNG" alt="Stateless and Volatile" style="width:8in; border:1px solid gray;"/>
+ 
 This approch, while providing elastic scalability, unfortunately suffers many drawbacks.
 
 * **Reliability**: Application requests that use several microservices may crash before all of their effects are completed -- a phenomena known as partial failure.   Application developers are left to encode logic for cleanup in their applications for dealing with these partial effects.
@@ -26,7 +27,7 @@ This approch, while providing elastic scalability, unfortunately suffers many dr
 
 So, what paradigm is appropriate for building elastic, fault-tolerant microservices?  
 
-![Paradigms](/img/paradigms.PNG)
+<img src="/img/paradigms.PNG" alt="Paradigms" style="width:7in;"/>
 
 It turns out that all of the different programming paradigms are *inter-expressible*.
 
@@ -36,7 +37,7 @@ However, tasks are more abstract: they are not tied to a particular computationa
 
 To position this along with the related work, we show where the Reactive Machine fits along with it's counterpart solutions.
 
-![Comparison to Existing Frameworks](/img/comparison.PNG)
+<img src="/img/comparison.PNG" alt="Comparison to Existing Frameworks" style="width:7in;"/>
 
 ## Strategy
 
@@ -44,4 +45,4 @@ The Reactive Machine provides the developers of microservice applications with a
 
 A unique feature of the Reactive Machine is that applications can be retargeted without altering application behavior, only the cost / performance trade-off differences between where the application is deployed.
 
-![Reactive Machine Strategy](/img/tactic.PNG)
+<img src="/img/tactic.PNG" alt="Reactive Machine Strategy" style="width:9in; border:1px solid gray;"/>

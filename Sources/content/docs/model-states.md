@@ -1,18 +1,19 @@
 ---
 title: "States"
-description: Storing and evolving application state using events
-weight: 7
+description: store information durably
+weight: 23
 menu:
   main: 
-    parent: "Interfaces"
-    weight: 17
+    parent: "Programming Model"
+    weight: 23
 ---
 
-# States
 
 States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.
 
-## Bank Example
+<p style="color:red; font-size:20pt">(section needs work)</p>
+
+## Example 1: Bank Customer State
 
 We start by defining an affinity for how our data should be partitioned.  To do this, we implement an affinity based on the users identity.
 
