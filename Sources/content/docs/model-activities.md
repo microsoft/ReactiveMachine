@@ -1,11 +1,11 @@
 ---
 title: "Activities"
 description: encapsulate nondeterminism and external interactions
-weight: 6
+weight: 22
 menu:
   main: 
-    parent: "Orchestrations"
-    weight: 61
+    parent: "Programming Model"
+    weight: 22
 ---
 
 
@@ -50,7 +50,7 @@ Activities complement orchestrations in terms of what you are allowed to do insi
 
 Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
 
-## At-least-once or at-most-once
+## At-least-once vs. At-most-once
 
 Activites allow nondeterminism to be effectively "determinized."  Activities are logged by the system prior to starting execution, and the return values of activities are logged when the operation completes.  Under replay, requests are not reissued if they have already been issued and a value returned: instead, the return value in the log is used as the return value for the operation.  
 
@@ -68,15 +68,13 @@ public class MyActivity : IAtMostOnceActivity<string>
        ... // regular execution
     }
     
-    // called if incomplete execution is detected during recovry
     public Task<TReturn> AfterFault(IContext context)
     {
-        ... // custom handling
+         ... // custom handling
     }
 }
 ```
 
-Inside the `AfterFault` handler we can, for example, perform some tests to figure out if the activity was already performed, and re-execute it only if those tests indicate so. This is appropriate when calling external services in a non-idempotent way, for example.
- 
+The `AfterFault` handler is called when the runtime, during recovery, detects that this activity was previously started but did not complete. Inside the handler, we can take an appropriate action to deal with this situation. For example, we can perform some tests to figure out if the desired effect of the activity (e.g. creating a blob) has already taken place (i.e. the blob already exists), and re-execute it only if those tests indicate so. 
 
-
+Conceptually, the `AfterFault` handler provides us with a mechanism that can wrap external calls that are not idempotent or not exactly idempotent into a truly idempotent activity.

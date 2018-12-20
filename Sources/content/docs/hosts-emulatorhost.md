@@ -1,9 +1,9 @@
 ---
 title: "EmulatorHost"
 description: runs your application in a local process
-weight: 6
+weight: 31
 menu:
   main: 
     parent: "Hosts"
-    weight: 16
+    weight: 31
 ---

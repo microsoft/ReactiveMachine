@@ -1,9 +1,9 @@
 ---
 title: "Affinities"
 description: express locality of state and operations
-weight: 3
+weight: 24
 menu:
   main: 
-    parent: "States"
-    weight: 32
+    parent: "Programming Model"
+    weight: 24
 ---

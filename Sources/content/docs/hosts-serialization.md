@@ -1,9 +1,9 @@
 ---
 title: "Serialization"
 description: is required pervasively
-weight: 6
+weight: 34
 menu:
   main: 
-    parent: "Orchestrations"
-    weight: 66
+    parent: "Hosts"
+    weight: 34
 ---

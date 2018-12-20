@@ -1,10 +1,11 @@
 ---
 title: "Orchestrations"
 description: compose operations deterministically and reliably
-weight: 2
+weight: 21
 menu:
   main: 
-    weight: 2
+    parent: "Programming Model"
+    weight: 21
 ---
 
 Orchestrations are classes that define how to execute of one or more operations in their `Execute` method.

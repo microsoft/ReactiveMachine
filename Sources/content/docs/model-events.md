@@ -4,6 +4,6 @@ description: update all subscribed states atomically
 weight: 3
 menu:
   main: 
-    parent: "States"
+    parent: "Programming Model"
     weight: 33
 ---

@@ -1,9 +1,9 @@
 ---
 title: "ApplicationBuilder"
 description: compiles the application
-weight: 6
+weight: 33
 menu:
   main: 
     parent: "Hosts"
-    weight: 16
+    weight: 33
 ---
