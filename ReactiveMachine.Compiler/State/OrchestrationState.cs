@@ -142,7 +142,9 @@ namespace ReactiveMachine.Compiler
             }
         }
 
-    
+        IExceptionSerializer IContext.ExceptionSerializer => process.Serializer;
+
+
         public void StartOrResume(Process process, OrchestrationInfo<TRequest,TReturn> info)
         {
             this.process = process;

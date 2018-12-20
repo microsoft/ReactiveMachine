@@ -17,13 +17,13 @@ namespace FunctionsHost
     public class FunctionsHostConfiguration
     {
 
-        [JsonIgnore]
+        [JsonIgnore] // we want no connection strings in logs
         public String StorageConnectionString { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] // we want no connection strings in logs
         public String ehConnectionString { get; set; }
 
-        [JsonIgnore]
+        [JsonIgnore] // we want no connection strings in logs
         public String AppInsightsInstrumentationKey { get; set; }
 
         public int CheckpointInterval { get; set; }

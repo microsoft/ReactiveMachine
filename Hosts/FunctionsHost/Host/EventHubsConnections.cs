@@ -18,11 +18,15 @@ namespace FunctionsHost
         private ILogger logger;
 
         public EventHubClient _doorbellClient;
-        private PartitionReceiver _eventHubReceiver;
-
+        public EventHubClient _responseClient;
         public Dictionary<uint, EventHubClient> _eventHubClients = new Dictionary<uint, EventHubClient>();
         public Dictionary<uint, PartitionSender> _processSenders = new Dictionary<uint, PartitionSender>();
         public Dictionary<uint, PartitionSender> _doorbellSenders = new Dictionary<uint, PartitionSender>();
+        public Dictionary<uint, PartitionSender> _responseSenders = new Dictionary<uint, PartitionSender>();
+
+        public PartitionReceiver ProcessReceiver { get; private set; }
+        public PartitionReceiver ResponseReceiver { get; private set; }
+
 
         public EventHubsConnections(uint processId, ILogger logger, string connectionString)
         {
@@ -49,15 +53,19 @@ namespace FunctionsHost
             }
         }
 
-        public PartitionReceiver Receiver => _eventHubReceiver;
-
         public void ResumeFrom(long position)
         {
             EventPosition eventPosition = (position == -1) ?
                   EventPosition.FromStart() : EventPosition.FromSequenceNumber(position);
 
-            var _eventHubClient = GetEventHubClient(processId);
-            _eventHubReceiver = _eventHubClient.CreateReceiver("$Default", (processId / 8).ToString(), eventPosition);
+            var client = GetEventHubClient(processId);
+            ProcessReceiver = client.CreateReceiver("$Default", (processId / 8).ToString(), eventPosition);
+        }
+
+        public PartitionReceiver ListenForResponses(uint partitionId)
+        {
+            var client = GetResponseClient();
+            return ResponseReceiver = client.CreateReceiver("$Default", partitionId.ToString(), EventPosition.FromEnd());
         }
 
         public EventHubClient GetDoorbellClient()
@@ -74,6 +82,23 @@ namespace FunctionsHost
                     logger.LogDebug($"Created Doorbell Client {_doorbellClient.ClientId}");
                 }
                 return _doorbellClient;
+            }
+        }
+
+        public EventHubClient GetResponseClient()
+        {
+            lock (_eventHubClients)
+            {
+                if (_responseClient == null)
+                {
+                    var connectionStringBuilder = new EventHubsConnectionStringBuilder(connectionString)
+                    {
+                        EntityPath = $"Responses"
+                    };
+                    _responseClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+                    logger.LogDebug($"Created Response Client {_responseClient.ClientId}");
+                }
+                return _responseClient;
             }
         }
 
@@ -105,12 +130,32 @@ namespace FunctionsHost
             }
         }
 
+        public PartitionSender GetResponseSender(uint partitionId)
+        {
+            lock (_responseSenders)
+            {
+                if (!_responseSenders.TryGetValue(partitionId, out var sender))
+                {
+                    var client = GetResponseClient();
+                    _responseSenders[partitionId] = sender = client.CreatePartitionSender(partitionId.ToString());
+                    logger.LogDebug($"Created ResponseSender {sender.ClientId} from {client.ClientId}");
+                }
+                return sender;
+            }
+        }
+
         public async Task Close()
         {
-            if (_eventHubReceiver != null)
+            if (ProcessReceiver != null)
             {
                 logger.LogDebug($"Closing EventHub Receiver");
-                await _eventHubReceiver.CloseAsync();
+                await ProcessReceiver.CloseAsync();
+            }
+
+            if (ResponseReceiver != null)
+            {
+                logger.LogDebug($"Closing Response Receiver");
+                await ResponseReceiver.CloseAsync();
             }
 
             logger.LogDebug($"Closing EventHub Process Clients");
@@ -120,6 +165,12 @@ namespace FunctionsHost
             {
                 logger.LogDebug($"Closing Eventhub Doorbell Client {_doorbellClient.ClientId}");
                 await _doorbellClient.CloseAsync();
+            }
+
+            if (_responseClient != null)
+            {
+                logger.LogDebug($"Closing Eventhub Response Client {_responseClient.ClientId}");
+                await _responseClient.CloseAsync();
             }
         }
     }

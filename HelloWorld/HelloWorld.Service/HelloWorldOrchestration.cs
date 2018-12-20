@@ -9,7 +9,7 @@ using ReactiveMachine;
 namespace HelloWorld.Service
 {
     /// <summary>
-    /// Defines an orchestration that runs automatically when the service is started for the first time
+    /// Defines an orchestration that does nothing other than returning the string "Hello World"
     /// </summary>
     public class HelloWorldOrchestration : ReactiveMachine.IOrchestration<string>
     {

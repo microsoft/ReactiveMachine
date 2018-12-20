@@ -53,6 +53,8 @@ namespace ReactiveMachine.Compiler
             yield return typeof(TReturn);
         }
 
+        IExceptionSerializer IContext.ExceptionSerializer => process.Serializer;
+
         public void DefineExtensions(IServiceBuilder serviceBuilder)
         {
             Extensions.Register.DefineActivityExtensions<TRequest, TReturn>(serviceBuilder);

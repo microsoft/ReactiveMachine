@@ -16,12 +16,15 @@ using ReactiveMachine.Util;
 
 namespace FunctionsHost
 {
-    public static class HostManager
+    public static class HostManager<TStaticApplicationInfo>
+            where TStaticApplicationInfo: IStaticApplicationInfo, new()
     {
-        public static async Task<string> InitializeService(IStaticApplicationInfo applicationInfo, Microsoft.Azure.WebJobs.ExecutionContext executionContext, ILogger logger)
+        public static async Task<string> InitializeService(Microsoft.Azure.WebJobs.ExecutionContext executionContext, ILogger logger)
         {
             var stopwatch = new System.Diagnostics.Stopwatch();
             stopwatch.Start();
+
+            var applicationInfo = new TStaticApplicationInfo();
 
             logger = new LoggerWrapper(logger, "[initialize] ");
 
@@ -29,7 +32,7 @@ namespace FunctionsHost
             {
                 var configuration = applicationInfo.GetHostConfiguration();
 
-                var host = new Host(applicationInfo, configuration, logger, 0, stopwatch, executionContext.InvocationId);
+                var host = new Host<TStaticApplicationInfo>(applicationInfo, configuration, logger, 0, stopwatch, executionContext.InvocationId);
 
                 var deploymentTimestamp = DateTime.UtcNow;
                 var deploymentId = applicationInfo.GetDeploymentId(deploymentTimestamp);
@@ -84,7 +87,7 @@ namespace FunctionsHost
             list.Add(body());
         }
 
-        public static async Task Doorbell(IStaticApplicationInfo applicationInfo, Microsoft.Azure.WebJobs.ExecutionContext executionContext, ILogger logger, EventData[] messages)
+        public static async Task Doorbell(Microsoft.Azure.WebJobs.ExecutionContext executionContext, ILogger logger, EventData[] messages)
         {
             var stopwatch = new System.Diagnostics.Stopwatch();
             stopwatch.Start();
@@ -92,6 +95,9 @@ namespace FunctionsHost
             var msg = DoorbellMessage.Deserialize(messages[0].Body.Array);
             
             var processId = msg.ProcessId;
+
+            var applicationInfo = new TStaticApplicationInfo();
+
             var configuration = applicationInfo.GetHostConfiguration();
 
             var hostlogger = new LoggerWrapper(logger, $"[p{processId:d3} doorbell] ");
@@ -128,7 +134,7 @@ namespace FunctionsHost
         {
             try
             {
-                var host = new Host(applicationInfo, configuration, logger, processId, stopwatch, invocationId);
+                var host = new Host<TStaticApplicationInfo>(applicationInfo, configuration, logger, processId, stopwatch, invocationId);
 
                 var done = await host.ResumeFromCheckpoint(leaseManager);
 
@@ -158,13 +164,7 @@ namespace FunctionsHost
             }
         }
 
-        public static async Task ForkOrchestration(IOrchestration orchestration, IStaticApplicationInfo applicationInfo, ILogger logger)
-        {
-            var client = ClientConnection.Get(applicationInfo, logger);
+     
 
-            await client.Fork(orchestration);
-        }
-
-       
     }
 }

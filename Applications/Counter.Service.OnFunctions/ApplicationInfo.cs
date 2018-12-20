@@ -17,46 +17,12 @@ using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Collections.Generic;
 
-namespace Counter.Benchmark.OnFunctions
+namespace Counter.Service.OnFunctions
 {
     public class ApplicationInfo : IStaticApplicationInfo
     {
         public ICompiledApplication Build(IApplicationCompiler compiler)
         {
-            var applicationConfig = new CounterBenchmarkConfiguration()
-            {
-                NumberGeneratorProcesses = 4,
-                NumberGenerators = 4,
-                NumberCounterProcesses = 4,
-                NumberCounters = 4,
-                Duration = TimeSpan.FromSeconds(10),
-                Cooldown = TimeSpan.FromSeconds(5),
-                Rate = 4,
-                Implementation = CounterImplementation.UpdateBased,
-            };
-
-            //var applicationConfig = new CounterBenchmarkConfiguration()
-            //{
-            //    NumberGeneratorProcesses = 4,
-            //    NumberGenerators = 1000,
-            //    NumberCounterProcesses = 4,
-            //    NumberCounters = 1000,
-            //    NumberRequests = 5000,
-            //    Stagger = TimeSpan.FromSeconds(1),
-            //    Implementation = CounterImplementation.UpdateBased,
-            //};
-
-            //var applicationConfig = new CounterBenchmarkConfiguration()
-            //{
-            //    NumberGeneratorProcesses = 10,
-            //    NumberGenerators = 20000,
-            //    NumberCounterProcesses = 10,
-            //    NumberCounters = 10,
-            //    NumberRequests = 400000,
-            //    Stagger = TimeSpan.FromSeconds(1),
-            //    Implementation = CounterImplementation.UpdateBased,
-            //};
-
             var runtimeLoggingConfig = new ReactiveMachine.LoggingConfiguration()
             {
                 ReceiveLogLevel = LogLevel.Debug,
@@ -73,17 +39,21 @@ namespace Counter.Benchmark.OnFunctions
             };
 
             compiler
-               .SetConfiguration(applicationConfig)
                .SetConfiguration(telemetryConfig)
                .SetConfiguration(runtimeLoggingConfig)
-               .AddService<CounterBenchmarkService>();
+               .AddService<CounterService>();
 
-            return compiler.Compile(applicationConfig.NumberCounterProcesses + applicationConfig.NumberGeneratorProcesses);
+            return compiler.Compile(10);
+        }
+
+        public IEnumerable<Type> GetResultTypes()
+        {
+            yield return typeof(int);
         }
 
         public string GetDeploymentId(DateTime deploymentTimestamp)
         {
-            String ExperimentAndHost = "counter/functions/";
+            String ExperimentAndHost = "counter/service/";
 
             String LocalOrCloudDeployment =
                 Environment.GetEnvironmentVariable("REACTIVE_MACHINE_DIR") == null ? "cloud" : "local";
@@ -118,9 +88,5 @@ namespace Counter.Benchmark.OnFunctions
             };
         }
 
-        public IEnumerable<Type> GetResultTypes()
-        {
-            yield break;
-        }
     }
 }

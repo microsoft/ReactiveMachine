@@ -17,7 +17,7 @@ using FunctionsHost;
 
 namespace Counter.Benchmark.OnFunctions
 {
-    public static class Functions
+    public static class AdminFunctions
     {
         [FunctionName("Initialize")]
         public async static Task<IActionResult> Initialize(
@@ -27,7 +27,7 @@ namespace Counter.Benchmark.OnFunctions
             ILogger logger
         )
         {
-            var deploymentId = await HostManager.InitializeService(new ApplicationInfo(), executionContext, logger);
+            var deploymentId = await HostManager<ApplicationInfo>.InitializeService(executionContext, logger);
 
             return new OkObjectResult(new { DeploymentId = deploymentId });
         }
@@ -40,7 +40,7 @@ namespace Counter.Benchmark.OnFunctions
             ExecutionContext executionContext,
             ILogger logger)
         {
-            return HostManager.Doorbell(new ApplicationInfo(), executionContext, logger, myEventHubMessages);
+            return HostManager<ApplicationInfo>.Doorbell(executionContext, logger, myEventHubMessages);
         }
     }
 }

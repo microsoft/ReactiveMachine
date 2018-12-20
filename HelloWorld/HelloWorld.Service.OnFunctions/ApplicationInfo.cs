@@ -15,18 +15,14 @@ using ReactiveMachine;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using HelloWorld.Test;
+using System.Collections.Generic;
 
-namespace HelloWorld.Test.OnFunctions
+namespace HelloWorld.Service.OnFunctions
 {
     public class ApplicationInfo : IStaticApplicationInfo
     {
         public ICompiledApplication Build(IApplicationCompiler compiler)
         {
-            var applicationConfig = new HelloWorldTestConfiguration()
-            {
-                NumberRepetitions = 100
-            };
-
             var telemetryConfig = new ReactiveMachine.TelemetryBlobWriter.Configuration()
             {
                 CollectHostEvents = true,
@@ -35,11 +31,10 @@ namespace HelloWorld.Test.OnFunctions
             };
 
             compiler
-               .SetConfiguration(applicationConfig)
                .SetConfiguration(telemetryConfig)
-               .AddService<HelloWorldTestService>();
+               .AddService<HelloWorldService>();
 
-            return compiler.Compile(1);
+            return compiler.Compile(numberOfProcesses: 1);
         }
 
         public string GetDeploymentId(DateTime deploymentTimestamp)
@@ -77,6 +72,11 @@ namespace HelloWorld.Test.OnFunctions
                 TimeLimit = TimeSpan.FromMinutes(4.5),
                 MaxReceiveBatchSize = 10000,
             };
+        }
+
+        public IEnumerable<Type> GetResultTypes()
+        {
+            yield return typeof(string);
         }
     }
 }

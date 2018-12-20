@@ -25,7 +25,8 @@ namespace FunctionsHost
 
         public RemoteSender(uint processId, uint destination, EventHubsConnections connections,
             ILogger logger, DataContractSerializer payloadSerializer, FunctionsHostConfiguration configuration, DateTime deploymentTimestamp)
-            : base(destination, connections, logger, payloadSerializer, configuration)
+            : base(destination, connections, logger, payloadSerializer, configuration,
+                  connections.GetProcessSender(destination))
         {
             this.processId = processId;
             this.deploymentTimestamp = deploymentTimestamp;

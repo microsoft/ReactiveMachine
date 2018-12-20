@@ -15,19 +15,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Azure.EventHubs;
 using FunctionsHost;
 
-namespace HelloWorld.Test.OnFunctions
+namespace HelloWorld.Service.OnFunctions
 {
-    public static class Functions
+    public static class PrivateFunctions
     {
         [FunctionName("Initialize")]
         public async static Task<IActionResult> Initialize(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
+           [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]
             HttpRequest req,
            ExecutionContext executionContext,
            ILogger logger
         )
         {
-            var deploymentId = await HostManager.InitializeService(new ApplicationInfo(), executionContext, logger);
+            var deploymentId = await HostManager<ApplicationInfo>.InitializeService(executionContext, logger);
 
             return new OkObjectResult(new { DeploymentId = deploymentId });
         }
@@ -39,7 +39,7 @@ namespace HelloWorld.Test.OnFunctions
             ExecutionContext executionContext,
             ILogger logger)
         {
-            return HostManager.Doorbell(new ApplicationInfo(), executionContext, logger, myEventHubMessages);
+            return HostManager<ApplicationInfo>.Doorbell(executionContext, logger, myEventHubMessages);
         }
     }
 }

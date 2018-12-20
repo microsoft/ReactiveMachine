@@ -29,18 +29,34 @@ Currently, the repository contains two hosts:
 - A local emulator, meant for debugging and local profiling. It emulates the reactive machine processes in a single process, using either a single thread or multiple threads.
 - A functions host, built on top of Azure Functions, Azure EventHubs, and Azure Blobs. It uses EventHubs to launch the reactive machine processes inside Azure functions, and to implement reliable communication between the processes. State snapshots are stored in Azure Blobs.
 
-## Status
+## Status and Plan
 
-We are currently at 1.0.0-alpha, meaning that this is preview of what we expect to release in the first release (1.0.0). It includes:
+We are currently at 1.0.0-alpha, meaning that this is preview which should give you a pretty good idea of what this is all about once finished. What we have is:
 
-- The C# version of the reactive machine programming model and compiler, on .NET standard 2.0
+- A C# implementation of the reactive machine programming model and compiler
 - Two host implementations (emulator and functions)
 - Application examples to demonstrate the features of the programming model
 - A Hello World sample to demonstrate how to use the 2 hosts
 
-What remains to be done for 1.0.0 is:
+Before we can release 1.0.0-beta, we need to:
 
-- Get documentation to be reasonably complete
-- Add support for code updates
-- Fix known bugs in existing tests, and add more tests
+- Plug holes in the documentation
+- Implement support for code updates, placement updates, and changing the number of processes
+- Fix known bugs in existing tests
 - Build and test on Linux
+
+Moving from 1.0.0-beta to 1.0.0 is then a matter of stability, i.e. we will remove the 'beta' tag once we feel comfortable with users placing trust on the stability of the code in a production environment.
+
+## Contributing
+
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.microsoft.com.
+
+When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

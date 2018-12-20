@@ -222,7 +222,7 @@ namespace ReactiveMachine.Compiler
 
             public void DefineExtensions(IServiceBuilder serviceBuilder)
             {
-                Extensions.Register.DefineUpdateExtensions<TState, TRequest, TReturn>(IsRead, serviceBuilder);
+                Extensions.Register.DefineOperationExtensions<TState, TRequest, TReturn>(IsRead, serviceBuilder);
             }
         }      
     }

@@ -13,13 +13,14 @@ namespace ReactiveMachine.Extensions
         {
             builder
                  .DefinePartitionedAffinity<IProcessAffinity, uint>()
+                 .DefineOrchestration<EventWrapper, UnitType>()
                  ;
         }
         public static void DefineInternalExtensions(IServiceBuilder builder)
         {
             builder
                  .DefineAtLeastOnceActivity<StableDelay, UnitType>()
-                 .DefineOrchestration<ForkedRaise, UnitType>()
+                 .DefineOrchestration<ForkedEvent, UnitType>()
                  ;
         }
 
@@ -33,12 +34,18 @@ namespace ReactiveMachine.Extensions
             builder.DefineOrchestration<ForkedActivity<TReturn>, UnitType>();
         }
 
-        public static void DefineUpdateExtensions<TState, TRequest, TReturn>(bool isRead, IServiceBuilder builder)
+        public static void DefineOperationExtensions<TState, TRequest, TReturn>(bool isRead, IServiceBuilder builder)
             where TState : IState
         {
-            if (!isRead)
+            if (isRead)
+            {
+                builder.DefineOrchestration<ReadWrapper<TState, TReturn>, TReturn>();
+            }
+            else
+            {
+                builder.DefineOrchestration<UpdateWrapper<TState, TReturn>, TReturn>();
                 builder.DefineOrchestration<ForkedLocalUpdate<TState, TReturn>, UnitType>();
+            }
         }
-
     }
 }

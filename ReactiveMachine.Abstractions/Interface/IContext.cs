@@ -17,6 +17,8 @@ namespace ReactiveMachine
         ILogger Logger { get; }
 
         TConfiguration GetConfiguration<TConfiguration>();
+
+        IExceptionSerializer ExceptionSerializer { get; }
     }
 
     /// <summary>

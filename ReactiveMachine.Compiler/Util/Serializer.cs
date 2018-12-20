@@ -11,7 +11,7 @@ using System.Text;
 
 namespace ReactiveMachine.Compiler
 {
-    internal class Serializer
+    public class Serializer : IExceptionSerializer
     {
         private readonly DataContractSerializer snapshotSerializer;
         private readonly DataContractSerializer exceptionSerializer;
@@ -24,14 +24,14 @@ namespace ReactiveMachine.Compiler
             objectSerializer = new DataContractSerializer(typeof(Object), classes);
         }
 
-        public byte[] SerializeSnapshot(Snapshot snapshot)
+        internal byte[] SerializeSnapshot(Snapshot snapshot)
         {
             var stream = new MemoryStream();
             snapshotSerializer.WriteObject(stream, snapshot);
             return stream.ToArray();
         }
 
-        public Snapshot DeserializeSnapshot(byte[] snapshot)
+        internal Snapshot DeserializeSnapshot(byte[] snapshot)
         {
             var stream = new MemoryStream(snapshot);
             return (Snapshot)snapshotSerializer.ReadObject(stream);

@@ -58,6 +58,7 @@ namespace ReactiveMachine.Compiler
 
         TState IReadContext<TState>.State => state;
 
+        IExceptionSerializer IContext.ExceptionSerializer => process.Serializer;
 
         void IContextWithForks.ForkEvent<TEvent>(TEvent evt)
         {
