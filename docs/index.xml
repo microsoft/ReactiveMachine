@@ -11,66 +11,52 @@
     
     
     <item>
-      <title>Motivation &amp; Vision</title>
+      <title>Programming Model</title>
+      <link>http://reactive-machine.org/docs/model/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/model/</guid>
+      <description>Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations can
+ perform Activities which encapsulate calls to external services, or any other nondeterministic behavior. perform Read or Update operations that target a particular state. raise Events that atomically update all subscribed states. specify one or more partition Locks that should be held during execution  States represent a small piece of information (like a key-value pair, or virtual actor).</description>
+    </item>
+    
+    <item>
+      <title>Events</title>
+      <link>http://reactive-machine.org/docs/model-events/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/model-events/</guid>
+      <description>(section needs work)
+Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</description>
+    </item>
+    
+    <item>
+      <title>Hosts</title>
+      <link>http://reactive-machine.org/docs/hosts/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/hosts/</guid>
+      <description>(section needs work)</description>
+    </item>
+    
+    <item>
+      <title>Examples</title>
+      <link>http://reactive-machine.org/docs/examples/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/examples/</guid>
+      <description>Examples We have several example applications written using the Reactive Machine.
+ Hello World The Hello World example serves to verify that you’ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model. Echo Service The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.</description>
+    </item>
+    
+    <item>
+      <title>Motivation</title>
       <link>http://reactive-machine.org/docs/motivation/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/motivation/</guid>
       <description>Motivation &amp;amp; Vision With the promise of developer agility, independent operations, and elastic scalability, microservice based development has become the &amp;ldquo;new normal&amp;rdquo; in distributed application development. Developers build application services such as dashboards, client services, and user-accesible APIs by &amp;ldquo;composing&amp;rdquo; existing cloud services, such as storage, databases, queues, and other microservices.
 Stateless Microservices However, many modern approaches to elastic scalability rely on an application tier that stateless and volatile. Application state must be loaded at the start of each request, persisted to cloud storage at the end of each request, and cached locally, if the application developer is sure that it will not introduce consistency anomalies.</description>
-    </item>
-    
-    <item>
-      <title>Interfaces</title>
-      <link>http://reactive-machine.org/docs/interfaces/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://reactive-machine.org/docs/interfaces/</guid>
-      <description>Interfaces The Reactive Machine interfaces: understanding how to build your application.
- Orchestrations describe operations that are composed of one or more other operations. They are written in async/await style, and execute deterministically and reliably. When executing an operation, orchestrations can either perform it (meaning they wait for its completion) or fork it (meaning it executes completely independently of its parent). Activities are operations that can be unreliable or nondeterministic, such as calls to external services.</description>
-    </item>
-    
-    <item>
-      <title>Orchestrations</title>
-      <link>http://reactive-machine.org/docs/interfaces-orchestrations/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://reactive-machine.org/docs/interfaces-orchestrations/</guid>
-      <description>Orchestrations Orchestrations describe operations that are composed of one or more other operations. They are written in async/await style, and execute deterministically and reliably. When executing an operation, orchestrations can either perform it (meaning they wait for its completion) or fork it (meaning it executes completely independently of its parent).
-Orchestrations can be composed of:
- Operations: application-specific operations that alter state within the system; Activities: application-specific operations that contain side-effects; Orchestrations: other orchestrations.</description>
-    </item>
-    
-    <item>
-      <title>Activities</title>
-      <link>http://reactive-machine.org/docs/interfaces-activities/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://reactive-machine.org/docs/interfaces-activities/</guid>
-      <description>Activities Activities are operations that can be unreliable or nondeterministic, such as calls to external services. In the Reactive Machine, the replay and recoverability of the system relies on the system remaining deterministic. That means that any nondeterminism required in your application needs to be determinized through a record/replay mechanism.
-Sources of nondeterminism Nondeterminism can creep into your application in many ways. Here&amp;rsquo;s some of them:
- Accessing the clock Setting a timer that will fire after a particular amount of time Random number generation Accessing external services Incoming web requests CPU intensive computations that make take an arbitrary amount of time to return  &amp;ldquo;Determinizing&amp;rdquo; nondeterminism Activites allow nondeterminism to be effectively &amp;ldquo;determinized.</description>
-    </item>
-    
-    <item>
-      <title>States</title>
-      <link>http://reactive-machine.org/docs/interfaces-states/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://reactive-machine.org/docs/interfaces-states/</guid>
-      <description>States States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.
-Bank Example We start by defining an affinity for how our data should be partitioned. To do this, we implement an affinity based on the users identity.
-namespace Bank.Service { public interface IUserAffinity : IPartitionedAffinity&amp;lt;IUserAffinity,string&amp;gt; { string UserId { get; } } } We create an event that our state will subscribe to: the UserSignedUp event.</description>
-    </item>
-    
-    <item>
-      <title>Affinities</title>
-      <link>http://reactive-machine.org/docs/interfaces-affinities/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://reactive-machine.org/docs/interfaces-affinities/</guid>
-      <description>Affinities Affinities define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.
-Singletons If we wish to place an object in only one location, the ISingletonAffinity interface can be used to force placement only at a single partition.</description>
     </item>
     
     <item>
@@ -105,13 +91,85 @@ Events To begin designing our distributed counter, we start by modeling events t
     </item>
     
     <item>
-      <title>Examples</title>
-      <link>http://reactive-machine.org/docs/examples/</link>
+      <title>Orchestrations</title>
+      <link>http://reactive-machine.org/docs/model-orchestrations/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/examples/</guid>
-      <description>Examples We have several example applications written using the Reactive Machine.
- Hello World The Hello World example serves to verify that you’ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model. Echo Service The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.</description>
+      <guid>http://reactive-machine.org/docs/model-orchestrations/</guid>
+      <description>Orchestrations are classes that define how to execute of one or more operations in their Execute method.
+Orchestrations can easily express sequential and parallel composition as straight-line code. For example:
+public class SequentialOrchestration : IOrchestration&amp;lt;int&amp;gt; { public async Task&amp;lt;int&amp;gt; Execute(IOrchestrationContext context) { int result1 = await context.Perform(...first operation...); int result2 = await context.Perform(...second operation...); return result1 + result2; } }public class ParallelOrchestration : IOrchestration&amp;lt;int&amp;gt; { public async Task&amp;lt;int&amp;gt; Execute(IOrchestrationContext context) { Task&amp;lt;int&amp;gt; task1 = context.</description>
+    </item>
+    
+    <item>
+      <title>Activities</title>
+      <link>http://reactive-machine.org/docs/model-activities/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/model-activities/</guid>
+      <description>Activities are classes that define how to execute some task in an Execute method, and may include nondeterminism and I/O.
+Example 1 : Calling an External Service We can define an activity that reads the contents of a blob from Azure Storage:
+public class ReadBlob : IAtLeastOnceActivity&amp;lt;string&amp;gt; { // the input to the activity  public string Path; // must specify a time limit  public TimeSpan TimeLimit =&amp;gt; TimeSpan.</description>
+    </item>
+    
+    <item>
+      <title>States</title>
+      <link>http://reactive-machine.org/docs/model-states/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/model-states/</guid>
+      <description>States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.
+(section needs work)
+Example 1: Bank Customer State We start by defining an affinity for how our data should be partitioned. To do this, we implement an affinity based on the users identity.
+namespace Bank.Service { public interface IUserAffinity : IPartitionedAffinity&amp;lt;IUserAffinity,string&amp;gt; { string UserId { get; } } } We create an event that our state will subscribe to: the UserSignedUp event.</description>
+    </item>
+    
+    <item>
+      <title>Affinities</title>
+      <link>http://reactive-machine.org/docs/model-affinities/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/model-affinities/</guid>
+      <description>Affinities define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.
+(section needs work)
+Singletons If we wish to place an object in only one location, the ISingletonAffinity interface can be used to force placement only at a single partition.</description>
+    </item>
+    
+    <item>
+      <title>EmulatorHost</title>
+      <link>http://reactive-machine.org/docs/hosts-emulatorhost/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/hosts-emulatorhost/</guid>
+      <description>(section needs work)</description>
+    </item>
+    
+    <item>
+      <title>FunctionsHost</title>
+      <link>http://reactive-machine.org/docs/hosts-functionshost/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/hosts-functionshost/</guid>
+      <description>(section needs work)</description>
+    </item>
+    
+    <item>
+      <title>ApplicationBuilder</title>
+      <link>http://reactive-machine.org/docs/hosts-applicationbuilder/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/hosts-applicationbuilder/</guid>
+      <description>(section needs work)</description>
+    </item>
+    
+    <item>
+      <title>Serialization</title>
+      <link>http://reactive-machine.org/docs/hosts-serialization/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/hosts-serialization/</guid>
+      <description>(section needs work)
+In the code, all of the entities (Orchestrations, States, Affinities, Activities, Reads, Updates, Events) and all return value types must be serializable classes. This allows the runtim to perform Serialization as needed to persist all states and orchestration progress durably and recover them automatically after machine or connection failures.</description>
     </item>
     
   </channel>

@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <title>
-The Reactive Machine | Examples
+The Reactive Machine | Affinities
 </title>
     
 <link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
@@ -51,10 +51,10 @@ The Reactive Machine | Examples
   <div class="hero-body">
     <div class="container">
       <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
-        Examples
+        Affinities
       </p>
       <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
-        illustrate Reactive Machine applications
+        express locality of state and operations
       </p>
     </div>
   </div>
@@ -70,7 +70,7 @@ The Reactive Machine | Examples
               Overview
             </a>
           </li> 
-          <li>
+          <li class="is-active">
             <a href="/docs/model/">
               Programming Model
             </a>
@@ -80,7 +80,7 @@ The Reactive Machine | Examples
               Hosts
             </a>
           </li> 
-          <li class="is-active">
+          <li>
             <a href="/docs/examples/">
               Examples
             </a>
@@ -99,6 +99,34 @@ The Reactive Machine | Examples
     
        
       
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        
+                <li class="">
+                    <a href="/docs/model-orchestrations/">Orchestrations</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-activities/">Activities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-states/">States</a>
+                </li>
+        
+                <li class="is-active">
+                    <a href="/docs/model-affinities/">Affinities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-events/">Events</a>
+                </li>
+        
+              </ul>
+            </div>
+          </nav>
+      
     
 
     
@@ -107,26 +135,6 @@ The Reactive Machine | Examples
     
 
     
-      
-          <nav class="tabs" style="margin-top: -25px;">
-            <div class="container">
-              <ul>
-        
-                <li class="">
-                    <a href="/docs/examples-hello/">Hello World</a>
-                </li>
-        
-                <li class="">
-                    <a href="/docs/examples-echo/">Echo Service</a>
-                </li>
-        
-                <li class="">
-                    <a href="/docs/examples-counter/">Counter Service</a>
-                </li>
-        
-              </ul>
-            </div>
-          </nav>
        
       
     
@@ -136,16 +144,26 @@ The Reactive Machine | Examples
   <div class="content">
     
 
-<h1 id="examples">Examples</h1>
+<p>Affinities define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</p>
 
-<p>We have several example applications written using the Reactive Machine.</p>
+<p style="color:red; font-size:20pt">(section needs work)</p>
 
-<ul>
-<li><strong>Hello World</strong> The Hello World example serves to verify that you’ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model.</li>
-<li><strong>Echo Service</strong>  The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.</li>
-<li><strong>Counter Service</strong> The Counter service example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.</li>
-</ul>
+<h2 id="singletons">Singletons</h2>
 
+<p>If we wish to place an object in only one location, the <code>ISingletonAffinity</code> interface can be used to force placement only at a single partition.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">ICounterAffinity</span> <span class="p">:</span>
+    <span class="n">ISingletonAffinity</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">&gt;</span>
+<span class="p">{</span>
+<span class="p">}</span></code></pre></div>
+<h2 id="partitioned-by-key">Partitioned by key</h2>
+
+<p>Events in the reactive machine can be partitioned based on a partitioning key.  Here, we use the <code>IPartitionedAffinity</code> interface, and specify that the key is an unsigned integer.  We use the round robin placement strategy for how counters should be assigned to partitions.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">ICounterAffinity</span> <span class="p">:</span>
+    <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">,</span> <span class="kt">uint</span><span class="p">&gt;</span>
+<span class="p">{</span><span class="na">
+</span><span class="na">    [RoundRobinPlacement]</span>
+    <span class="kt">uint</span> <span class="n">CounterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
   </div>
 </div>
 

@@ -7,27 +7,23 @@
   </url>
   
   <url>
+    <loc>http://reactive-machine.org/docs/model/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/model-events/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/hosts/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/examples/</loc>
+  </url>
+  
+  <url>
     <loc>http://reactive-machine.org/docs/motivation/</loc>
-  </url>
-  
-  <url>
-    <loc>http://reactive-machine.org/docs/interfaces/</loc>
-  </url>
-  
-  <url>
-    <loc>http://reactive-machine.org/docs/interfaces-orchestrations/</loc>
-  </url>
-  
-  <url>
-    <loc>http://reactive-machine.org/docs/interfaces-activities/</loc>
-  </url>
-  
-  <url>
-    <loc>http://reactive-machine.org/docs/interfaces-states/</loc>
-  </url>
-  
-  <url>
-    <loc>http://reactive-machine.org/docs/interfaces-affinities/</loc>
   </url>
   
   <url>
@@ -43,7 +39,35 @@
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/examples/</loc>
+    <loc>http://reactive-machine.org/docs/model-orchestrations/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/model-activities/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/model-states/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/model-affinities/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/hosts-emulatorhost/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/hosts-functionshost/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/hosts-applicationbuilder/</loc>
+  </url>
+  
+  <url>
+    <loc>http://reactive-machine.org/docs/hosts-serialization/</loc>
   </url>
   
   <url>

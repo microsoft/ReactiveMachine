@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <title>
-The Reactive Machine | Motivation &amp; Vision
+The Reactive Machine | Motivation
 </title>
     
 <link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
@@ -37,6 +37,9 @@ The Reactive Machine | Motivation &amp; Vision
         <a class="navbar-item" href="/docs">
           Docs
         </a>
+        <a class="navbar-item" href="https://github.com/Microsoft/ReactiveMachine">
+          GitHub
+        </a>
       </div>
     </div>
   </div>
@@ -48,10 +51,10 @@ The Reactive Machine | Motivation &amp; Vision
   <div class="hero-body">
     <div class="container">
       <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
-        Motivation &amp; Vision
+        Motivation
       </p>
       <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
-        Elastic microservies for serverless environments
+        and the overall vision
       </p>
     </div>
   </div>
@@ -67,19 +70,24 @@ The Reactive Machine | Motivation &amp; Vision
               Overview
             </a>
           </li> 
-          <li class="is-active">
-            <a href="/docs/motivation/">
-              Motivation &amp; Vision
+          <li>
+            <a href="/docs/model/">
+              Programming Model
             </a>
           </li> 
           <li>
-            <a href="/docs/interfaces/">
-              Interfaces
+            <a href="/docs/hosts/">
+              Hosts
             </a>
           </li> 
           <li>
             <a href="/docs/examples/">
               Examples
+            </a>
+          </li> 
+          <li class="is-active">
+            <a href="/docs/motivation/">
+              Motivation
             </a>
           </li>
     </ul>
@@ -87,6 +95,11 @@ The Reactive Machine | Motivation &amp; Vision
 </nav>
 
 
+
+    
+       
+      
+    
 
     
        
@@ -107,13 +120,13 @@ The Reactive Machine | Motivation &amp; Vision
 
 <p>With the promise of developer agility, independent operations, and elastic scalability, microservice based development has become the &ldquo;new normal&rdquo; in distributed application development.  Developers build application services such as dashboards, client services, and user-accesible APIs by &ldquo;composing&rdquo; existing cloud services, such as storage, databases, queues, and other microservices.</p>
 
-<p><img src="/img/motivation.PNG" alt="Motivation" /></p>
+<p><img src="/img/motivation.PNG" alt="Motivation" style="width:8in; border:1px solid gray;"/></p>
 
 <h2 id="stateless-microservices">Stateless Microservices</h2>
 
 <p>However, many modern approaches to elastic scalability rely on an application tier that stateless and volatile.  Application state must be loaded at the start of each request, persisted to cloud storage at the end of each request, and cached locally, if the application developer is sure that it will not introduce consistency anomalies.</p>
 
-<p><img src="/img/stateless.PNG" alt="Stateless and Volatile" /></p>
+<p><img src="/img/stateless.PNG" alt="Stateless and Volatile" style="width:8in; border:1px solid gray;"/></p>
 
 <p>This approch, while providing elastic scalability, unfortunately suffers many drawbacks.</p>
 
@@ -127,7 +140,7 @@ The Reactive Machine | Motivation &amp; Vision
 
 <p>So, what paradigm is appropriate for building elastic, fault-tolerant microservices?</p>
 
-<p><img src="/img/paradigms.PNG" alt="Paradigms" /></p>
+<p><img src="/img/paradigms.PNG" alt="Paradigms" style="width:7in;"/></p>
 
 <p>It turns out that all of the different programming paradigms are <em>inter-expressible</em>.</p>
 
@@ -137,7 +150,7 @@ The Reactive Machine | Motivation &amp; Vision
 
 <p>To position this along with the related work, we show where the Reactive Machine fits along with it&rsquo;s counterpart solutions.</p>
 
-<p><img src="/img/comparison.PNG" alt="Comparison to Existing Frameworks" /></p>
+<p><img src="/img/comparison.PNG" alt="Comparison to Existing Frameworks" style="width:7in;"/></p>
 
 <h2 id="strategy">Strategy</h2>
 
@@ -145,7 +158,7 @@ The Reactive Machine | Motivation &amp; Vision
 
 <p>A unique feature of the Reactive Machine is that applications can be retargeted without altering application behavior, only the cost / performance trade-off differences between where the application is deployed.</p>
 
-<p><img src="/img/tactic.PNG" alt="Reactive Machine Strategy" /></p>
+<p><img src="/img/tactic.PNG" alt="Reactive Machine Strategy" style="width:9in; border:1px solid gray;"/></p>
 
   </div>
 </div>

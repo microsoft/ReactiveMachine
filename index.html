@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-us">
   <head>
-	<meta name="generator" content="Hugo 0.52-DEV" />
+	<meta name="generator" content="Hugo 0.52" />
     <title>Reactive Machine</title>
     
 <link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
@@ -36,6 +36,9 @@
         <a class="navbar-item" href="/docs">
           Docs
         </a>
+        <a class="navbar-item" href="https://github.com/Microsoft/ReactiveMachine">
+          GitHub
+        </a>
       </div>
     </div>
   </div>
@@ -59,26 +62,26 @@
         <div class="column">
           <ul>
             <li class="is-size-4 is-size-5-mobile has-text-weight-light">
-              <a href="#author-microservices-without-thinking-about-faults-or-servers">
-                Author microservices without thinking about faults or servers
+              <a href="#author-microservices-without-thinking-about-faults-or-servers.">
+                Author microservices without thinking about faults or servers.
               </a>
             </li>
             <hr />
             <li class="is-size-4 is-size-5-mobile has-text-weight-light">
-              <a href="#deploy-on-your-back-end-of-choice">
-                Deploy on your back-end of choice
+              <a href="#deploy-on-your-back-end-of-choice.">
+                Deploy on your back-end of choice.
               </a>
             </li>
             <hr />
             <li class="is-size-4 is-size-5-mobile has-text-weight-light">
-              <a href="#orchestrations-and-actors-and-events">
-                Orchestrations and actors and events
+              <a href="#boost-productivity-with-convenient-abstractions.">
+                Boost productivity with convenient abstractions.
               </a>
             </li>
             <hr />
             <li class="is-size-4 is-size-5-mobile has-text-weight-light">
-              <a href="#always-recoverable-always-consistent">
-                Always recoverable, always consistent
+              <a href="#be-always-recoverable-always-consistent.">
+                Be always recoverable, always consistent.
               </a>
             </li>
           </ul>
@@ -91,45 +94,41 @@
 
 <section class="section">
   <div class="container">
-    <div class="columns is-variable is-6 is-vcentered">
+    <div class="columns is-variable is-6">
       <div class="column has-text-centered">
-        <p class="title is-size-2">
-          The Reactive Machine Strategy
-        </p>
-        <hr />
-        <img src="/img/tactic.PNG">
+        <img src="/img/tactic.svg">
       </div>
       <div class="column">
-        <a id="author-microservices-without-thinking-about-faults-or-servers"></a>
+        <a id="author-microservices-without-thinking-about-faults-or-servers."></a>
         <p class="title is-size-3 is-size-4-mobile is-spaced">
-          Author microservices without thinking about faults or servers
+          Author microservices without thinking about faults or servers.
         </p>
         <p class="subtitle">
-          It&rsquo;s about the application logic, not the execution platform
+          With Reactive Machine, you can focus on the application logic. Server or connection failures are recovered transparently. And locality is represented by partition keys, not servers.
         </p>
         <hr class="has-background-primary" />
-        <a id="deploy-on-your-back-end-of-choice"></a>
+        <a id="deploy-on-your-back-end-of-choice."></a>
         <p class="title is-size-3 is-size-4-mobile is-spaced">
-          Deploy on your back-end of choice
+          Deploy on your back-end of choice.
         </p>
         <p class="subtitle">
-          Keep your options open. For example, host on serverless functions with a consumption plan. Or run your own elastic K8s cluster. And of course, debug on your local emulator first
+          Keep your options open. For example, host on serverless functions with a consumption plan. Or run your own elastic K8s cluster. And of course, debug on your local emulator first.
         </p>
         <hr class="has-background-primary" />
-        <a id="orchestrations-and-actors-and-events"></a>
+        <a id="boost-productivity-with-convenient-abstractions."></a>
         <p class="title is-size-3 is-size-4-mobile is-spaced">
-          Orchestrations and actors and events
+          Boost productivity with convenient abstractions.
         </p>
         <p class="subtitle">
-          We put it all together in an intuitive task-oriented programming model. Write orchestrations using async/await, encapsulate state in virtual actors, and subscribe them to <strong>globally ordered atomic events</strong>
+          Orchestrations, actors, and events - we combine them all in an intuitive task-oriented programming model. Write orchestrations using async/await, encapsulate state in virtual actors, and subscribe them to globally ordered atomic events.
         </p>
         <hr class="has-background-primary" />
-        <a id="always-recoverable-always-consistent"></a>
+        <a id="be-always-recoverable-always-consistent."></a>
         <p class="title is-size-3 is-size-4-mobile is-spaced">
-          Always recoverable, always consistent
+          Be always recoverable, always consistent.
         </p>
         <p class="subtitle">
-          The runtime takes care of logging messages and persisting snapshots to durable cloud storage. So that when machines go down or connections fail, it can recover without missing a beat
+          The runtime takes care of logging messages and persisting snapshots to durable cloud storage. So that when machines go down or connections fail, it can recover without missing a beat.
         </p>
       </div>
     </div>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <title>
+The Reactive Machine | Orchestrations
+</title>
+    
+<link rel="stylesheet" href="/css/style.af54df87ff3bd3c2c433dbfd4c3a7ecb417849c15384eba8e9fb6f7b5a9de6e2.css">
+<link rel="stylesheet" href="/css/syntax.de5a118cd688caecccb0905dc27fdf35ea42b86621e7f077f96723087430564e.css">
+<link rel="shortcut icon" href="/img/logo-icon.png">
+
+  </head>
+  <body class="page has-navbar-fixed-top">
+    <main class="main">
+      
+
+<nav class="navbar is-fixed-top">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="http://reactive-machine.org">
+        <img src="/img/logo-icon.png">
+      </a>
+
+      <a class="navbar-item has-text-primary has-text-weight-bold" href="http://reactive-machine.org">
+        Reactive Machine
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbar-menu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="/docs">
+          Docs
+        </a>
+        <a class="navbar-item" href="https://github.com/Microsoft/ReactiveMachine">
+          GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+      
+<section class="hero is-primary">
+  <div class="hero-body">
+    <div class="container">
+      <p class="title is-size-1 is-size-2-mobile has-text-weight-light is-spaced">
+        Orchestrations
+      </p>
+      <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
+        compose operations deterministically and reliably
+      </p>
+    </div>
+  </div>
+</section>
+  
+
+<nav class="tabs">
+  <div class="container">
+
+    <ul> 
+          <li>
+            <a href="/docs/">
+              Overview
+            </a>
+          </li> 
+          <li class="is-active">
+            <a href="/docs/model/">
+              Programming Model
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/hosts/">
+              Hosts
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/examples/">
+              Examples
+            </a>
+          </li> 
+          <li>
+            <a href="/docs/motivation/">
+              Motivation
+            </a>
+          </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+    
+       
+      
+          <nav class="tabs" style="margin-top: -25px;">
+            <div class="container">
+              <ul>
+        
+                <li class="is-active">
+                    <a href="/docs/model-orchestrations/">Orchestrations</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-activities/">Activities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-states/">States</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-affinities/">Affinities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-events/">Events</a>
+                </li>
+        
+              </ul>
+            </div>
+          </nav>
+      
+    
+
+    
+       
+      
+    
+
+    
+       
+      
+    
+
+
+<div class="container docs-container">
+  <div class="content">
+    
+
+<p>Orchestrations are classes that define how to execute of one or more operations in their <code>Execute</code> method.</p>
+
+<p>Orchestrations can easily express sequential and parallel composition as straight-line code. For example:</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">SequentialOrchestration</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">result1</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">first</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="kt">int</span> <span class="n">result2</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">second</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="k">return</span> <span class="n">result1</span> <span class="p">+</span> <span class="n">result2</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div><div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">ParallelOrchestration</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">task1</span> <span class="p">=</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">first</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">task2</span> <span class="p">=</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">second</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="n">task1</span><span class="p">)</span> <span class="p">+</span> <span class="p">(</span><span class="k">await</span> <span class="n">task2</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Of course, it does not end there. Orchestrations are plain C# code with async/await, so we enjoy a rich language support that lets us express anything from simple loops to subtle nested exception handlers with pattern matching.</p>
+
+<h2 id="requirements">Requirements</h2>
+
+<p>An orchestration class must</p>
+
+<ul>
+<li>implement the interface <code>IOrchestration&lt;TReturn&gt;</code> where <code>TReturn</code> is the return type</li>
+<li>provide an <code>Execute</code> function that specifies how the orchestration executes</li>
+<li>specify all inputs to the orchestration as fields or properties</li>
+<li>be serializable, and have a serializable return type</li>
+</ul>
+
+<p>Moreover, the <code>Execute</code> method must</p>
+
+<ul>
+<li>call no asynchronous APIs other than the ones provided by the <code>IOrchestrationContext</code></li>
+<li>execute no nondeterministic code other than what is provided by the <code>IOrchestrationContext</code></li>
+<li>execute a bounded number of operations</li>
+</ul>
+
+<p>These rules are required so we can replay orchestrations deterministically.</p>
+
+<h3 id="example">Example</h3>
+
+<p>Consider a simple orchestration that reads the content of one blob, prepends a timestamp, and then writes it to another blob. The code is shown below.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">CopyBlob</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">From</span><span class="p">;</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">To</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>    
+        <span class="c1">// read content from a blob
+</span><span class="c1"></span>        <span class="kt">var</span> <span class="n">content</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">ReadBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">From</span> <span class="p">});</span>
+
+        <span class="c1">// append the current time
+</span><span class="c1"></span>        <span class="kt">var</span> <span class="n">time</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">ReadDateTimeUtcNow</span><span class="p">();</span>
+        <span class="n">content</span> <span class="p">=</span> <span class="n">time</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&#34;o&#34;</span><span class="p">)</span> <span class="p">+</span> <span class="s">&#34;\n&#34;</span> <span class="p">+</span> <span class="n">content</span><span class="p">;</span>
+        
+        <span class="c1">// write a message to the log
+</span><span class="c1"></span>        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Writing content to {To} at time {time:o}&#34;</span><span class="p">);</span>
+
+        <span class="c1">// write the modified content to a blob
+</span><span class="c1"></span>        <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">WriteBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">To</span><span class="p">,</span> <span class="n">Content</span> <span class="p">=</span> <span class="n">content</span><span class="p">});</span>
+
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Note the following:</p>
+
+<ul>
+<li>The input to the orchestrations are the names of the source and destination blob, represented by the fields <code>From</code> and <code>To</code>.</li>
+<li>This orchestration is not intended to return a value. However, our framework requires that all orchestrations do return <em>some</em> value, so we use the type <code>UnitType</code> (cf. <code>void</code> in C#, or <code>unit</code> in F#). It is a type we have already defined for this purpose; it has a single value <code>UnitType.Value</code>, which we return at the end of <code>Execute</code>.</li>
+<li>Reading a blob is asynchronous and nondeterministic. Thus we cannot call Azure storage directly inside the <code>Execute</code> method. Rather, we encapsulate those calls inside a <code>ReadBlob</code> activity (defined in a separate class) and execute it via <code>context.PerformActivity</code>. This makes it deterministically replayable.</li>
+<li>Similarly, we encapsulate the Azure storage calls for writing a the blob in a <code>WriteBlob</code> activity.</li>
+<li>The timestamp is nondeterministic. Thus we cannot simply call <code>DateTime.UtcNow</code>. Instead, we call the specially provided method <code>context.ReadDateTimeUtcNow</code>. This makes the timestamp deterministically replayable.</li>
+</ul>
+
+<h2 id="the-orchestration-context">The Orchestration Context</h2>
+
+<p>The orchestration context that is passed as an argument to the <code>Execute</code> functions has the type <code>IOrchestrationContext</code>, which provides methods for logging, and for performing, forking, and scheduling other operations.</p>
+
+<h3 id="logging">Logging</h3>
+
+<p>The <code>context.GetLogger</code> returns an <code>ILogger</code> that can be used for logging, following the standard practices for logging on .NET. Simply include the following clause at the beginning:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">using</span> <span class="nn">Microsoft.Extensions.Logging</span><span class="p">;</span></code></pre></div>
+<p>The needed package <code>Microsoft.Extensions.Logging.Abstractions</code> is automatically installed by NuGet when installing the <code>Microsoft.ReactiveMachine.Abstractions</code> package.</p>
+
+<h3 id="performing">Performing</h3>
+
+<p>The orchestration context provides several methods for performing asynchronous operations.</p>
+
+<p>Each type of operation has its corresponding method, with type-checked arguments and return values:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="n">Task</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">PerformOrchestration</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">orchestration</span><span class="p">);</span>
+<span class="n">Task</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">PerformActivity</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IActivityBase</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">activity</span><span class="p">);</span>
+<span class="n">Task</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">PerformUpdate</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">update</span><span class="p">)</span>
+<span class="n">Task</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">PerformRead</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IRead</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">read</span><span class="p">)</span>
+<span class="n">Task</span> <span class="n">PerformEvent</span><span class="p">(</span><span class="n">IEvent</span> <span class="n">evt</span><span class="p">);</span></code></pre></div>
+<p>All performed operations are asynchronous, i.e. return a task. These tasks finish when the operation is completed and can return a value or throw an exception. The expectation is that the orchestrations awaits these tasks prior to finishing.</p>
+
+<h3 id="forking">Forking</h3>
+
+<p>Sometimes it makes sense for an orchestration to <em>not</em> await the operation it performs. For example, we may want to simply kick off a new operation and then continue the execution immediately and independently, without waiting for that operation to complete, and without ever observing any return value or exception.
+This is particularly common for events, which are intended to decouple the producers and consumers.</p>
+
+<p>If not awaiting the returned task, orchestrations should <em>fork</em> the operation rather than perform it:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">void</span> <span class="n">ForkOrchestration</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">orchestration</span><span class="p">);</span>
+<span class="k">void</span> <span class="n">ForkActivity</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IActivityBase</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">activity</span><span class="p">);</span>
+<span class="k">void</span> <span class="n">ForkUpdate</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">update</span><span class="p">)</span>
+<span class="k">void</span> <span class="n">ForkEvent</span><span class="p">(</span><span class="n">IEvent</span> <span class="n">evt</span><span class="p">);</span></code></pre></div>
+<p>A forked operation executes completely independently of its parent. If it throws an exception, that exception is passed to a global exception handler (which is defined by the host).</p>
+
+<p>Two forked operations are always performed <em>in order</em> if they target the same affinity partition. Thus, it is possible to implement ordered streams using forked events or updates.</p>
+
+<h3 id="scheduling">Scheduling</h3>
+
+<p>Sometimes, we want a forked operation to not start immediately. The following methods allow us to include a delay.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">void</span> <span class="n">ScheduleOrchestration</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">TimeSpan</span> <span class="n">delay</span><span class="p">,</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">orchestration</span><span class="p">);</span>
+<span class="k">void</span> <span class="n">ScheduleActivity</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">TimeSpan</span> <span class="n">delay</span><span class="p">,</span> <span class="n">IActivityBase</span><span class="p">&lt;</span><span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">activity</span><span class="p">);</span>
+<span class="k">void</span> <span class="n">ScheduleUpdate</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;(</span><span class="n">TimeSpan</span> <span class="n">delay</span><span class="p">,</span> <span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">TState</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">&gt;</span> <span class="n">update</span><span class="p">)</span>
+<span class="k">void</span> <span class="n">ScheduleEvent</span><span class="p">(</span><span class="n">TimeSpan</span> <span class="n">delay</span><span class="p">,</span> <span class="n">IEvent</span> <span class="n">evt</span><span class="p">);</span></code></pre></div>
+<p>The runtime will make a &ldquo;best effort&rdquo; to start the scheduled operation somewhere near the desired time. However, there are no specific guarantees about precision or relative ordering. The guarantees are thus a bit weaker than for fork.</p>
+
+<h3 id="configuration-information">Configuration information</h3>
+
+<p>The context also provides a method for retrieving configuration information that was specified during the application build:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="n">TConfiguration</span> <span class="n">GetConfiguration</span><span class="p">&lt;</span><span class="n">TConfiguration</span><span class="p">&gt;();</span></code></pre></div>
+<p>The configuration is identified by its type <code>TConfiguration</code>. If no such configuration exists, an exception is thrown.</p>
+
+<h2 id="guidelines">Guidelines</h2>
+
+<p>As mentioned earlier, the runtime records the execution of an orchestration&rsquo;s <code>Execute</code> function in a log that can be used for deterministic replay. For this mechanism to work correctly and efficiently, it is important to avoid nondeterminism, and to avoid long-running orchestrations.</p>
+
+<h3 id="sources-of-nondeterminism">Sources of Nondeterminism</h3>
+
+<p>Nondeterminism can creep into your application in many ways. Here is a list of common sources, together with the recommended solution.</p>
+
+<table>
+<thead>
+<tr>
+<th>Nondeterminism Source</th>
+<th>Solution</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Access the current clock</td>
+<td>use <code>context.GetDateTimeNow</code> or <code>context.GetDateTimeUtcNow</code></td>
+</tr>
+
+<tr>
+<td>Set a timer to fire after a specified time</td>
+<td>use <code>context.ScheduleXXX</code></td>
+</tr>
+
+<tr>
+<td>Generate a random number</td>
+<td>use <code>context.NewRandom</code></td>
+</tr>
+
+<tr>
+<td>Generate a fresh GUID</td>
+<td>use <code>context.NewGuid</code></td>
+</tr>
+
+<tr>
+<td>Call external services</td>
+<td>encapsulate in an Activity</td>
+</tr>
+
+<tr>
+<td>Run task on thread pool</td>
+<td>run task as an Activity</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="long-running-orchestrations">Long-Running Orchestrations</h3>
+
+<p>One must be mindful of not performing too many operations in an <code>Execute</code> method, because internally, the implementation records a log of all performed operations to allow deterministic replay.</p>
+
+<p>For situations where the application wants to run very long (or infinite) loop, the recommended practice is thus to use <em>forking</em> or <em>scheduling</em>. This avoids accumulating a history that grows without bounds.</p>
+
+<p>Concretely, rather than running a long or infinite loop inside <code>Execute</code>, an orchestration can run a single iteration of the loop inside <code>Execute</code>, and then <strong>fork or schedule itself</strong> at the end.</p>
+
+<p>For example, we can implement an orchestration that re-executes every 10 minutes as follows:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">PeriodicOrchestration</span><span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span>
+
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">IterationNumber</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// do something first
+</span><span class="c1"></span>        <span class="p">...</span>
+        <span class="c1">// then schedule our next iteration
+</span><span class="c1"></span>        <span class="n">IterationNumber</span><span class="p">++;</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">ScheduleOrchestration</span><span class="p">(</span><span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromMinutes</span><span class="p">(</span><span class="m">10</span><span class="p">),</span> <span class="k">this</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+  </div>
+</div>
+
+
+    </main>
+
+    
+<footer class="footer has-background-dark">
+  <div class="container has-text-centered">
+    <p class="is-size-5 is-size-6-mobile has-text-white-bis">
+      &copy; 2018 Microsoft Corporation
+    </p>
+  </div>
+</footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="/js/app.min.e119cad0205945173c83cdb2ffec7a581007a612e088c70bd62c7245ad7e58cb.js" integrity=""></script>
+
+  </body>
+</html>
