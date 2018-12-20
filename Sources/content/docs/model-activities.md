@@ -11,7 +11,9 @@ menu:
 
 Activities are classes that define how to execute some task in an `Execute` method, and may include nondeterminism and I/O.
 
-For example, we can define an activity that reads the contents of a blob from Azure Storage:
+### Example 1 : Calling an External Service
+
+We can define an activity that reads the contents of a blob from Azure Storage:
 ```c#
 public class ReadBlob : IAtLeastOnceActivity<string>
 {
@@ -34,6 +36,38 @@ public class ReadBlob : IAtLeastOnceActivity<string>
 
 **Context object**. Just like for orchestrations, the `Execute` method is passed a context. However, this context has a lot fewer methods. Essentially, it just supports logging (via `context.Logger`) and accessing configuration information (via `context.GetConfiguration<TConfiguration>()`).
 
+### Example 2: Performing a CPU-intensive activity
+
+In the `Applications/Miner.Service` project, we demonstrate a hash-space mining application.  Searching for a hash collision is CPU intensive, so we use an orchestration to break the search space into small portions, and then run an activity for searching each portion. The runtime runs each portion on the thread pool.
+
+```c#
+namespace Miner.Service
+{
+    public class SearchPortion : IAtLeastOnceActivity<List<long>>
+    {
+        public TimeSpan TimeLimit => TimeSpan.FromSeconds(30);
+ 
+        public int Target;
+        public long Start;
+        public long Count;
+
+        public Task<List<long>> Execute(IContext context)
+        {
+            context.Logger.LogInformation($"Starting portion [{Start},{Start + Count})");
+            var results = new List<long>();
+            // search given range for a hash collision
+            for (var i = Start; i < Start + Count; i++)
+            {
+                if (i.GetHashCode() == Target)
+                    results.Add(i);
+            }
+            context.Logger.LogInformation($"Finished portion [{Start},{Start + Count})");
+            return Task.FromResult(results);
+        }
+    }
+}
+```
+
 ## Activites vs. Orchestrations
 
 Activities complement orchestrations in terms of what you are allowed to do inside `Execute`:
@@ -50,7 +84,7 @@ Activities complement orchestrations in terms of what you are allowed to do insi
 
 Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
 
-## At-least-once vs. At-most-once
+### At-least-once vs. At-most-once
 
 Activites allow nondeterminism to be effectively "determinized."  Activities are logged by the system prior to starting execution, and the return values of activities are logged when the operation completes.  Under replay, requests are not reissued if they have already been issued and a value returned: instead, the return value in the log is used as the return value for the operation.  
 
@@ -78,3 +112,5 @@ public class MyActivity : IAtMostOnceActivity<string>
 The `AfterFault` handler is called when the runtime, during recovery, detects that this activity was previously started but did not complete. Inside the handler, we can take an appropriate action to deal with this situation. For example, we can perform some tests to figure out if the desired effect of the activity (e.g. creating a blob) has already taken place (i.e. the blob already exists), and re-execute it only if those tests indicate so. 
 
 Conceptually, the `AfterFault` handler provides us with a mechanism that can wrap external calls that are not idempotent or not exactly idempotent into a truly idempotent activity.
+
+
