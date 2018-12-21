@@ -9,70 +9,30 @@ menu:
 ---
 
 Orchestrations are classes that define how to execute of one or more operations in their `Execute` method.
+Typically, orchestrations are executed by a service application to handle external requests or events. 
 
-Orchestrations can easily express sequential and parallel composition as straight-line code. For example:
+Internally, the state of an orchestration is tracked by recording the operations it performs, and the `Execute` method must therefore be deterministically replayable, and not directly call any I/O or async methods.
 
-```c#
-public class SequentialOrchestration : IOrchestration<int>
-{
-    public async Task<int> Execute(IOrchestrationContext context)
-    {
-        int result1 = await context.Perform(...first operation...);
-        int result2 = await context.Perform(...second operation...);
-        return result1 + result2;
-    }
-}
-```
-```c#
-public class ParallelOrchestration : IOrchestration<int>
-{
-    public async Task<int> Execute(IOrchestrationContext context)
-    {
-        Task<int> task1 = context.Perform(...first operation...);
-        Task<int> task2 = context.Perform(...second operation...);
-        return (await task1) + (await task2);
-    }
-}
-```
 
-Of course, it does not end there. Orchestrations are plain C# code with async/await, so we enjoy a rich language support that lets us express anything from simple loops to subtle nested exception handlers with pattern matching.   
-
-## Requirements
-
-An orchestration class must
-
-- implement the interface `IOrchestration<TReturn>` where `TReturn` is the return type
-- provide an `Execute` function that specifies how the orchestration executes
-- specify all inputs to the orchestration as fields or properties
-- be serializable, and have a serializable return type
-
-Moreover, the `Execute` method must 
-
-- call no asynchronous APIs other than the ones provided by the `IOrchestrationContext`
-- execute no nondeterministic code other than what is provided by the `IOrchestrationContext`
-- execute a bounded number of operations
-
-These rules are required so we can replay orchestrations deterministically.
-
-### Example
+### Example 1: BlobBackup
 
 Consider a simple orchestration that reads the content of one blob, prepends a timestamp, and then writes it to another blob. The code is shown below. 
 
 ```c#
-public class CopyBlob : IOrchestration<UnitType>
+public class BlobBackup : IOrchestration<UnitType>
 {
     public string From;
     public string To;
 
     public async Task<UnitType> Execute(IOrchestrationContext context)
-    {    
+    {
         // read content from a blob
         var content = await context.PerformActivity(new ReadBlob() { Path = From });
 
         // append the current time
         var time = await context.ReadDateTimeUtcNow();
         content = time.ToString("o") + "\n" + content;
-        
+
         // write a message to the log
         context.Logger.LogInformation($"Writing content to {To} at time {time:o}");
 
@@ -91,6 +51,54 @@ Note the following:
 - Similarly, we encapsulate the Azure storage calls for writing a the blob in a `WriteBlob` activity.
 - The timestamp is nondeterministic. Thus we cannot simply call `DateTime.UtcNow`. Instead, we call the specially provided method `context.ReadDateTimeUtcNow`. This makes the timestamp deterministically replayable.
  
+
+
+## Requirements
+
+An orchestration class must
+
+- implement the interface `IOrchestration<TReturn>` where `TReturn` is the return type
+- provide an `Execute` function that specifies how the orchestration executes
+- specify all inputs to the orchestration as fields or properties
+- be serializable, and have a serializable return type
+
+Moreover, the `Execute` method must 
+
+- call no asynchronous APIs other than the ones provided by the `IOrchestrationContext`
+- execute no nondeterministic code other than what is provided by the `IOrchestrationContext`
+- execute a bounded number of operations
+
+These rules are required so we can replay orchestrations deterministically.
+
+### Sequential vs. Parallel Operations
+
+Orchestrations can easily express both sequential and parallel composition as straight-line code. For example:
+
+```c#
+public class SequentialOrchestration : IOrchestration<int>
+{
+    public async Task<int> Execute(IOrchestrationContext context)
+    {
+        int result1 = await context.Perform(...first operation...);
+        int result2 = await context.Perform(...second operation...);
+        return result1 + result2;
+    }
+}
+```
+
+```c#
+public class ParallelOrchestration : IOrchestration<int>
+{
+    public async Task<int> Execute(IOrchestrationContext context)
+    {
+        Task<int> task1 = context.Perform(...first operation...);
+        Task<int> task2 = context.Perform(...second operation...);
+        return (await task1) + (await task2);
+    }
+}
+```
+
+Of course, it does not end there. Orchestrations are plain C# code with async/await, so we enjoy a rich language support that lets us express anything from simple loops to subtle nested exception handlers with pattern matching.
 
 ## The Orchestration Context
 
@@ -169,7 +177,7 @@ As mentioned earlier, the runtime records the execution of an orchestration's `E
 
 Nondeterminism can creep into your application in many ways. Here is a list of common sources, together with the recommended solution. 
 
-| Nondeterminism Source  | Solution  |
+| Nondeterminism Source  | Correct Solution  |
 |---|---|
 | Access the current clock |  use `context.GetDateTimeNow` or `context.GetDateTimeUtcNow` |
 | Set a timer to fire after a specified time  |  use `context.ScheduleXXX` |

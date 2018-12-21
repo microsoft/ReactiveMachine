@@ -36,7 +36,7 @@ public class ReadBlob : IAtLeastOnceActivity<string>
 
 **Context object**. Just like for orchestrations, the `Execute` method is passed a context. However, this context has a lot fewer methods. Essentially, it just supports logging (via `context.Logger`) and accessing configuration information (via `context.GetConfiguration<TConfiguration>()`).
 
-### Example 2: Performing a CPU-intensive activity
+### Example 2: Performing a CPU-intensive computation
 
 In the `Applications/Miner.Service` project, we demonstrate a hash-space mining application.  Searching for a hash collision is CPU intensive, so we use an orchestration to break the search space into small portions, and then run an activity for searching each portion. The runtime runs each portion on the thread pool.
 
@@ -68,7 +68,13 @@ namespace Miner.Service
 }
 ```
 
-## Activites vs. Orchestrations
+## Guidelines
+
+Activities "determinize" nondeterministic, external, fallible, or otherwise unpredictable tasks, by logging the outcome. Under replay, activities are not repeated if the log has already recorded a result (a returned value or exception) for this activity: instead, the recorded result is used. Thus, the activity has become *deterministically replayable*.  
+
+ Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
+
+### Activites vs. Orchestrations
 
 Activities complement orchestrations in terms of what you are allowed to do inside `Execute`:
 
@@ -82,15 +88,11 @@ Activities complement orchestrations in terms of what you are allowed to do insi
 | Fork an operation         | ❌ | ✓  |
 | Schedule an operation     | ❌ | ✓  |
 
-Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
-
 ### At-least-once vs. At-most-once
 
-Activites allow nondeterminism to be effectively "determinized."  Activities are logged by the system prior to starting execution, and the return values of activities are logged when the operation completes.  Under replay, requests are not reissued if they have already been issued and a value returned: instead, the return value in the log is used as the return value for the operation.  
+If a host recovers after failing while executing an activity, the system detects in the log that the activity did not complete. However, it is not possible to know how far the activity progressed before the failure; it may have already achieved its objective, or it may have failed before the activity even got really started. The right thing to do in this case may depend on the specific purpose of the activity, i.e. it is application-dependent.
 
-If a host resumes after failing in the middle of executing an activity, the system detects in the log that the activity started, but did not complete. The right thing to do in this case may depend on the specific purpose of the activity, i.e. it is application-dependent.
-
-In most cases, the right thing to do is to simply restart the activity. By using the interface `IAtLeastOnceActivity<string>`, we indicate to the runtime that this is always the desired course of action.
+In most cases, the right thing to do is to simply restart the activity, at the risk of executing it a second time. By using the interface `IAtLeastOnceActivity<string>`, we indicate to the runtime that this is always the desired course of action.
 
 Sometimes, it is desirable to take some special action rather than just restarting an activity. The interface `IAtMostOnceActivity<TReturn>` can be used for that:
 
@@ -109,7 +111,7 @@ public class MyActivity : IAtMostOnceActivity<string>
 }
 ```
 
-The `AfterFault` handler is called when the runtime, during recovery, detects that this activity was previously started but did not complete. Inside the handler, we can take an appropriate action to deal with this situation. For example, we can perform some tests to figure out if the desired effect of the activity (e.g. creating a blob) has already taken place (i.e. the blob already exists), and re-execute it only if those tests indicate so. 
+The `AfterFault` handler is called when the runtime, during recovery, detects that this activity may have been previously executed but did not complete. Inside the handler, we can take an appropriate action to deal with this situation. For example, we can perform some tests to figure out if the desired effect of the activity (e.g. creating a blob) has already taken place (i.e. the blob already exists), and re-execute it only if those tests indicate so.
 
 Conceptually, the `AfterFault` handler provides us with a mechanism that can wrap external calls that are not idempotent or not exactly idempotent into a truly idempotent activity.
 
