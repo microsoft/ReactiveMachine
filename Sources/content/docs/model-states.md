@@ -8,117 +8,166 @@ menu:
     weight: 23
 ---
 
+States are used to store information durably and scalably. To use state in a reactive machine application, you
 
-States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.
+- must define how the state should be distributed, by declaring an **affinity**.
+- must define the **state** to be stored.
+- may define **read** operations that can access the state and return a value
+- may define **update** operations that can read and update the state and return a value
+- may define event **subscriptions** that can update the state in response to an event
 
-<p style="color:red; font-size:20pt">(section needs work)</p>
+### Example 1: Account State
 
-## Example 1: Bank Customer State
+Suppose we are implementing a service whose customers have some sort of account, containing some form of currency. Conceptually, the type of our data is something like `Dictionary<Guid,AccountState>`, but we want this dictionary to be partitioned over the machines in a cluster, so we can handle very large numbers of accounts, and we want it durably persisted in cloud storage.  
 
-We start by defining an affinity for how our data should be partitioned.  To do this, we implement an affinity based on the users identity.
+First, we need to define an **affinity**, i.e. the "type of the key". We do this by defining a new interface that implements `IPartitionedAffinity`:
 
-```c#
-namespace Bank.Service
+```csharp
+public interface IAccountAffinity : IPartitionedAffinity<IAccountAffinity,Guid>
 {
-    public interface IUserAffinity : 
-        IPartitionedAffinity<IUserAffinity,string>
+    Guid AccountId { get; }
+}
+```
+
+Second, we define the **state** of the account, i.e. the "type of the value". We do this by defining a new serializable class that implements `IPartitionedState`:
+
+```csharp
+public class AccountState : IPartitionedState<IAccountAffinity,Guid>
+{
+    public int Balance;
+}
+```
+
+Finally, we want to define operations that can read and update the account state. As for orchestrations and activites, read and update operations are defined as serializable classes with an `Execute` method.
+
+For example, we can define a **read operation** that returns an integer (the balance) by defining a new serializable class that implements `IRead`:
+
+```csharp
+public class ReadBalance : IRead<AccountState, int>, IAccountAffinity
+{
+    public Guid AccountId { get; set; }
+    public int Execute(IReadContext<AccountState> context)
     {
-        string UserId { get; }
+        return context.State.Balance;
     }
 }
 ```
 
-We create an event that our state will subscribe to: the ```UserSignedUp``` event.
+Note that the class must also implement the `IAccountAffinity` interface, so that the runtime can determine which account is being targeted by this operation by getting the `AccountId` property. Inside the `Execute` method, we can use the `context` object to access the state and read the balance. A read operation *must not* modify the state.
 
-```c#
-namespace Bank.Service
+To execute the read operation from within an orchestration, we construct a read operation and call `PerformRead`:
+
+```csharp
+int balance = await context.PerformRead(new ReadBalance() { AccountId = accountId });
+```
+
+To define an **update operation**, we do something similar, but we add another input (the amount to be withdrawn), we check to see if there is sufficient balance before withdrawing the amount, and we return a boolean indicating whether we did indeed withdraw:
+
+```csharp
+public class TryWithdraw : IUpdate<AccountState, bool>, IAccountAffinity
 {
-    [DataContract]
-    public class UserSignedUp : 
-        IEvent,
-        IUserAffinity,
-        IMultiple<IAccountAffinity,Guid>
+    public Guid AccountId { get; set; }
+    public int Amount;
+
+    public bool Execute(IUpdateContext<AccountState> context)
     {
-        [DataMember]
-        public string UserId { get; set; }
-
-        [DataMember]
-        public string FullName;
-
-        [DataMember]
-        public string InitialCredentials;
-
-        [DataMember]
-        public DateTime Timestamp;
-
-        [DataMember]
-        public Guid SavingsAccountId;
-
-        [DataMember]
-        public Guid CheckingAccountId;
-
-        public IEnumerable<Guid> DeclareAffinities()
-        {
-            yield return SavingsAccountId;
-            yield return CheckingAccountId;
-        }
+        if (context.State.Balance < Amount) return false;
+        context.State.Balance -= Amount;
+        return true;
     }
 }
 ```
 
-Now, we can create a partitioned state that's derived from the ```UserSignedUp``` events.  These events are subscribed to by implementing the ```ISubscribe``` interface and specifying which events you wish to subscribe to.  The ```IPartitionedState``` interface designates how the partitioning key should be used to partition the state across the nodes.
+To execute the update operation from within an orchestration, we construct it and call `PerformUpdate`:
+
+```csharp
+bool withdrawSuccessful = await context.PerformUpdate(new TryWithdraw()
+{
+    AccountId = accountId,
+    Amount = 20
+});
+```
+
+Note that calling multiple withdrawal operations concurrently never produces unsafe interleavings, because all operations on a state are always serialized.
+
+### Example 2: Global Counter
+
+Consider that we would like to maintain a single global counter to count some sort of rare event. Because the state is just one piece in this case, we define a singleton affinity:
 
 ```c#
-namespace Bank.Service
+public interface IGlobalCounterAffinity : ISingletonAffinity<IGlobalCounterAffinity>  {  }
+```
+
+Next, we define an event class. The event has to implement `IGlobalCounterAffinity` to let the runtime know that this event has an effect on that affinity.
+
+```csharp
+public class SomeEvent : IEvent, IGlobalCounterAffinity
 {
-    [DataContract]
-    public class UserState :
-         IPartitionedState<IUserAffinity, string>,
-         ISubscribe<UserSignedUp, IUserAffinity, string>
+    ...
+}
+```
+
+Finally, we define the state, including a subscription to the event:
+
+```csharp
+public class GlobalCounterState :
+    ISingletonState<IGlobalCounterAffinity>,
+    ISubscribe<SomeEvent, IGlobalCounterAffinity>
+{
+    public int Count;
+
+    public void On(ISubscriptionContext context, SomeEvent evt)
     {
-        [DataMember]
-        public string UserId { get; set; }
-
-        [DataMember]
-        public DateTime? Created;
-
-        [DataMember]
-        public string FullName;
-
-        [DataMember]
-        public string InitialCredentials;
-
-        [DataMember]
-        public HashSet<Guid> Accounts = new HashSet<Guid>();
-
-        public void On(ISubscriptionContext<string> context, UserSignedUp evt)
-        {
-            Created = evt.Timestamp;
-            FullName = evt.FullName;
-            InitialCredentials = evt.InitialCredentials;
-            Accounts.Add(evt.SavingsAccountId);
-            Accounts.Add(evt.CheckingAccountId);
-        }
+        Count++;
     }
 }
 ```
 
-We can now create an operation for reading the state.  To do this, we implement the ```IRead``` interface.  We specify that we are reading ```UserState``` and returning a ```bool```.  Our operation implements the ```IUserAffinity``` partitioning key, and therefore needs to carry a ```UserId``` for routing to the correct partition.
+To fire off the event in an orchestration, we construct an object and call ForkEvent.
 
-```c#
-namespace Bank.Service
+```csharp
+context.ForkEvent(new SomeEvent());
+```
+
+## Initial State
+
+There is no operation for creating a state. Rather, states are created lazily *when needed*, i.e. when they are accessed for the first time by a read, update, or event. 
+
+All states must be serializable, and have a parameterless constructor. This constructor is used to create the initial state and must be deterministic.
+
+Sometimes, it may be desirable to do additional work when initializing the state, such as logging, or forking operations. Also, for partitioned states, it is often desirable to make the initial state depend on the partition key. Thus, we support interfaces `IInitialize` (for singleton states) and `IInitialize<TKey>` (for partitioned states). If a state declares that interface, then the `OnInitialize` method is guaranteed to be called right before any other operations are applied to this state.
+
+```csharp
+public class AccountState :
+    IPartitionedState<IAccountAffinity, Guid>,
+    IInitialize<Guid>
 {
-    [DataContract]
-    public class CheckUseridAvailable :
-        IRead<UserState, bool>,
-        IUserAffinity
-    {
-        public string UserId { get; set; }
+    public int Balance;
 
-        public bool Execute(IReadContext<UserState> context)
-        {
-            return ! context.State.Created.HasValue;
-        }
+    public void OnInitialize(IInitializationContext context, Guid key)
+    {
+        context.Logger.LogInformation($"initializing account {key}");
+        Balance = 10;
+    }
+}
+```
+
+```csharp
+public class GlobalCounterState :
+    ISingletonState<IGlobalCounterAffinity>,
+    ISubscribe<SomeEvent, IGlobalCounterAffinity>,
+    IInitialize
+{
+    public int Count;
+
+    public void On(ISubscriptionContext context, SomeEvent evt)
+    {
+        Count++;
+    }
+
+    public void OnInitialize(IInitializationContext context)
+    {
+        context.Logger.LogInformation($"initializing GlobalCounterState");
     }
 }
 ```
