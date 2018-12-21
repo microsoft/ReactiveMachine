@@ -29,23 +29,26 @@ Currently, the repository contains two hosts:
 - A local emulator, meant for debugging and local profiling. It emulates the reactive machine processes in a single process, using either a single thread or multiple threads.
 - A functions host, built on top of Azure Functions, Azure EventHubs, and Azure Blobs. It uses EventHubs to launch the reactive machine processes inside Azure functions, and to implement reliable communication between the processes. State snapshots are stored in Azure Blobs.
 
+Also, we are currently working on releasing a third host that executes on top of the [Ambrosia](https://github.com/microsoft/ambrosia) system. Ambrosia is the ideal back-end for Reactive Machine, because it provides virtual resiliency with very good performance.
+
 ## Status and Plan
 
-We are currently at 1.0.0-alpha, meaning that this is preview which should give you a pretty good idea of what this is all about once finished. What we have is:
+We are currently at 1.0.0-alpha, meaning that this is preview which should give you an idea of what this is all about once finished. What we have is:
 
 - A C# implementation of the reactive machine programming model and compiler
 - Two host implementations (emulator and functions)
 - Application examples to demonstrate the features of the programming model
 - A Hello World sample to demonstrate how to use the 2 hosts
 
-Before we can release 1.0.0-beta, we need to:
+Before we can release 1.0.0-beta, we still need to do some significant work:
 
-- Plug holes in the documentation
+- Add an Ambrosia Host
+- Plug the many gaping holes in the documentation
 - Implement support for code updates, placement updates, and changing the number of processes
 - Fix known bugs in existing tests
 - Build and test on Linux
 
-Moving from 1.0.0-beta to 1.0.0 is then a matter of stability, i.e. we will remove the 'beta' tag once we feel comfortable with users placing trust on the stability of the code in a production environment.
+Further in the future, we will consider moving from 1.0.0-beta to 1.0.0 as a matter of stability, i.e. we will remove the 'beta' tag once we feel comfortable with users placing trust on the stability of the code in a production environment.
 
 ## Contributing
 
