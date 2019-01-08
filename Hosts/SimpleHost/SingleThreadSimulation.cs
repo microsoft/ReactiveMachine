@@ -25,7 +25,7 @@ namespace EmulatorHost
         private readonly DateTime deploymentTimestamp;
         private readonly Configuration configuration;
         private readonly ICompiledApplication application;
-        private ILogger logger;
+        private readonly ILogger logger;
 
         public SingleThreadSimulation(Configuration configuration, ICompiledApplication application, string deploymentId, DateTime deploymentTimestamp, ILogger logger)
         {
@@ -38,7 +38,7 @@ namespace EmulatorHost
 
         DataContractSerializer _serializer;
 
-        static List<IMessage> empty = new List<IMessage>();
+        static readonly List<IMessage> empty = new List<IMessage>();
 
         private Random random = new Random(0);
 
@@ -153,7 +153,7 @@ namespace EmulatorHost
             }
         }
 
-        private object sgl = new object();
+        private readonly object sgl = new object();
         private int messageCount;
 
         public void HandleGlobalException(Exception e)

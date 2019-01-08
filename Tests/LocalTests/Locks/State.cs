@@ -29,8 +29,6 @@ namespace LocalTests.Locks
         public void On(ISubscriptionContext<Places> context, IncrementEvent evt)
         {
             Balance++;
-
-
             context.Logger.LogInformation($"Increment {context.Key} to {Balance} in response to {evt}");
         }
     }
@@ -51,6 +49,7 @@ namespace LocalTests.Locks
 
         public int NewBalance;
 
+        [CreateIfNotExists]
         public UnitType Execute(IUpdateContext<State> context)
         {
             context.State.Balance = NewBalance;

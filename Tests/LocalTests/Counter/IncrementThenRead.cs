@@ -20,6 +20,7 @@ namespace LocalTests.Counter
         [DataMember]
         public uint CounterId { get; set; }
 
+        [CreateIfNotExists]
         public UnitType Execute(IUpdateContext<Counter2> context)
         {
             context.Logger.LogDebug($"IncrementThenRead({CounterId}) Start");

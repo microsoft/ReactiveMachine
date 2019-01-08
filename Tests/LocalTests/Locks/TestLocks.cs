@@ -85,7 +85,7 @@ namespace LocalTests.Locks
     }
 
 
-    public class TestLocks : TestTemplate
+    public class TestLocks : TestOrchestration
     {
         public IEnumerable<Places> AllPlaces()
         {

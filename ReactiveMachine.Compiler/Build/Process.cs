@@ -122,16 +122,19 @@ namespace ReactiveMachine.Compiler
             if (LowerBounds[origin] < opid)
                 LowerBounds[origin] = opid;
         }
-  
-        public void HandleGlobalException(Exception e)
+
+        public void CheckForUnhandledException(object result)
         {
-            if (HostServices.GlobalExceptionHandler != null)
+            if (Serializer.DeserializeException(result, out var exceptionResult))
             {
-                HostServices.GlobalExceptionHandler(e);
-            }
-            else
-            {
-                RuntimeLogger.LogError($"!!! Unhandled Exception: {e}");
+                if (HostServices.GlobalExceptionHandler != null)
+                {
+                    HostServices.GlobalExceptionHandler(exceptionResult);
+                }
+                else
+                {
+                    RuntimeLogger.LogError($"!!! Unhandled Exception: {exceptionResult}");
+                }
             }
         }
 
@@ -191,6 +194,7 @@ namespace ReactiveMachine.Compiler
             HostServices.SerializableTypeSet.Add(typeof(ClassicallySerializedExceptionResult));
             HostServices.SerializableTypeSet.Add(typeof(NonserializedExceptionResult));
             HostServices.SerializableTypeSet.Add(typeof(List<IRestorable>));
+            HostServices.SerializableTypeSet.Add(typeof(KeyNotFoundException));
             HostServices.SerializableTypeSet.Add(typeof(UnitType));
             HostServices.SerializableTypeSet.Add(typeof(RequestFinish));
             HostServices.SerializableTypeSet.Add(typeof(FinishState));

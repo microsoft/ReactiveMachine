@@ -24,21 +24,43 @@ namespace ReactiveMachine.Compiler
         KeyValuePair<ulong, string> WaitingFor { get; }
     }
 
+    internal enum OrchestrationType
+    {
+        Perform,
+        Fork,
+        Initialize
+    }
+
     [DataContract]
-    internal class OrchestrationState<TRequest, TReturn> : IOrchestrationState, IOrchestrationContext, IReadOrchestrationContext, ILogger
+    internal class OrchestrationState<TRequest, TReturn> : IOrchestrationState, IInitializationContext, IReadOrchestrationContext, ILogger
         where TRequest : IOrchestrationBase<TReturn>
     {
-        public OrchestrationState(ForkOperation<TRequest> request)
+        public OrchestrationState(
+            Process process,
+            OrchestrationInfo<TRequest, TReturn> info,
+            ulong opid,
+            TRequest request,
+            OrchestrationType orchestrationType,
+            bool lockedByCaller,
+            ulong parent,
+            ulong clock)
         {
-            this.Opid = request.Opid;
-            this.Request = request.Request;
-            this.Parent = request.Parent;
-            this.StartingClock = request.Clock;
-            this.ExpectsResponse = !request.MessageType.IsFork();
-            this.LockedByCaller = request.LockedByCaller;
+            this.Opid = opid;
+            this.Request = request;
+            this.Parent = parent;
+            this.StartingClock = clock;
+            this.LockedByCaller = lockedByCaller;
+            this.OrchestrationType = orchestrationType;
             this.History = new List<Record>();
             this.Continuations = new Dictionary<ulong, IContinuationInfo>();
+            this.process = process;
+            this.info = info;
+
+            process.OrchestrationStates[opid] = this;
+            StartOrResume();
         }
+
+
 
         [DataMember]
         public readonly ulong Opid;
@@ -47,7 +69,7 @@ namespace ReactiveMachine.Compiler
         public readonly TRequest Request;
 
         [DataMember]
-        public readonly bool ExpectsResponse;
+        public readonly OrchestrationType OrchestrationType;
 
         [DataMember]
         internal bool LockedByCaller;
@@ -86,7 +108,7 @@ namespace ReactiveMachine.Compiler
         private Process process;
 
         [IgnoreDataMember]
-        private OrchestrationInfo<TRequest,TReturn> info;
+        private OrchestrationInfo<TRequest, TReturn> info;
 
         [IgnoreDataMember]
         internal int HistoryPosition;
@@ -145,10 +167,8 @@ namespace ReactiveMachine.Compiler
         IExceptionSerializer IContext.ExceptionSerializer => process.Serializer;
 
 
-        public void StartOrResume(Process process, OrchestrationInfo<TRequest,TReturn> info)
+        public void StartOrResume()
         {
-            this.process = process;
-            this.info = info;
             Clock = StartingClock;
             Continuations = new Dictionary<ulong, IContinuationInfo>();
 
@@ -177,10 +197,13 @@ namespace ReactiveMachine.Compiler
 
         public void RestoreStateTo(Process process)
         {
+            this.process = process;
+            this.info = (OrchestrationInfo<TRequest, TReturn>)process.Orchestrations[typeof(TRequest)];
+
             process.RecordReplayTracer?.Invoke($"[o{Opid:D10}-Replay] Replaying o{Opid:D10} {typeof(TRequest)}");
 
             process.OrchestrationStates[Opid] = this;
-            StartOrResume(process, (OrchestrationInfo<TRequest,TReturn>) process.Orchestrations[typeof(TRequest)]);
+            StartOrResume();
             Debug.Assert(Continuations.Count != 0);
 
             while (HistoryPosition < History.Count)
@@ -326,7 +349,7 @@ namespace ReactiveMachine.Compiler
             }
         }
 
-      
+
 
         public async Task Run()
         {
@@ -370,38 +393,55 @@ namespace ReactiveMachine.Compiler
             messageProcessingTimer.Stop();
             var elapsed = messageProcessingTimer.Elapsed.TotalMilliseconds;
 
-            if (ExpectsResponse)
-            {
-                var response = new RespondToOperation()
-                {
-                    Opid = Opid,
-                    Result = result,
-                    Clock = Clock,
-                    Parent = Parent,
-                };
-                process.Send(process.GetOrigin(Opid), response);
-            }
-            else if (process.FinishStates.TryGetValue(Parent, out var finishState))
-            {
-                finishState.RemovePending(Opid);
-            }
-
             process.Telemetry?.OnApplicationEvent(
-                    processId: process.ProcessId,
-                    id: Opid.ToString(),
-                    name: Request.ToString(),
-                    parent: Parent.ToString(),
-                    opSide: OperationSide.Callee,
-                    opType: OperationType.Orchestration,
-                    duration: elapsed
-                );
+                processId: process.ProcessId,
+                id: Opid.ToString(),
+                name: Request.ToString(),
+                parent: Parent.ToString(),
+                opSide: OperationSide.Callee,
+                opType: OperationType.Orchestration,
+                duration: elapsed
+            );
 
-            if (!ExpectsResponse && process.Serializer.DeserializeException(result, out var exceptionResult))
+            switch (OrchestrationType)
             {
-                process.HandleGlobalException(exceptionResult);
+                case OrchestrationType.Perform:
+                    var response = new RespondToOrchestration()
+                    {
+                        Opid = Opid,
+                        Result = result,
+                        Clock = Clock,
+                        Parent = Parent,
+                    };
+                    process.Send(process.GetOrigin(Opid), response);
+                    break;
+
+                case OrchestrationType.Fork:
+                    process.CheckForUnhandledException(result);
+                    if (process.FinishStates.TryGetValue(Parent, out var finishState))
+                    {
+                        finishState.RemovePending(Opid);
+                    }
+                    break;
+
+                case OrchestrationType.Initialize:
+                    process.CheckForUnhandledException(result);
+                    var initializationRequest = (IInitializationRequest)Request;
+                    initializationRequest.SetStateToFinalResult(process);
+                    var initresponse = new AckInitialization()
+                    {
+                        OriginalOpid = Parent,
+                        PartitionKey = initializationRequest.GetPartitionKey(),
+                        Opid = Opid,
+                        Clock = Clock,
+                        Parent = Parent,
+                    };
+                    process.Send(process.GetOrigin(Opid), initresponse);
+                    break;
             }
         }
 
+      
         private bool RecordOrReplayCall(MessageType type, out ulong opid, out ulong clock, out Guid instanceId)
         {
             if (HistoryPosition < History.Count)
@@ -443,7 +483,7 @@ namespace ReactiveMachine.Compiler
             }
             else
             {
-                if(!ExpectsResponse && Continuations.Count == 0)
+                if(OrchestrationType == OrchestrationType.Fork && Continuations.Count == 0)
                 {
                     if (!process.FinishStates.TryGetValue(Parent, out var finishState))
                         process.FinishStates[Parent] = finishState = new FinishState(process, Parent);
@@ -501,11 +541,13 @@ namespace ReactiveMachine.Compiler
             if (!RecordOrReplayCall(MessageType.AcquireLock, out var opid, out var clock, out var instanceId))
             {
                 var destination = LockSet[0].Locate(process);
-                var message = new AcquireLock();
-                message.Opid = opid;
-                message.Clock = clock;
-                message.Parent = this.Opid;
-                message.LockSet = LockSet;
+                var message = new AcquireLock
+                {
+                    Opid = opid,
+                    Clock = clock,
+                    Parent = this.Opid,
+                    LockSet = LockSet
+                };
                 process.Send(destination, message);
             }
             LockOpid = opid;
@@ -528,7 +570,7 @@ namespace ReactiveMachine.Compiler
                 foreach (var key in LockSet)
                 {
                     var destination = key.Locate(process);
-                    var message = new ReleaseLock() { Key = key, LockOpid = LockOpid};
+                    var message = new ReleaseLock() { PartitionKey = key, OriginalOpid = LockOpid};
                     message.Opid = opid;
                     message.Clock = clock;
                     message.Parent = this.Opid;
@@ -539,7 +581,7 @@ namespace ReactiveMachine.Compiler
 
         public void ForkOrchestration<TReturn2>(IOrchestration<TReturn2> orchestration)
         {
-            if (!RecordOrReplayCall(MessageType.ForkOperation, out var opid, out var clock, out var instanceId))
+            if (!RecordOrReplayCall(MessageType.ForkOrchestration, out var opid, out var clock, out var instanceId))
             {
                 if (!process.Orchestrations.TryGetValue(orchestration.GetType(), out var orchestrationInfo))
                     throw new BuilderException($"undefined orchestration type {orchestration.GetType().FullName}.");
@@ -586,7 +628,7 @@ namespace ReactiveMachine.Compiler
                         throw new SynchronizationDisciplineException("to perform a local operation in a locked context, the caller must include its affinity");
                 }
                 var destination = stateInfo.AffinityInfo.LocateAffinity(localOperation);
-                var message = stateInfo.CreateLocalMessage(localOperation, this.Opid, false);
+                var message = stateInfo.CreateLocalMessage(localOperation, this.Opid, MessageType.RequestLocal);
                 message.Opid = opid;
                 message.Clock = clock;
                 message.Parent = this.Opid;
@@ -620,7 +662,7 @@ namespace ReactiveMachine.Compiler
                     throw new BuilderException($"undefined state {typeof(TState).FullName}.");
                 var destination = stateInfo.AffinityInfo.LocateAffinity(update);
                 (ForkedDestinations ?? (ForkedDestinations = new SortedSet<uint>())).Add(destination);
-                var message = stateInfo.CreateLocalMessage(update, this.Opid, true);
+                var message = stateInfo.CreateLocalMessage(update, this.Opid, MessageType.ForkLocal);
                 message.Opid = opid;
                 message.Clock = clock;
                 message.Parent = this.Opid;
@@ -639,6 +681,43 @@ namespace ReactiveMachine.Compiler
             }
         }
 
+        Task<bool> IOrchestrationContext.StateExists<TState, TAffinity, TKey>(TKey key)
+        {
+            if (!RecordOrReplayCall(MessageType.RequestPing, out var opid, out var clock, out var instanceId))
+            {
+                var keyInfo = (AffinityInfo<TAffinity, TKey>)process.Affinities[typeof(TAffinity)];
+                var pkey = new PartitionKey<TKey>()
+                {
+                    Index = keyInfo.Index,
+                    Key = key,
+                    Comparator = keyInfo.Comparator
+                };
+                if (LockSet == null || !LockSet.Contains(pkey))
+                {
+                    throw new SynchronizationDisciplineException($"{nameof(IOrchestrationContext.StateExists)} can only be called from a context that has already locked the key");
+                }
+                if (!process.States.TryGetValue(typeof(TState), out var stateInfo))
+                    throw new BuilderException($"undefined state {typeof(TState).FullName}.");
+                var destination = pkey.Locate(process);
+                var message = stateInfo.CreateLocalMessage(pkey, this.Opid, MessageType.RequestPing);
+                message.Opid = opid;
+                message.Clock = clock;
+                message.Parent = this.Opid;
+                message.LockedByCaller = (LockSet != null);
+                process.Send(destination, message);
+            }
+            if (!ReplayReturn(MessageType.RespondToLocal, opid, out var result))
+            {
+                var continuationInfo = new ContinuationInfo<bool>("StateExists", OperationType.Local);
+                Continuations[opid] = continuationInfo;
+                return continuationInfo.Tcs.Task;
+            }
+            else
+            {
+                return Task.FromResult((bool) result);
+            }
+        }
+
         public Task<TReturn2> PerformOrchestration<TReturn2>(IReadOrchestration<TReturn2> orchestration)
         {
             return PerformOrchestration<TReturn2>((IOrchestration<TReturn2>) orchestration);
@@ -646,7 +725,7 @@ namespace ReactiveMachine.Compiler
 
         public Task<TReturn2> PerformOrchestration<TReturn2>(IOrchestration<TReturn2> orchestration)
         {
-            if (!RecordOrReplayCall(MessageType.RequestOperation, out var opid, out var clock, out var instanceId))
+            if (!RecordOrReplayCall(MessageType.RequestOrchestration, out var opid, out var clock, out var instanceId))
             {
                 if (!process.Orchestrations.TryGetValue(orchestration.GetType(), out var orchestrationInfo))
                     throw new BuilderException($"undefined orchestration type {orchestration.GetType().FullName}.");
@@ -666,7 +745,7 @@ namespace ReactiveMachine.Compiler
                 message.LockedByCaller = (LockSet != null);
                 process.Send(destination, message);
             }
-            if (!ReplayReturn(MessageType.RespondToOperation, opid, out var result))
+            if (!ReplayReturn(MessageType.RespondToOrchestration, opid, out var result))
             {
                 var continuationInfo = new ContinuationInfo<TReturn2>(orchestration.ToString(), OperationType.Orchestration);
                 Continuations[opid] = continuationInfo;
@@ -783,10 +862,12 @@ namespace ReactiveMachine.Compiler
             {
                 if (!RecordOrReplayCall(MessageType.RequestFinish, out opIds[opIdPos], out var clock, out var instanceId))
                 {
-                    var message = new RequestFinish();
-                    message.Opid = opIds[opIdPos];
-                    message.Clock = clock;
-                    message.Parent = this.Opid;
+                    var message = new RequestFinish
+                    {
+                        Opid = opIds[opIdPos],
+                        Clock = clock,
+                        Parent = this.Opid
+                    };
                     process.Send(destination, message);
                 }
                 opIdPos++;
@@ -804,7 +885,8 @@ namespace ReactiveMachine.Compiler
             return Task.WhenAll(finishAcks);
         }
 
-         
+
+        
         public ILogger Logger => this;
 
         void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
@@ -832,5 +914,7 @@ namespace ReactiveMachine.Compiler
         {
             return process.ApplicationLogger?.BeginScope<TState1>(state);
         }
-     }
+
+    }
+    
 }

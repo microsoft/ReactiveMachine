@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace LocalTests.Counter
 {
     [DataContract]
-    public class TestRandomActivityCount : TestTemplate
+    public class TestRandomActivityCount : TestOrchestration
     {
 
         protected override async Task Run(IOrchestrationContext context)

@@ -19,7 +19,7 @@ namespace LocalTests
         {
             var configuration = new EmulatorHost.Configuration()
             {
-                MultiThreaded = true,
+                MultiThreaded = false,
                 RoundTripMessages = true,
                 RoundTripProcessStateEvery = int.MaxValue,
                 DeliverStaleExternalsOneOutOf = 1,

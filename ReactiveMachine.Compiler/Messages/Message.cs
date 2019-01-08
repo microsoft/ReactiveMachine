@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,53 +42,24 @@ namespace ReactiveMachine.Compiler
     }
 
 
-    [DataContract]
-    internal abstract class QueuedMessage : RequestMessage
-    {
-        internal abstract IPartitionKey GetPartitionKey(Process process);
-
-        internal abstract object Execute<TKey>(Process process, ulong opid);
-
-        [IgnoreDataMember]
-        internal abstract object Payload { get; }
-    }
-
 
     /// <summary>
-    ///  A message that will trigger a continuation when received
+    ///  A message that can advance the state machine at a partition lock
     /// </summary>
     [DataContract]
-    internal abstract class ResponseMessage : Message
-    {
-        // we call this on messages that are not already serialized/deserialized
-        internal virtual void AntiAlias(IDeepCopier deepCopier)
-        {
-        }
-
-        public override string ToString()
-        {
-            return $"o{Parent:D10}.o{Opid:D10}";
-        }
-    }
-
-
-    /// <summary>
-    ///  A response message containing a result or exception
-    /// </summary>
-    [DataContract]
-    internal abstract class ResultMessage : ResponseMessage
+    internal abstract class ProtocolMessage : Message
     {
         [DataMember]
-        public object Result { get; set; }
+        public IPartitionKey PartitionKey;
 
-        internal override void AntiAlias(IDeepCopier deepCopier)
+        [DataMember]
+        public ulong OriginalOpid;
+
+        internal override void Apply(Process process)
         {
-            if (! ((Result is Exception) || (Result is UnitType)))
-                Result = deepCopier.DeepCopy(Result);
+            var PartitionLock = process.AffinityIndex[PartitionKey.Index].PartitionLock;
+            PartitionLock.UpdateLock(this);
         }
+
     }
-
-
-
-
 }

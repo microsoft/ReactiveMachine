@@ -26,6 +26,8 @@ namespace ReactiveMachine.Compiler
         [DataMember]
         public TKey Key;
 
+        // we need not restore this, as it is only used by events and locked orchestrations
+        // that sort partition keys; and those are re-creating the keys when loaded back from storage
         [IgnoreDataMember]
         public Func<TKey, TKey, int> Comparator;
 

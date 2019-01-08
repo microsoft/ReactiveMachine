@@ -11,15 +11,15 @@ using System.Threading.Tasks;
 namespace Bank.Service
 {
     [DataContract]
-    public class CheckUseridAvailable :
-        IRead<UserState, bool>,
+    public class GetUserInfo :
+        IRead<UserState, string>,
         IUserAffinity
     {
         public string UserId { get; set; }
 
-        public bool Execute(IReadContext<UserState> context)
+        public string Execute(IReadContext<UserState> context)
         {
-            return ! context.State.Created.HasValue;
+            return context.State.FullName;
         }
     }
 }

@@ -49,11 +49,6 @@ namespace ReactiveMachine.Compiler
         {
             return $"{base.ToString()} AckFinish";
         }
-
-        internal override void Apply(Process process)
-        {
-            process.OrchestrationStates[Parent].Continue(Opid, Clock, MessageType.AckEvent, UnitType.Value);
-        }
     }
 
 

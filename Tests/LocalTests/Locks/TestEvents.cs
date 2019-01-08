@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LocalTests.Locks
 {
-    public class TestEvents : TestTemplate
+    public class TestEvents : TestOrchestration
     {
         public IEnumerable<Places> AllPlaces()
         {
