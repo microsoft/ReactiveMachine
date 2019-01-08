@@ -17,7 +17,7 @@ namespace RideSharing
         GeoLocation Location { get; }
     }
 
-    public struct GeoLocation : IEquatable<GeoLocation>, IUseConsistentHash
+    public struct GeoLocation : IEquatable<GeoLocation>
     {
         public GeoLocation Location => this;
 

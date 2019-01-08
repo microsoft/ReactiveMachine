@@ -12,9 +12,9 @@ namespace ReactiveMachine.Compiler
     {
         None,
 
-        ForkOperation,
-        RequestOperation,
-        RespondToOperation,
+        ForkOrchestration,
+        RequestOrchestration,
+        RespondToOrchestration,
 
         ForkLocal,
         RequestLocal,
@@ -23,7 +23,7 @@ namespace ReactiveMachine.Compiler
         ForkEvent,
         PerformEvent,
         AckEvent,
-        UnlockEvent,
+        CommitEvent,
 
         AcquireLock,
         GrantLock,
@@ -35,6 +35,11 @@ namespace ReactiveMachine.Compiler
         RequestFinish,
         AckFinish,
 
+        RequestPing,
+        RespondToPing,
+
+        AckInitialization,
+
         EnqueueStartup,
         ExternalRequest
     }
@@ -45,7 +50,7 @@ namespace ReactiveMachine.Compiler
         {
             switch (type)
             {
-                case MessageType.RespondToOperation:
+                case MessageType.RespondToOrchestration:
                 case MessageType.RespondToActivity:
                 case MessageType.RespondToLocal:
                 case MessageType.AckEvent:
@@ -60,7 +65,7 @@ namespace ReactiveMachine.Compiler
         {
             switch (type)
             {
-                case MessageType.ForkOperation:
+                case MessageType.ForkOrchestration:
                 case MessageType.ForkLocal:
                 case MessageType.ForkEvent:
                     return true;

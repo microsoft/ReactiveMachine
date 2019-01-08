@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ReactiveMachine
 {
@@ -34,6 +35,14 @@ namespace ReactiveMachine
         void On(ISubscriptionContext<TKey> context, TEvent evt);
     }
 
+    public interface IInitialize
+    {
+        Task OnInitialize(IInitializationContext context);
+    }
 
- 
+    public interface IInitialize<TKey>
+    {
+        Task OnInitialize(IInitializationContext context, TKey key);
+    }
+
 }

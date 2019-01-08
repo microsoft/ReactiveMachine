@@ -35,6 +35,8 @@ namespace ReactiveMachine.Compiler
         TKey GetAffinityKey(object obj);
 
         uint LocateKey(TKey key);
+
+        PartitionKey<TKey> MakePartitionKey(TKey key);
     }
 
     internal abstract class AffinityInfo<TAffinity, TKey> : IAffinityInfo, IAffinityInfoByKeyType<TKey>
@@ -56,6 +58,16 @@ namespace ReactiveMachine.Compiler
             process.Affinities[typeof(TAffinity)] = this;
             Index = process.AffinityIndex.Count;
             process.AffinityIndex.Add(this);      
+        }
+
+        public PartitionKey<TKey> MakePartitionKey(TKey key)
+        {
+            return new PartitionKey<TKey>()
+            {
+                Key = key,
+                Index = Index,
+                Comparator = Comparator
+            };
         }
 
         public IPartitionLock PartitionLock { get; set; }
@@ -112,6 +124,7 @@ namespace ReactiveMachine.Compiler
                 }
             }
         }
+
     }
 
     internal class SingletonAffinityInfo<TAffinity> : AffinityInfo<TAffinity, UnitType>

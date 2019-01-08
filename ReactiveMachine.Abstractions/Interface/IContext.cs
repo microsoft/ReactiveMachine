@@ -45,6 +45,13 @@ namespace ReactiveMachine
     }
 
     /// <summary>
+    /// Context for initializing state when it is first accessed
+    /// </summary>
+    public interface IInitializationContext : IOrchestrationContext
+    {
+    }
+
+    /// <summary>
     /// Context for executing user code that updates state in response to an event.
     /// </summary>
     public interface ISubscriptionContext<TKey> : ISubscriptionContext
@@ -104,6 +111,10 @@ namespace ReactiveMachine
         Task<TReturn> PerformActivity<TReturn>(IActivityBase<TReturn> activity);
 
         Task PerformEvent<TEvent>(TEvent evt) where TEvent : IEvent;
+
+        Task<bool> StateExists<TState, TAffinity, TKey>(TKey key)
+            where TState : IPartitionedState<TAffinity, TKey>
+            where TAffinity : IPartitionedAffinity<TAffinity, TKey>;
 
         Task Finish();
     }

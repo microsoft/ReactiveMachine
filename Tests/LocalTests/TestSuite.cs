@@ -19,8 +19,9 @@ namespace LocalTests
         {
             context.Logger.LogInformation($"Counter.TestSuite Start");
 
-
+            await context.PerformOrchestration(new TestStates());
             await context.PerformOrchestration(new TestEvents());
+            await context.PerformOrchestration(new TestEventsWithInit());
             await context.PerformOrchestration(new TestLocks());
 
             await Task.WhenAll(

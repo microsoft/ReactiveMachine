@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Bank.Tests
 {
 
-    public class OnFirstStart : IStartupOrchestration
+    public class OnFirstStart : IOrchestration<UnitType>
     {
         public async Task<UnitType> Execute(IOrchestrationContext context)
         {

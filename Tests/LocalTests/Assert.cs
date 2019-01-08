@@ -16,6 +16,9 @@ namespace LocalTests
                 throw new TestFailureException($"expected: {expected} actual: {actual}");
             }
         }
-
+        public static void Fail(string msg = "Assertion Failed")
+        {
+            throw new TestFailureException(msg);
+        }
     }
 }

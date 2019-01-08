@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace LocalTests.Counter
 {
     [DataContract]
-    public class TestForks : TestTemplate
+    public class TestForks : TestOrchestration
     {
         protected override async Task Run(IOrchestrationContext context)
         {

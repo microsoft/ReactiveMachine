@@ -47,8 +47,8 @@ namespace Bank.Service
             });
 
             // check all involved state so we can validate preconditions
-            var t1 = context.PerformRead(new CheckAccount() { AccountId = FromAccount });
-            var t2 = context.PerformRead(new CheckAccount() { AccountId = ToAccount });
+            var t1 = context.PerformRead(new GetAccountInfo() { AccountId = FromAccount });
+            var t2 = context.PerformRead(new GetAccountInfo() { AccountId = ToAccount });
 
             // get a timestamp
             var timestamp = await context.ReadDateTimeUtcNow();

@@ -10,58 +10,55 @@ namespace ReactiveMachine.Compiler
 {
 
     [DataContract]
-    internal class ForkOperation<TOperation> : RequestMessage
+    internal class ForkOrchestration<TOrchestration> : RequestMessage
     {
         [DataMember]
-        public TOperation Request;
+        public TOrchestration Request;
 
-        internal override MessageType MessageType => MessageType.ForkOperation;
+        internal override MessageType MessageType => MessageType.ForkOrchestration;
 
         public override string ToString()
         {
-            return $"{base.ToString()} ForkOperation<{typeof(TOperation).Name}>";
+            return $"{base.ToString()} ForkOrchestration<{typeof(TOrchestration).Name}>";
+        }
+
+        internal override void Apply(Process process)
+        {
+            var orchestrationInfo = process.Orchestrations[typeof(TOrchestration)];
+            orchestrationInfo.ProcessRequest(this, OrchestrationType.Fork);
+        }
+    }
+
+    [DataContract]
+    internal class RequestOrchestration<TOperation> : ForkOrchestration<TOperation>
+    {
+        internal override MessageType MessageType => MessageType.RequestOrchestration;
+
+
+        public override string ToString()
+        {
+            return $"{base.ToString()} RequestOrchestration<{typeof(TOperation).Name}>";
         }
 
         internal override void Apply(Process process)
         {
             var orchestrationInfo = process.Orchestrations[typeof(TOperation)];
-            orchestrationInfo.ProcessRequest(this);
+            orchestrationInfo.ProcessRequest(this, OrchestrationType.Perform);
         }
     }
 
+    /// <summary>
+    ///  A response message from an orchestration
+    /// </summary>
     [DataContract]
-    internal class RequestOperation<TOperation> : ForkOperation<TOperation>
+    internal class RespondToOrchestration : ResultMessage
     {
-        internal override MessageType MessageType => MessageType.RequestOperation;
-
+        internal override MessageType MessageType => MessageType.RespondToOrchestration;
 
         public override string ToString()
         {
-            return $"{base.ToString()} RequestOperation<{typeof(TOperation).Name}>";
-        }
-
-        internal override void Apply(Process process)
-        {
-            var orchestrationInfo = process.Orchestrations[typeof(TOperation)];
-            orchestrationInfo.ProcessRequest(this);
+            return $"{base.ToString()} RespondToOrchestration";
         }
     }
-
-    [DataContract]
-    internal class RespondToOperation : ResultMessage
-    {
-        internal override MessageType MessageType => MessageType.RespondToOperation;
-
-        public override string ToString()
-        {
-            return $"{base.ToString()} RespondToOperation";
-        }
-
-        internal override void Apply(Process process)
-        {
-            process.OrchestrationStates[Parent].Continue(Opid, Clock, MessageType.RespondToOperation, Result);
-        }
-    }
-
 
 }

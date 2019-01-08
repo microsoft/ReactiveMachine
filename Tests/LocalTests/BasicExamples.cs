@@ -10,8 +10,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LocalTests
+namespace LocalTests.BasicExamples
 {
+    // The snippets in this file were used for preparing documentation and presentations
+    // Most of them are not executed by tests or samples
+
     [RandomPlacement]
     public class CopyBlob : IOrchestration<UnitType>
     {

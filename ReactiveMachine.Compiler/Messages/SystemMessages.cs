@@ -62,23 +62,4 @@ namespace ReactiveMachine.Compiler
         }
     }
 
-    [DataContract]
-    internal class RespondToActivity : ResultMessage
-    {
-        [DataMember]
-        public Guid InstanceId;
-
-        internal override MessageType MessageType => MessageType.RespondToActivity;
-
-        public override string ToString()
-        {
-            return $"{base.ToString()} RespondToActivity {InstanceId}";
-        }
-
-        internal override void Apply(Process process)
-        {
-            if (process.OrchestrationStates.TryGetValue(Parent, out var orchestrationState))
-                orchestrationState.Continue(Opid, Clock, MessageType.RespondToActivity, Result);
-        }
-    }
 }

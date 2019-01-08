@@ -31,9 +31,11 @@ namespace ReactiveMachine.Compiler
             public Stopwatch Stopwatch;
         }
 
+        [IgnoreDataMember]
         public bool IsEmpty => head == null;
 
-       
+        public QueuedMessage Holder => head.Request;
+
         public void Enqueue(QueuedMessage request, Stopwatch stopwatch)
         {
             Process.LockTracer?.Invoke($"p{Process.ProcessId:D3} {request.GetPartitionKey(Process)} Enqueue {request.Opid}");
@@ -41,7 +43,7 @@ namespace ReactiveMachine.Compiler
             {
                 Request = request,
                 Stopwatch = stopwatch,
-            };        
+            };
             if (head == null)
             {
                 head = tail = rinfo;
@@ -53,37 +55,23 @@ namespace ReactiveMachine.Compiler
             }
         }
 
-        public void Remove(ulong opid, out QueuedMessage msg)
+        public void Update<TKey>(TKey localkey, ProtocolMessage protocolMessage)
         {
-            if (head.Request.Opid == opid)
-            {
-                msg = head.Request;
-                head = head.Next;
-            }
-            else
-            {
-                var pos = head;
-                while (pos.Next.Request.Opid != opid)
-                {
-                    pos = pos.Next;
-                }
-                msg = pos.Next.Request;
-                if (tail == pos.Next)
-                    tail = pos;
-                pos.Next = pos.Next.Next;
-            }
-            Process.LockTracer?.Invoke($"p{Process.ProcessId:D3} {msg.GetPartitionKey(Process)} Removed {opid}");
-        }
+            if (head == null)
+                throw new Exception("internal error: received update for request not holding lock");
 
-        public void EnterNextHolder<TKey>(TKey localkey, Func<ulong,TKey,QueuedMessage,Stopwatch,MessageType,ulong,bool> entering)
-        {
-            // move head forward past all entries that immediately leave the lock after entering
-            while (head != null && !entering(head.Request.Opid, localkey, head.Request, head.Stopwatch, head.Request.MessageType, head.Request.Parent))
+            head.Request.Update(Process, localkey, protocolMessage, head.Stopwatch, out var exiting);
+
+            while (exiting)
             {
-                if (head.Request.MessageType.IsFork())
-                    Process.FinishStates[head.Request.Parent].RemovePending(head.Request.Opid);
+                head.Request.OnExit(Process);
                 head = head.Next;
-                continue;
+
+                if (head == null)
+                    return;
+
+                head.Request.OnEnter(Process);
+                head.Request.Enter(Process, localkey, head.Stopwatch, out exiting);
             }
         }
     }

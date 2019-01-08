@@ -37,7 +37,7 @@ namespace Bank.Service
 
             // check the account
             var accountInfo = await context.PerformRead(
-                new CheckAccount()
+                new GetAccountInfo()
                 {
                     AccountId = AccountId
                 });

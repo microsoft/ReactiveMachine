@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 using Microsoft.Extensions.Logging;
+using ReactiveMachine.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,7 +13,7 @@ namespace ReactiveMachine.Compiler
 {
     internal interface IStateInstance
     {
-        object Execute(dynamic op, ulong opid, bool evt);
+        object Execute(dynamic op, ulong opid, StateOperation operation);
     }
 
     internal interface IStateInstance<TState, TAffinity>   
@@ -22,6 +23,12 @@ namespace ReactiveMachine.Compiler
         void Restore(TState state);
 
         TState State { get; } 
+    }
+
+    public enum StateOperation
+    {
+        ReadOrUpdate,
+        Event,
     }
 
     internal class StateContext<TState, TAffinity, TKey> :
@@ -114,7 +121,7 @@ namespace ReactiveMachine.Compiler
                 throw new BuilderException($"undefined state {typeof(TAffinity).FullName}.");
             var destination = stateInfo.AffinityInfo.LocateAffinity(update);
             var opid = process.NextOpid;
-            var message = stateInfo.CreateLocalMessage(update, CurrentOpid, true);
+            var message = stateInfo.CreateLocalMessage(update, CurrentOpid, MessageType.ForkLocal);
             message.Opid = opid;
             message.Parent = CurrentOpid;
             process.Send(destination, message);
@@ -135,25 +142,33 @@ namespace ReactiveMachine.Compiler
             process.HostServices.GlobalShutdown();
         }
 
-        public object Execute(dynamic op, ulong opid, bool evt)
+        internal void SetInitializationResult(TState state)
+        {
+            this.state = state;
+        }
+
+        public object Execute(dynamic op, ulong opid, StateOperation operationType)
         {
             CurrentOpid = opid;
             try
             {
-                if (evt)
+                switch(operationType)
                 {
-                    dynamic s = State;
-                    s.On(this, op);
-                    return null;
-                }
-                else
-                {
-                    return op.Execute(this);
+                    case StateOperation.ReadOrUpdate:
+                        return op.Execute(this);
+
+                    case StateOperation.Event:
+                        dynamic s = State;
+                        s.On(this, op);
+                        return null;
+
+                    default:
+                        throw new Exception("internal error: unhandled case");
                 }
             }
             catch (Exception e)
             {
-                // TODO for events, what with that?
+                // TODO for events and initialize, what with that?
                 return process.Serializer.SerializeException(e);
             }
             finally
@@ -176,7 +191,6 @@ namespace ReactiveMachine.Compiler
         {
             return (TConfiguration)process.Configurations[typeof(TConfiguration)];
         }
-
 
         public ILogger Logger => this;
 
