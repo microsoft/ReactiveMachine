@@ -14,6 +14,7 @@ namespace LocalTests
         {
             builder.BuildService<CounterService>();
             builder.BuildService<Bank.BankTestsService>();
+            builder.BuildService<SimpleLoadTest.Service.SimpleLoadTestService>();
             builder.ScanThisDLL();
         }
     }

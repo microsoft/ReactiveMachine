@@ -32,6 +32,9 @@ namespace LocalTests
 
             await context.PerformOrchestration(new TestForks());
 
+            var m = await context.PerformOrchestration(new SimpleLoadTest.Service.LoadTestOrchestration() { Depth = 2, UseSmallerTest = true });
+            context.Logger.LogInformation($"volume: {m.Volume} machines: {string.Join(",", m.Hosts)}");
+
             context.Logger.LogInformation($"Counter.TestSuite End");
 
             return UnitType.Value;
