@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ReactiveMachine.Compiler
+namespace ReactiveMachine.Util
 {
-    internal static class JumpConsistentHash
+    public static class JumpConsistentHash
     {
         public static uint Compute(ulong x, uint num_buckets)
         {

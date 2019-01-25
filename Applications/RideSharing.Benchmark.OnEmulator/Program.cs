@@ -15,7 +15,6 @@ namespace RideSharing.Benchmark.OnEmulator
     {
         static void Main(string[] args)
         {
-  
             var applicationConfiguration = new RideSharing.Benchmark.Configuration()
             {
                 NumberGeneratorProcesses = 1,

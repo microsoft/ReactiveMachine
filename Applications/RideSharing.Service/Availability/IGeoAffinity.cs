@@ -17,18 +17,13 @@ namespace RideSharing
         GeoLocation Location { get; }
     }
 
-    public struct GeoLocation : IEquatable<GeoLocation>
+    public struct GeoLocation : ICustomKeyType<GeoLocation>
     {
         public GeoLocation Location => this;
-
+ 
         // for this simple sample, we just use zipcode
         public int ZipCode;
-
-        public ulong GetHashInput()
-        {
-            return (ulong) ZipCode;
-        }
-
+ 
         public GeoLocation(int zipCode)
         {
             this.ZipCode = zipCode;
@@ -41,11 +36,28 @@ namespace RideSharing
                 yield return new GeoLocation(zipCode);
             }
         }
-
-        public bool Equals(GeoLocation other)
+ 
+        public override bool Equals(object obj)
         {
-            return Equals(ZipCode, other.ZipCode);
+            return (obj is GeoLocation other) && this.ZipCode == other.ZipCode;
         }
+        public override int GetHashCode()
+        {
+            return ZipCode.GetHashCode();
+        }
+
+        #region ICustomKeyType
+
+        public Func<GeoLocation, uint, uint> RoundRobinPlacer =>
+            (location, numprocs) => 0;
+
+        public Func<GeoLocation, GeoLocation, int> Comparator =>
+            (location1, location2) => location1.ZipCode.CompareTo(location2.ZipCode);
+
+        public Func<GeoLocation, uint, uint> JumpConsistentHasher =>
+            (location, numprocs) => ReactiveMachine.Util.JumpConsistentHash.Compute((ulong)location.ZipCode, numprocs);
+        
+        #endregion
 
     }
 
