@@ -28,19 +28,21 @@ namespace EmulatorHost
         private readonly Configuration configuration;
         private readonly ICompiledApplication application;
         private ILogger logger;
+        private Emulator emulator;
 
-        public MultiThreadedSimulation(Configuration configuration, ICompiledApplication application, string deploymentId, DateTime deploymentTimestamp, ILogger logger)
+        public MultiThreadedSimulation(Configuration configuration, ICompiledApplication application, string deploymentId, DateTime deploymentTimestamp, ILogger logger, Emulator emulator)
         {
             this.configuration = configuration;
             this.application = application;
             this.deploymentId = deploymentId;
             this.deploymentTimestamp = deploymentTimestamp;
             this.logger = logger;
+            this.emulator = emulator;
         }
 
         DataContractSerializer _serializer;
 
-        static List<IMessage> empty = new List<IMessage>();
+        static readonly List<IMessage> empty = new List<IMessage>();
 
         private Random random = new Random(0);
 
@@ -104,6 +106,8 @@ namespace EmulatorHost
                 }
                 if (!someoneBusy)
                     break;
+
+                emulator.FlushLog();
 
                 shutdown.Token.WaitHandle.WaitOne(TimeSpan.FromSeconds(10));
             }
