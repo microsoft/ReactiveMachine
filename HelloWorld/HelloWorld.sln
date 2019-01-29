@@ -5,11 +5,6 @@ VisualStudioVersion = 15.0.28010.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Service", "HelloWorld.Service\HelloWorld.Service.csproj", "{96B4C69F-AC50-4575-9B3E-4915F053D1B2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{23E91679-B0D7-47E1-9180-1FD8DEEAC081}"
-	ProjectSection(SolutionItems) = preProject
-		readme.md = readme.md
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Test.OnEmulator", "HelloWorld.Test.OnEmulator\HelloWorld.Test.OnEmulator.csproj", "{1A7543E5-C61A-4529-A5CA-A1843F516B87}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld.Test", "HelloWorld.Test\HelloWorld.Test.csproj", "{B58CC879-2BA0-4A23-BD63-891DB55F5B38}"

@@ -40,7 +40,7 @@ namespace Bank.Service
         public async Task<bool> Execute(IOrchestrationContext context)
         {
             // perform authentication
-            await context.PerformRead(new Authentication()
+            await context.PerformRead(new CheckCredentials()
             {
                 UserId = UserId,
                 Credentials = Credentials
@@ -55,19 +55,14 @@ namespace Bank.Service
 
             // wait for the checks to complete. This ensures both accounts exist.
             // (otherwise an exception is thrown)
-            var fromAccount = await t1;
-            var toAccount = await t2;
+            GetAccountInfo.Response fromAccountInfo = await t1;
+            GetAccountInfo.Response toAccountInfo = await t2;
 
-            if (fromAccount == null)
-                throw new KeyNotFoundException($"no such account: {fromAccount}");
-            if (toAccount == null)
-                throw new KeyNotFoundException($"no such account: {toAccount}");
-
-            if (fromAccount.Owner != UserId)
+            if (fromAccountInfo.Owner != UserId)
             {
                 throw new InvalidOperationException("only owner of account can issue transfer");
             }
-            else if (fromAccount.Balance < Amount)
+            else if (fromAccountInfo.Balance < Amount)
             {
                 return false;
             }
@@ -82,6 +77,5 @@ namespace Bank.Service
                 return true;
             }
         }
-
     }
 }

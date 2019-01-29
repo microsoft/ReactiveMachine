@@ -40,9 +40,6 @@ namespace Bank.Service
             yield return CheckingAccountId;
         }
 
-      
-
-
         [Lock]
         public async Task<UnitType> Execute(IOrchestrationContext context)
         {
@@ -53,8 +50,7 @@ namespace Bank.Service
 
             // we want to record a timestamp for the creation
             var timestamp = await context.ReadDateTimeUtcNow();
-
-            
+        
             if (await userExists)
             {
                 throw new Exception("user already exists");

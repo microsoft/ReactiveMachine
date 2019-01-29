@@ -29,8 +29,6 @@ namespace Bank.Service
 
         public Response Execute(IReadContext<AccountState> context)
         {
-            var accountInfo = context.State;
-
             return new Response()
             {
                 Balance = context.State.Balance,

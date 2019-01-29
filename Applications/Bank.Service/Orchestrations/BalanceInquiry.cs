@@ -28,26 +28,36 @@ namespace Bank.Service
         [Lock]
         public async Task<int> Execute(IOrchestrationContext context)
         {
-            // first, perform authentication
-            await context.PerformRead(new Authentication()
+            // first, check the supplied credentials
+            bool credentialsValidated = false;
+            try
             {
-                UserId = UserId,
-                Credentials = Credentials
-            });
-
-            // check the account
-            var accountInfo = await context.PerformRead(
-                new GetAccountInfo()
+                credentialsValidated = await context.PerformRead(new CheckCredentials()
                 {
-                    AccountId = AccountId
+                    UserId = UserId,
+                    Credentials = Credentials
                 });
-
-            if (accountInfo.Owner != UserId)
-            {
-                throw new InvalidOperationException("only owner of account can check balance");
             }
+            catch (KeyNotFoundException) { }
 
-            return accountInfo.Balance;
+            if (!credentialsValidated)
+                throw new InvalidOperationException("Unauthorized");
+
+            // if the specified account exists and is owned by this user, return balance
+            try
+            {
+                var accountInfo = await context.PerformRead(
+                        new GetAccountInfo()
+                        {
+                            AccountId = AccountId
+                        });
+
+                if (accountInfo.Owner == UserId)
+                    return accountInfo.Balance;
+            }
+            catch (KeyNotFoundException) { }
+
+            throw new InvalidOperationException("no such account");
         }
     }
 }

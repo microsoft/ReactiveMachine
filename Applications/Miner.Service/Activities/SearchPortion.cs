@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Miner.Service
 {
     [DataContract]
-    public class SearchPortion : IAtLeastOnceActivity<List<long>>
+    public class SearchPortion : IActivity<List<long>>
     {
         public TimeSpan TimeLimit => TimeSpan.FromSeconds(30);
 
