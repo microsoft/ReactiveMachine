@@ -21,7 +21,7 @@ namespace FunctionsHost
         public String StorageConnectionString { get; set; }
 
         [JsonIgnore] // we want no connection strings in logs
-        public String ehConnectionString { get; set; }
+        public String EventHubsConnectionString { get; set; }
 
         [JsonIgnore] // we want no connection strings in logs
         public String AppInsightsInstrumentationKey { get; set; }

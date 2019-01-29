@@ -19,10 +19,10 @@ namespace FunctionsHost
     public class Client<TStaticApplicationInfo> : IClient, IClientInternal
         where TStaticApplicationInfo : IStaticApplicationInfo, new()
     {
-        private static Object lockable = new object();
+        private static readonly Object lockable = new object();
         private static Client<TStaticApplicationInfo> instance;
 
-        private readonly IStaticApplicationInfo applicationInfo;
+        private readonly TStaticApplicationInfo applicationInfo;
         private readonly FunctionsHostConfiguration configuration;
         private readonly uint processId;
         private readonly EventHubsConnections connections;
@@ -61,7 +61,7 @@ namespace FunctionsHost
             this.application = Compilation.Compile<TStaticApplicationInfo>(applicationInfo, configuration);
             this.processId = (uint)random.Next((int)application.NumberProcesses); // we connect to a randomly selected process
             this.responsePartition = (uint)random.Next(ResponseSender.NumberPartitions); // we receive on a randomly selected partition
-            this.connections = new EventHubsConnections(processId, logger, configuration.ehConnectionString);
+            this.connections = new EventHubsConnections(processId, logger, configuration.EventHubsConnectionString);
             this.requestSender = new RequestSender(processId, connections, logger, new DataContractSerializer(typeof(List<IMessage>), application.SerializableTypes), configuration);
             this.responseSenders = new Dictionary<uint, ResponseSender>();
             this.continuations = new ConcurrentDictionary<Guid, object>();

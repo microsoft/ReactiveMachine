@@ -51,12 +51,12 @@ namespace FunctionsHost
                 }
                 if ((ex.RequestInformation.HttpStatusCode == 404) && (information.ErrorCode.Equals(BlobErrorCodeStrings.ContainerNotFound)))
                 {
-                    logger.LogWarning("Invalid application state (Container not found). Ignoring Doorbell.");
+                    logger.LogWarning("Invalid application state (Container not found). Ignoring Doorbell. Did you forget to initialize the service?");
                     return false;
                 }
                 if ((ex.RequestInformation.HttpStatusCode == 404) && (information.ErrorCode.Equals(BlobErrorCodeStrings.BlobNotFound)))
                 {
-                    logger.LogWarning("Invalid application state (Blob not found). Ignoring Doorbell.");
+                    logger.LogWarning("Invalid application state (Blob not found). Ignoring Doorbell. Did you forget to initialize the service?");
                     return false;
                 }
 
