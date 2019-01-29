@@ -108,7 +108,7 @@ namespace ReactiveMachine
     {
         Task<TReturn> PerformOrchestration<TReturn>(IOrchestration<TReturn> orchestration);
 
-        Task<TReturn> PerformActivity<TReturn>(IActivityBase<TReturn> activity);
+        Task<TReturn> PerformActivity<TReturn>(IActivity<TReturn> activity);
 
         Task PerformEvent<TEvent>(TEvent evt) where TEvent : IEvent;
 

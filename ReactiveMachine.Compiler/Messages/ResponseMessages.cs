@@ -33,16 +33,7 @@ namespace ReactiveMachine.Compiler
             }
             else
             {
-                if (MessageType == MessageType.RespondToActivity)
-                {
-                    // activities can receive duplicate responses, leading to missing continuations
-                    // in that case the second response should simply be ignored
-                    return;
-                }
-                else
-                {
-                    throw new Exception("internal error: missing continuation");
-                }
+                throw new Exception("internal error: missing continuation");
             }
         }
     }

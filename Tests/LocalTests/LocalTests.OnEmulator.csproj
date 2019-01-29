@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\Hosts\SimpleHost\EmulatorHost.csproj" />
     <ProjectReference Include="..\..\ReactiveMachine.Abstractions\ReactiveMachine.Abstractions.csproj" />
     <ProjectReference Include="..\..\ReactiveMachine.Compiler\ReactiveMachine.Compiler.csproj" />
+    <ProjectReference Include="..\SimpleLoadTest.Service\SimpleLoadTest.Service.csproj" />
   </ItemGroup>
 
 </Project>

@@ -35,8 +35,10 @@ namespace ReactiveMachine.Compiler
                 return; // keep lock
             }
 
-            if (MessageType != MessageType.ForkLocal)
+            if (MessageType != MessageType.ForkUpdate)
                 process.Send(process.GetOrigin(Opid), new RespondToLocal() { Opid = Opid, Parent = Parent, Result = result });
+            else
+                process.CheckForUnhandledException(result);
 
             process.Telemetry?.OnApplicationEvent(
                 processId: process.ProcessId,
@@ -81,7 +83,7 @@ namespace ReactiveMachine.Compiler
             {
                 if (!createIfNotExist)
                 {
-                    result = process.Serializer.SerializeException(new KeyNotFoundException("no state for this partition key"));
+                    result = process.Serializer.SerializeException(new KeyNotFoundException($"no state for key {localkey} ({typeof(TState)})"));
                     return true;
                 }
                 else
@@ -102,30 +104,30 @@ namespace ReactiveMachine.Compiler
     }
 
     [DataContract]
-    internal class ForkLocal<TState> : LocalOperation<TState>
+    internal class ForkUpdate<TState> : LocalOperation<TState>
     {
-        internal override MessageType MessageType => MessageType.ForkLocal;
+        internal override MessageType MessageType => MessageType.ForkUpdate;
 
         public override string ToString()
         {
-            return $"{base.ToString()} ForkLocal<{typeof(TState).Name}>";
+            return $"{base.ToString()} ForkUpdate<{typeof(TState).Name}> {this.Operation}";
         }
     }
 
 
     [DataContract]
-    internal class RequestLocal<TState> : LocalOperation<TState>
+    internal class PerformLocal<TState> : LocalOperation<TState>
     {
-        internal override MessageType MessageType => MessageType.RequestLocal;
+        internal override MessageType MessageType => MessageType.PerformLocal;
 
         public override string ToString()
         {
-            return $"{base.ToString()} RequestLocal<{typeof(TState).Name}>";
+            return $"{base.ToString()} PerformLocal<{typeof(TState).Name}> {this.Operation}";
         }
     }
 
     [DataContract]
-    internal class RequestPing<TState> : LocalMessage<TState>
+    internal class PerformPing<TState> : LocalMessage<TState>
     {
         [DataMember]
         public IPartitionKey Key;
@@ -134,12 +136,12 @@ namespace ReactiveMachine.Compiler
         internal override string LabelForTelemetry => Key.ToString();
 
         [IgnoreDataMember]
-        internal override MessageType MessageType => MessageType.RequestPing;
+        internal override MessageType MessageType => MessageType.PerformPing;
 
 
         public override string ToString()
         {
-            return $"{base.ToString()} RequestPing<{typeof(TState).Name}>";
+            return $"{base.ToString()} PerformPing<{typeof(TState).Name}>";
         }
 
         internal override IPartitionKey GetPartitionKey(Process process)

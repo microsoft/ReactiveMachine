@@ -48,10 +48,6 @@ namespace ReactiveMachine
        /// <summary>
         /// the log level used for information on progress
         /// </summary>
-        public LogLevel ProgressLogLevel { get; set; } = LogLevel.Information;
-
-
-
-    
+        public LogLevel ProgressLogLevel { get; set; } = LogLevel.Debug;
     }
 }

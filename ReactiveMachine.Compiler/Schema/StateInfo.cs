@@ -64,9 +64,9 @@ namespace ReactiveMachine.Compiler
         {
             yield return typeof(TState);
             yield return typeof(StateState<TState>);
-            yield return typeof(ForkLocal<TState>);
-            yield return typeof(RequestLocal<TState>);
-            yield return typeof(RequestPing<TState>);
+            yield return typeof(ForkUpdate<TState>);
+            yield return typeof(PerformLocal<TState>);
+            yield return typeof(PerformPing<TState>);
             yield return typeof(RespondToLocal);
             foreach (var kvp in operations)
                 foreach (var t in kvp.Value.SerializableTypes())
@@ -228,7 +228,7 @@ namespace ReactiveMachine.Compiler
 
         public RequestMessage CreateForkLocalMessage(object op, ulong parent)
         {
-            return new ForkLocal<TState>()
+            return new ForkUpdate<TState>()
             {
                 Operation = op,
                 Parent = parent
@@ -239,22 +239,22 @@ namespace ReactiveMachine.Compiler
         {
             switch (mtype)
             {
-                case MessageType.ForkLocal:
-                    return new ForkLocal<TState>()
+                case MessageType.ForkUpdate:
+                    return new ForkUpdate<TState>()
                     {
                         Operation = payload,
                         Parent = parent
                     };
 
-                case MessageType.RequestLocal:
-                    return new RequestLocal<TState>()
+                case MessageType.PerformLocal:
+                    return new PerformLocal<TState>()
                     {
                         Operation = payload,
                         Parent = parent
                     };
 
-                case MessageType.RequestPing:
-                    return new RequestPing<TState>()
+                case MessageType.PerformPing:
+                    return new PerformPing<TState>()
                     {
                         Key = (IPartitionKey) payload,
                         Parent = parent

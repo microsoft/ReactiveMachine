@@ -15,7 +15,7 @@ namespace LocalTests.BasicExamples
     // The snippets in this file were used for preparing documentation and presentations
     // Most of them are not executed by tests or samples
 
-    [RandomPlacement]
+    [Distribute]
     public class CopyBlob : IOrchestration<UnitType>
     {
         public string From;
@@ -38,7 +38,7 @@ namespace LocalTests.BasicExamples
         }
     }
 
-    public class ReadBlob : IAtLeastOnceActivity<string>
+    public class ReadBlob : IActivity<string>
     {
         public string Path;
         public TimeSpan TimeLimit => TimeSpan.FromSeconds(30);
@@ -49,7 +49,7 @@ namespace LocalTests.BasicExamples
         }
     }
 
-    public class WriteBlob : IAtLeastOnceActivity<string>
+    public class WriteBlob : IActivity<string>
     {
         public string Path;
         public string Content;
@@ -86,7 +86,7 @@ namespace LocalTests.BasicExamples
         }
     }
 
-    [RandomPlacement]
+    [Distribute]
     public class CopyBlob2 : IOrchestration<UnitType>, IMultiple<IPathAffinity, string>
     {
         public string From;

@@ -20,10 +20,7 @@ namespace ReactiveMachine.Extensions
 
         public override string ToString()
         {
-            if (Delay != TimeSpan.Zero)
-                return $"Forked-{Event}";
-            else
-                return $"Forked-{Delay}-{Event}";
+           return $"Scheduled-{Delay}-{Event}";
         }
 
         public async Task<UnitType> Execute(IOrchestrationContext context)

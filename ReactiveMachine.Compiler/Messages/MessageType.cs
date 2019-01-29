@@ -13,11 +13,11 @@ namespace ReactiveMachine.Compiler
         None,
 
         ForkOrchestration,
-        RequestOrchestration,
+        PerformOrchestration,
         RespondToOrchestration,
 
-        ForkLocal,
-        RequestLocal,
+        ForkUpdate,
+        PerformLocal,
         RespondToLocal,
 
         ForkEvent,
@@ -29,19 +29,24 @@ namespace ReactiveMachine.Compiler
         GrantLock,
         ReleaseLock,
 
-        RequestExternal,
+        PerformActivity,
+        RecordActivityResult,
         RespondToActivity,
 
-        RequestFinish,
+        PerformDeterminize,
+        RespondToDeterminize,
+
+        PerformFinish,
         AckFinish,
 
-        RequestPing,
+        PerformPing,
         RespondToPing,
 
         AckInitialization,
 
         EnqueueStartup,
-        ExternalRequest
+        ExternalRequest,
+        RegisterProcess
     }
 
     internal static class MessageTypeExtensions
@@ -66,7 +71,7 @@ namespace ReactiveMachine.Compiler
             switch (type)
             {
                 case MessageType.ForkOrchestration:
-                case MessageType.ForkLocal:
+                case MessageType.ForkUpdate:
                 case MessageType.ForkEvent:
                     return true;
                 default:

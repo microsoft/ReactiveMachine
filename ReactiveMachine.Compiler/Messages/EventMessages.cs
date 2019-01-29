@@ -155,6 +155,7 @@ namespace ReactiveMachine.Compiler
         {
             return new PerformEvent()
             {   Clock = timestamp, Effects = Effects, Event = Event,
+                LockedByCaller = LockedByCaller, PendingAcks = 0,
                 Opid = Opid, Parent = Parent, Position = Position + 1 };
         }
     }

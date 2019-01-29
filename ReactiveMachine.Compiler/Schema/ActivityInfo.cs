@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,42 +16,62 @@ namespace ReactiveMachine.Compiler
     {
         IEnumerable<Type> SerializableTypes();
 
-        IAffinityInfo AffinitizationKey { set; }
+        IAffinityInfo PlacementAffinity { set; }
+
+        bool DistributeRandomly { set; }
+
+        bool RequiresLocks(object request, out List<IPartitionKey> list);
+
+        bool CanExecuteLocally(object request, ulong opid, out uint destination);
 
         void DefineExtensions(IServiceBuilder serviceBuilder);
+
+        void ProcessRequest(RequestMessage message);
+
+        RequestMessage CreateRequestMessage(object activity);
     }
 
-    internal interface IActivityInfo<TReturn>
-    {
-        Task<TReturn> Perform(IActivityBase<TReturn> request, IOrchestrationState orchestrationState);
-    }
-
-    internal enum ActivityType
-    {
-        AtLeastOnce,
-        AtMostOnce,
-    }
-
-    internal class ActivityInfo<TRequest, TReturn> : IActivityInfo, IActivityInfo<TReturn>, IContext, ILogger
-        where TRequest : IActivityBase<TReturn>
+    internal class ActivityInfo<TRequest, TReturn> : IActivityInfo, IContext, ILogger
+        where TRequest : IActivity<TReturn>
     {
         private readonly Process process;
-        private readonly ActivityType type;
 
-        //TODO: honor this when launching activities
-        public IAffinityInfo AffinitizationKey { private get; set; }
+        public IAffinityInfo PlacementAffinity { private get; set; }
 
-        public ActivityInfo(Process process, ActivityType type)
+        public bool DistributeRandomly { private get; set; }
+
+        private readonly bool requirelocks;
+
+        public List<IAffinityInfo> AffinityList;
+
+
+        public ActivityInfo(Process process)
         {
             this.process = process;
-            this.type = type;
             process.Activities[typeof(TRequest)] = this;
+
+            // use reflection to obtain affinity and locking information
+            var canRouteToPrefix = ReflectionServiceBuilder.GetGenericTypeNamePrefix(typeof(ICanRouteTo<>));
+            foreach (var i in typeof(TRequest).GetInterfaces())
+                if (ReflectionServiceBuilder.GetGenericTypeNamePrefix(i) == canRouteToPrefix)
+                {
+                    var gt = i.GenericTypeArguments;
+                    var affinityInfo = process.Affinities[gt[0]];
+                    (AffinityList ?? (AffinityList = new List<IAffinityInfo>())).Add(affinityInfo);
+                }
+
+            var method = typeof(TRequest).GetMethod("Execute");
+            requirelocks = method.GetCustomAttributes(typeof(LockAttribute), false).Count() > 0;
+
+            if (requirelocks && (AffinityList == null || AffinityList.Count == 0))
+                throw new BuilderException($"To use {nameof(LockAttribute)} on Execute function of {typeof(TRequest).FullName}, you must define at least one affinity.");
         }
 
         public IEnumerable<Type> SerializableTypes()
         {
             yield return typeof(TRequest);
             yield return typeof(TReturn);
+            yield return typeof(PerformActivity<TRequest>);
         }
 
         IExceptionSerializer IContext.ExceptionSerializer => process.Serializer;
@@ -60,37 +81,43 @@ namespace ReactiveMachine.Compiler
             Extensions.Register.DefineActivityExtensions<TRequest, TReturn>(serviceBuilder);
         }
 
-        public Task<TReturn> Perform(IActivityBase<TReturn> r, IOrchestrationState orchestrationState)
+        public bool CanExecuteLocally(object request, ulong opid, out uint destination)
         {
-            var request = (TRequest)r;
-            return orchestrationState.Activity(
-                (originalInstanceId) => RunWithTimeout(request, originalInstanceId == process.InstanceId),
-                request.ToString());
-        }
-
-        private async Task<TReturn> Execute(TRequest request, bool guaranteedFirst)
-        {
-            if (guaranteedFirst
-                || type == ActivityType.AtLeastOnce)
+            if (PlacementAffinity != null)
             {
-                return await request.Execute(this);
+                destination = PlacementAffinity.LocateAffinity(request);
             }
-            else if (type == ActivityType.AtMostOnce)
+            else if (DistributeRandomly)
             {
-                var a = (IAtMostOnceActivity<TReturn>)request;
-                return await a.AfterFault(this);
+                destination = (uint)(FNVHash.ComputeHash(opid) % process.NumberProcesses);
             }
             else
             {
-                throw new Exception("internal error: unmatched activity type");
+                destination = process.ProcessId;
             }
+            return destination == process.ProcessId;
         }
 
-        private async Task<TReturn> RunWithTimeout(TRequest request, bool guaranteedFirst)
+        public RequestMessage CreateRequestMessage(object activity)
+        {
+            return new PerformActivity<TRequest>()
+            {
+                Request = (TRequest)activity,
+            };
+        }
+
+        public void ProcessRequest(RequestMessage req)
+        {
+            var request = (PerformActivity<TRequest>)req;
+
+            new ActivityState<TRequest, TReturn>(process, request);
+        }
+
+        public async Task<TReturn> RunWithTimeout(TRequest request)
         {
             var timelimit = request.TimeLimit;
 
-            var taskToComplete = Task.Run(() => Execute(request, guaranteedFirst));
+            var taskToComplete = Task.Run(() => request.Execute(this));
 
             var timeoutCancellationTokenSource = new CancellationTokenSource();
             var completedTask = await Task.WhenAny(taskToComplete, Task.Delay(timelimit, timeoutCancellationTokenSource.Token));
@@ -105,6 +132,28 @@ namespace ReactiveMachine.Compiler
 
             // We did not complete before the timeout
             throw new TimeoutException(String.Format($"Activity {request} has timed out after {0}.", timelimit));
+        }
+
+        public bool RequiresLocks(object request, out List<IPartitionKey> list)
+        {
+            if (!requirelocks)
+            {
+                list = null;
+                return false;
+            }
+            else
+            {
+                if (AffinityList.Count == 1)
+                    list = AffinityList[0].GetAffinityKeys(request).ToList();
+                else
+                {
+                    list = new List<IPartitionKey>();
+                    foreach (var a in AffinityList)
+                        foreach (var k in a.GetAffinityKeys(request))
+                            list.Add(k);
+                }
+                return true;
+            }
         }
 
         ILogger IContext.Logger => this;

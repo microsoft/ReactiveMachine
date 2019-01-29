@@ -73,6 +73,15 @@ namespace ReactiveMachine.Compiler
             return this;
         }
 
+        IServiceBuilder IServiceBuilder.DefineDerived(IDerivedDefiner definer)
+        {
+            foreach (var o in process.Orchestrations.Values.ToList())
+            {
+                o.CallDerivedDefiner(definer, this);
+            }           
+            return this;
+        }
+
         IServiceBuilder IServiceBuilder.DefinePartitionedAffinity<TAffinity, TKey>() 
         {
             var type = typeof(TAffinity);
@@ -140,23 +149,15 @@ namespace ReactiveMachine.Compiler
             return this;
         }
 
-        IServiceBuilder IServiceBuilder.DefineAtLeastOnceActivity<TRequest, TReturn>()
+        IServiceBuilder IServiceBuilder.DefineActivity<TRequest, TReturn>()
         {
             var type = typeof(TRequest);
             if (process.Activities.ContainsKey(type)) return this;
-            new ActivityInfo<TRequest, TReturn>(process, ActivityType.AtLeastOnce);
+            new ActivityInfo<TRequest, TReturn>(process);
             Placements.Add(ReflectionServiceBuilder.DefaultPlacement<TRequest>(process.Affinities.Keys));
             return this;
         }
-        IServiceBuilder IServiceBuilder.DefineAtMostOnceActivity<TRequest, TReturn>()
-        {
-            var type = typeof(TRequest);
-            if (process.Activities.ContainsKey(type)) return this;
-            new ActivityInfo<TRequest, TReturn>(process, ActivityType.AtMostOnce);
-            Placements.Add(ReflectionServiceBuilder.DefaultPlacement<TRequest>(process.Affinities.Keys));
-            return this;
-        }
-       
+    
 
         IServiceBuilder IServiceBuilder.DefineEvent<TEvent>()
         {

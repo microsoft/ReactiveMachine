@@ -13,7 +13,9 @@ namespace ReactiveMachine.Compiler
     {
         IEnumerable<Type> SerializableTypes();
 
-        bool CanExecuteLocally(object request, out uint destination);
+        void CallDerivedDefiner(IDerivedDefiner definer, IServiceBuilder builder);
+
+        bool CanExecuteLocally(object request, ulong opid, out uint destination);
 
         void ProcessRequest(RequestMessage request, OrchestrationType orchestrationType);
 
@@ -22,6 +24,9 @@ namespace ReactiveMachine.Compiler
         RequestMessage CreateRequestMessage(object orchestration);
 
         IAffinityInfo PlacementAffinity { set; }
+
+        bool DistributeRandomly { set; }
+
         bool RequiresLocks(object request, out List<IPartitionKey> list);
 
         void DefineExtensions(IServiceBuilder serviceBuilder);
@@ -35,6 +40,7 @@ namespace ReactiveMachine.Compiler
         private readonly bool IsInitialization;
 
         public IAffinityInfo PlacementAffinity { private get; set; }
+        public bool DistributeRandomly { private get; set; }
 
         public List<IAffinityInfo> AffinityList;
 
@@ -77,10 +83,15 @@ namespace ReactiveMachine.Compiler
             yield return typeof(TRequest);
             yield return typeof(TReturn);
             yield return typeof(ForkOrchestration<TRequest>);
-            yield return typeof(RequestOrchestration<TRequest>);
+            yield return typeof(PerformOrchestration<TRequest>);
             yield return typeof(RespondToOrchestration);
             yield return typeof(AckInitialization);
             yield return typeof(OrchestrationState<TRequest,TReturn>);
+        }
+
+        public void CallDerivedDefiner(IDerivedDefiner definer, IServiceBuilder builder)
+        {
+            definer.DefineForEachOrchestration<TRequest, TReturn>(builder);
         }
 
         public void DefineExtensions(IServiceBuilder serviceBuilder)
@@ -88,11 +99,15 @@ namespace ReactiveMachine.Compiler
             Extensions.Register.DefineOrchestrationExtensions<TRequest, TReturn>(serviceBuilder);
         }
 
-        public bool CanExecuteLocally(object request, out uint destination)
+        public bool CanExecuteLocally(object request, ulong opid, out uint destination)
         {
             if (PlacementAffinity != null)
             {
                 destination = PlacementAffinity.LocateAffinity(request);
+            }
+            else if (DistributeRandomly)
+            {
+                destination = (uint)(FNVHash.ComputeHash(opid) % Process.NumberProcesses);
             }
             else
             {
@@ -103,13 +118,11 @@ namespace ReactiveMachine.Compiler
 
         public void ProcessRequest(RequestMessage request, OrchestrationType orchestrationType)
         {
-            var forkrequest = (ForkOrchestration<TRequest>)request;
-
             new OrchestrationState<TRequest, TReturn>(
                 Process,
                 this,
                 request.Opid,
-                ((ForkOrchestration<TRequest>)request).Request,
+                ((OrchestrationMessage<TRequest>)request).Request,
                 orchestrationType,
                 request.LockedByCaller,
                 request.Parent,
@@ -126,7 +139,7 @@ namespace ReactiveMachine.Compiler
 
         public RequestMessage CreateRequestMessage(object orchestration)
         {
-            return new RequestOrchestration<TRequest>()
+            return new PerformOrchestration<TRequest>()
             {
                 Request = (TRequest) orchestration,
             };

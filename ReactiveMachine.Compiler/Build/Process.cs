@@ -35,18 +35,13 @@ namespace ReactiveMachine.Compiler
         public uint NumberProcesses { get; internal set; }
         private uint Pad;
 
-        // orchestrations in progress
+        // orchestrations, activities, and remote forks in progress
         public Dictionary<ulong, IOrchestrationState> OrchestrationStates = new Dictionary<ulong, IOrchestrationState>();
-        public bool IsPrimary;
-        public Dictionary<ulong, ActivityState> PendingActivities = new Dictionary<ulong, ActivityState>();
+        public Dictionary<ulong, IActivityState> PendingActivities = new Dictionary<ulong, IActivityState>();
         public Dictionary<ulong, FinishState> FinishStates = new Dictionary<ulong, FinishState>();
 
-        internal struct ActivityState
-        {
-            public Task Task;
-            public string Name;
-        }
-
+        public bool IsPrimary;
+ 
         // clocks
         public ulong DeliveryCounter;
         public ulong OperationCounter;
@@ -97,10 +92,29 @@ namespace ReactiveMachine.Compiler
             }
             if (OrchestrationStates.Count > 0)
             {
-                var op = OrchestrationStates.First().Value.WaitingFor;
-                while (OrchestrationStates.ContainsKey(op.Key))
-                    op = OrchestrationStates[op.Key].WaitingFor;
-                ProgressTracer?.Invoke($"Waiting for o{op.Key:d10}-{op.Value}");
+                if (ProgressTracer != null)
+                {
+                    var orchestration = OrchestrationStates.First().Value;
+                    while (true)
+                    {
+                        var response = orchestration.WaitingFor;
+                        if (!response.HasValue)
+                        {
+                            ProgressTracer?.Invoke($"Waiting for orchestration {orchestration}");
+                            break;
+                        }
+                        else if (OrchestrationStates.TryGetValue(response.Value.Key, out var o))
+                        {
+                            orchestration = o;
+                            continue;
+                        }
+                        else
+                        {
+                            ProgressTracer?.Invoke($"Waiting for response o{response.Value.Key:d10}-{response.Value.Value}");
+                            break;
+                        }
+                    }
+                }
                 return true;
             }
             return false;
@@ -193,12 +207,15 @@ namespace ReactiveMachine.Compiler
             HostServices.SerializableTypeSet.Add(typeof(DataContractSerializedExceptionResult));
             HostServices.SerializableTypeSet.Add(typeof(ClassicallySerializedExceptionResult));
             HostServices.SerializableTypeSet.Add(typeof(NonserializedExceptionResult));
+            HostServices.SerializableTypeSet.Add(typeof(SynchronizationDisciplineException));
             HostServices.SerializableTypeSet.Add(typeof(List<IRestorable>));
             HostServices.SerializableTypeSet.Add(typeof(KeyNotFoundException));
+            HostServices.SerializableTypeSet.Add(typeof(TimeoutException));
             HostServices.SerializableTypeSet.Add(typeof(UnitType));
-            HostServices.SerializableTypeSet.Add(typeof(RequestFinish));
+            HostServices.SerializableTypeSet.Add(typeof(PerformFinish));
             HostServices.SerializableTypeSet.Add(typeof(FinishState));
             HostServices.SerializableTypeSet.Add(typeof(AckFinish));
+            HostServices.SerializableTypeSet.Add(typeof(RecordActivityResult));
             HostServices.SerializableTypeSet.Add(typeof(RespondToActivity));
             HostServices.SerializableTypeSet.Add(typeof(ExternalRequest));
             HostServices.SerializableTypeSet.Add(typeof(EnqueueStartup));
@@ -267,28 +284,11 @@ namespace ReactiveMachine.Compiler
                 SnapshotTracer?.Invoke($"Becoming Primary");
 
                 IsPrimary = true;
-                foreach (var t in PendingActivities)
+                foreach (var t in PendingActivities.Values)
                 {
-                    ActivityTracer?.Invoke($"   Restoring activity o{t.Key:D10}");
-                    t.Value.Task.Start();
+                    t.BecomePrimary();
                 }
             }
-        }
-
-        // TODO avoid memory leak on secondaries
-
-        internal void AddActivity(ulong opid, string name, Task task)
-        {
-            PendingActivities.Add(opid, new ActivityState() { Name = name, Task = task });
-            if (IsPrimary)
-            {
-                task.Start();
-            }
-        }
-
-        internal void RemoveActivity(ulong opid)
-        {
-            PendingActivities.Remove(opid);
         }
 
         public void SaveToSnapshot(Snapshot s)
@@ -306,6 +306,8 @@ namespace ReactiveMachine.Compiler
             foreach (var x in PartitionLocks.Values)
                 x.SaveStateTo(s);
             foreach (var x in OrchestrationStates.Values)
+                x.SaveStateTo(s);
+            foreach (var x in PendingActivities.Values)
                 x.SaveStateTo(s);
             foreach (var x in FinishStates.Values)
                 x.SaveStateTo(s);
@@ -331,7 +333,7 @@ namespace ReactiveMachine.Compiler
        
         public void Send(uint destination, Message m)
         {
-            SendTracer?.Invoke($"   {m} -->p{destination:D3}");
+            SendTracer?.Invoke($"   -->p{destination:D3} {m}");
 
             if (destination == ProcessId)
             {

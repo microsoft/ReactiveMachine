@@ -32,7 +32,7 @@ namespace ReactiveMachine
             where TState: IState
         {
             CheckTimeArgument(delay);
-            context.ForkOrchestration(new Extensions.ForkedLocalUpdate<TState, TReturn>()
+            context.ForkOrchestration(new Extensions.ForkedUpdate<TState, TReturn>()
             {
                 Delay = delay,
                 Update = update
@@ -49,7 +49,7 @@ namespace ReactiveMachine
             });
         }
 
-        public static void ScheduleActivity<TReturn>(this IContextWithForks context, TimeSpan delay, IActivityBase<TReturn> activity)
+        public static void ScheduleActivity<TReturn>(this IContextWithForks context, TimeSpan delay, IActivity<TReturn> activity)
         {
             CheckTimeArgument(delay);
             context.ForkOrchestration(new Extensions.ForkedActivity<TReturn>()

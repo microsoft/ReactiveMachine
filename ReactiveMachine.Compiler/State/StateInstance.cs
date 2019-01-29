@@ -97,11 +97,11 @@ namespace ReactiveMachine.Compiler
         {
             if (!process.Orchestrations.TryGetValue(orchestration.GetType(), out var orchestrationInfo))
                 throw new BuilderException($"undefined orchestration type {orchestration.GetType().FullName}.");
-            orchestrationInfo.CanExecuteLocally(orchestration, out uint destination);
             var opid = process.NextOpid;
             var message = orchestrationInfo.CreateForkMessage(orchestration);
             message.Opid = opid;
             message.Parent = CurrentOpid;
+            orchestrationInfo.CanExecuteLocally(orchestration, opid, out uint destination);
             process.Send(destination, message);
 
             process.Telemetry?.OnApplicationEvent(
@@ -121,7 +121,7 @@ namespace ReactiveMachine.Compiler
                 throw new BuilderException($"undefined state {typeof(TAffinity).FullName}.");
             var destination = stateInfo.AffinityInfo.LocateAffinity(update);
             var opid = process.NextOpid;
-            var message = stateInfo.CreateLocalMessage(update, CurrentOpid, MessageType.ForkLocal);
+            var message = stateInfo.CreateLocalMessage(update, CurrentOpid, MessageType.ForkUpdate);
             message.Opid = opid;
             message.Parent = CurrentOpid;
             process.Send(destination, message);

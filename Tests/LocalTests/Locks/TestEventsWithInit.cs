@@ -36,7 +36,7 @@ namespace LocalTests.Locks
         }
     }
 
-    public class InitializationActivity : IAtLeastOnceActivity<int>
+    public class InitializationActivity : IActivity<int>
     {
         public TimeSpan TimeLimit => TimeSpan.FromSeconds(20);
 

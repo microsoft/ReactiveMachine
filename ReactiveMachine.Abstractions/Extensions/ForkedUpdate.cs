@@ -10,27 +10,26 @@ using System.Threading.Tasks;
 namespace ReactiveMachine.Extensions
 {
     [DataContract]
-    public class StableDelay : IActivity<UnitType>
+    public class ForkedUpdate<TState, TReturn> : IOrchestration<UnitType>
+            where TState : IState
     {
         [DataMember]
-        public DateTime TargetTime;
+        public IUpdate<TState, TReturn> Update;
+
+        [DataMember]
+        public TimeSpan Delay;
 
         public override string ToString()
         {
-            return $"StableDelay";
+            return $"Scheduled-{Delay}-{Update}";
         }
 
-        public TimeSpan TimeLimit => TimeSpan.FromMilliseconds(int.MaxValue);
-
-        public async Task<UnitType> Execute(IContext context)
+        public async Task<UnitType> Execute(IOrchestrationContext context)
         {
-            var now = DateTime.UtcNow;
+            await context.DelayBy(Delay);
 
-            if (TargetTime > now)
-            {
-                await Task.Delay(TargetTime - now);
-            }
-            
+            context.ForkUpdate(Update);
+
             return UnitType.Value;
         }
     }

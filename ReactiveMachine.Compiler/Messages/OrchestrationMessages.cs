@@ -8,18 +8,21 @@ using System.Text;
 
 namespace ReactiveMachine.Compiler
 {
-
     [DataContract]
-    internal class ForkOrchestration<TOrchestration> : RequestMessage
+    internal abstract class OrchestrationMessage<TOrchestration> : RequestMessage
     {
         [DataMember]
         public TOrchestration Request;
+    }
 
+    [DataContract]
+    internal class ForkOrchestration<TOrchestration> : OrchestrationMessage<TOrchestration>
+    {
         internal override MessageType MessageType => MessageType.ForkOrchestration;
 
         public override string ToString()
         {
-            return $"{base.ToString()} ForkOrchestration<{typeof(TOrchestration).Name}>";
+            return $"{base.ToString()} ForkOrchestration<{typeof(TOrchestration).Name}> {Request}";
         }
 
         internal override void Apply(Process process)
@@ -30,19 +33,18 @@ namespace ReactiveMachine.Compiler
     }
 
     [DataContract]
-    internal class RequestOrchestration<TOperation> : ForkOrchestration<TOperation>
+    internal class PerformOrchestration<TOrchestration> : OrchestrationMessage<TOrchestration>
     {
-        internal override MessageType MessageType => MessageType.RequestOrchestration;
-
+        internal override MessageType MessageType => MessageType.PerformOrchestration;
 
         public override string ToString()
         {
-            return $"{base.ToString()} RequestOrchestration<{typeof(TOperation).Name}>";
+            return $"{base.ToString()} PerformOrchestration<{typeof(TOrchestration).Name}> {Request}";
         }
 
         internal override void Apply(Process process)
         {
-            var orchestrationInfo = process.Orchestrations[typeof(TOperation)];
+            var orchestrationInfo = process.Orchestrations[typeof(TOrchestration)];
             orchestrationInfo.ProcessRequest(this, OrchestrationType.Perform);
         }
     }

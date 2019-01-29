@@ -48,9 +48,9 @@ namespace ReactiveMachine.Compiler
             Send = action;
         }
 
-        public void RegisterSerializableType<Type>()
+        public void RegisterSerializableType(Type type)
         {
-            SerializableTypeSet.Add(typeof(Type));
+            SerializableTypeSet.Add(type);
         }
 
         public void RegisterGlobalShutdown(Action globalShutdown)
