@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace FunctionsHost
 {
     [DataContract]
-    internal class ClientRequestResponseNotification<TApplicationInfo,TResult> : IAtLeastOnceActivity<UnitType>
+    internal class ClientRequestResponseNotification<TApplicationInfo,TResult> : IActivity<UnitType>
         where TApplicationInfo: IStaticApplicationInfo, new()
     {
         [DataMember]

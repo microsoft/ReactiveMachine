@@ -10,9 +10,9 @@ namespace ReactiveMachine.Compiler
 {
 
     [DataContract]
-    internal class RequestFinish : RequestMessage
+    internal class PerformFinish : RequestMessage
     {
-        internal override MessageType MessageType => MessageType.RequestFinish;
+        internal override MessageType MessageType => MessageType.PerformFinish;
 
         internal override void Apply(Process process)
         {
@@ -33,7 +33,7 @@ namespace ReactiveMachine.Compiler
 
         public override string ToString()
         {
-            return $"{base.ToString()} RequestFinish";
+            return $"{base.ToString()} PerformFinish";
         }
     }
 
@@ -48,11 +48,6 @@ namespace ReactiveMachine.Compiler
         public override string ToString()
         {
             return $"{base.ToString()} AckFinish";
-        }
-
-        internal override void Apply(Process process)
-        {
-            process.OrchestrationStates[Parent].Continue(Opid, Clock, MessageType.AckEvent, UnitType.Value);
         }
     }
 

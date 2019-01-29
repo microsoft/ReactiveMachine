@@ -39,7 +39,7 @@ namespace FunctionsHost
         private TelemetryCollector blobTelemetryListener;
         private readonly Stopwatch stopwatch;
         private readonly Guid invocationId;
-        private bool collectHostEvents;
+        private readonly bool collectHostEvents;
 
         public CombinedLogger CombinedLogger;
         public ILogger HostLogger;
@@ -52,7 +52,7 @@ namespace FunctionsHost
         private readonly DataContractSerializer payloadSerializer;
         private readonly DataContractSerializer payloadSerializerLoopback;
 
-        public Host(IStaticApplicationInfo applicationInfo, FunctionsHostConfiguration configuration, ILogger logger, uint processId, Stopwatch stopwatch, Guid invocationId)
+        public Host(TStaticApplicationInfo applicationInfo, FunctionsHostConfiguration configuration, ILogger logger, uint processId, Stopwatch stopwatch, Guid invocationId)
         {
             this.processId = processId;
             this.stopwatch = stopwatch;
@@ -71,7 +71,7 @@ namespace FunctionsHost
             this.invocationId = invocationId;
             this.payloadSerializer = new DataContractSerializer(typeof(List<KeyValuePair<long,IMessage>>), application.SerializableTypes);
             this.payloadSerializerLoopback = new DataContractSerializer(typeof(List<IMessage>), application.SerializableTypes);
-            this.Connections = new EventHubsConnections(processId, HostLogger, configuration.ehConnectionString);
+            this.Connections = new EventHubsConnections(processId, HostLogger, configuration.EventHubsConnectionString);
 
             if (application.TryGetConfiguration<ReactiveMachine.TelemetryBlobWriter.Configuration>(out var config))
             {

@@ -28,13 +28,6 @@ namespace FunctionsHost
         FunctionsHostConfiguration GetHostConfiguration();
 
         /// <summary>
-        /// A list of types that may be returned by requests, and that must
-        /// therefore be serializable
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<Type> GetResultTypes();
-
-        /// <summary>
         /// The build recipe for creating the application
         /// </summary>
         /// <param name="compiler"></param>

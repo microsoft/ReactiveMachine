@@ -33,5 +33,10 @@ namespace ReactiveMachine
         {
             return 1234;
         }
+
+        public override string ToString()
+        {
+            return "unit";
+        }
     }
 }

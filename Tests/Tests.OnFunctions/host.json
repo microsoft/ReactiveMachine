@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "extensions": {
+    "eventHubs": {
+      "maxBatchSize": 256,
+      "prefetchCount": 256,
+      "batchCheckpointFrequency": 256
+    },
+    "durableTask": {
+      "maxConcurrentActivityFunctions": 2,
+      "maxConcurrentOrchestratorFunctions": 10000
+    }
+  }
+}

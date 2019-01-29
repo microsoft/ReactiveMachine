@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ReactiveMachine.Extensions
 {
     [DataContract]
-    public class StableDelay : IAtLeastOnceActivity<UnitType>
+    public class StableDelay : IActivity<UnitType>
     {
         [DataMember]
         public DateTime TargetTime;

@@ -19,8 +19,11 @@ namespace ReactiveMachine.Extensions
         public static void DefineInternalExtensions(IServiceBuilder builder)
         {
             builder
-                 .DefineAtLeastOnceActivity<StableDelay, UnitType>()
+                 .DefineActivity<StableDelay, UnitType>()
                  .DefineOrchestration<ForkedEvent, UnitType>()
+                 .DefineActivity<DeterminizationActivity<Guid>, Guid>()
+                 .DefineActivity<DeterminizationActivity<int>, int>()
+                 .DefineActivity<DeterminizationActivity<DateTime>, DateTime>()
                  ;
         }
 
@@ -44,7 +47,7 @@ namespace ReactiveMachine.Extensions
             else
             {
                 builder.DefineOrchestration<UpdateWrapper<TState, TReturn>, TReturn>();
-                builder.DefineOrchestration<ForkedLocalUpdate<TState, TReturn>, UnitType>();
+                builder.DefineOrchestration<ForkedUpdate<TState, TReturn>, UnitType>();
             }
         }
     }

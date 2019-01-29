@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -18,8 +19,11 @@ namespace ReactiveMachine.Compiler
         [DataMember]
         public int Position;
 
+        [DataMember]
+        public Dictionary<ulong, QueuedMessage> Requests;
+
         [IgnoreDataMember]
-        internal override object Payload => null;
+        internal override string LabelForTelemetry => "Acquire";
 
         public AcquireLock NextMessage(ulong timestamp)
         {
@@ -41,9 +45,52 @@ namespace ReactiveMachine.Compiler
             affinityInfo.PartitionLock.EnterLock(this);
         }
 
-        internal override object Execute<TKey>(Process process, ulong opid)
+        internal override void Enter<TKey>(Process process, TKey localkey, Stopwatch stopwatch, out bool exitImmediately)
         {
-            return null;
+            var timestamp = process.NextOpid;
+
+            // if we are not the last partition to lock send next lock message
+            if (Position < LockSet.Count - 1)
+            {
+                var nextReq = NextMessage(timestamp);
+                var destination = nextReq.LockSet[nextReq.Position].Locate(process);
+                process.Send(destination, nextReq);
+            }
+
+            // if we are the last partition to lock return ack to orchestration
+            else
+            {
+                process.Send(process.GetOrigin(Opid), new GrantLock()
+                {
+                    Opid = Opid,
+                    Parent = Parent,
+                    Clock = timestamp
+                });
+            }
+
+            exitImmediately = false; // stays in the lock        
+        }
+
+        internal void Add(QueuedMessage request)
+        {
+            if (Requests == null)
+                Requests = new Dictionary<ulong, QueuedMessage>();
+            Requests.Add(request.Opid, request);
+        }
+
+        internal override void Update<TKey>(Process process, TKey localkey, ProtocolMessage protocolMessage, Stopwatch stopwatch, out bool exiting)
+        {
+            if (protocolMessage.OriginalOpid == this.Opid)
+            {
+                exiting = true;
+            }
+            else
+            {
+                exiting = false;
+                Requests[protocolMessage.OriginalOpid].Update(process, localkey, protocolMessage, stopwatch, out var innerIsExiting);
+                if (innerIsExiting)
+                    Requests.Remove(protocolMessage.OriginalOpid);
+            }
         }
 
         public override string ToString()
@@ -63,28 +110,13 @@ namespace ReactiveMachine.Compiler
             return $"{base.ToString()} GrantLock";
         }
 
-        internal override void Apply(Process process)
-        {
-            process.OrchestrationStates[Parent].Continue(Opid, Clock, MessageType.GrantLock, UnitType.Value);
-        }
-    }
+     }
 
     [DataContract]
-    internal class ReleaseLock : Message
+    internal class ReleaseLock : ProtocolMessage
     {
         internal override MessageType MessageType => MessageType.ReleaseLock;
 
-        [DataMember]
-        public IPartitionKey Key;
-
-        [DataMember]
-        public ulong LockOpid;
-
-        internal override void Apply(Process process)
-        {
-            var PartitionLock = process.AffinityIndex[Key.Index].PartitionLock;
-            PartitionLock.ExitLock(Key, LockOpid);
-        }
         public override string ToString()
         {
             return $"{base.ToString()} ReleaseLock";

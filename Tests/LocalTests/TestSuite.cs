@@ -19,8 +19,9 @@ namespace LocalTests
         {
             context.Logger.LogInformation($"Counter.TestSuite Start");
 
-
+            await context.PerformOrchestration(new TestStates());
             await context.PerformOrchestration(new TestEvents());
+            await context.PerformOrchestration(new TestEventsWithInit());
             await context.PerformOrchestration(new TestLocks());
 
             await Task.WhenAll(
@@ -30,6 +31,9 @@ namespace LocalTests
                 );
 
             await context.PerformOrchestration(new TestForks());
+
+            var m = await context.PerformOrchestration(new SimpleLoadTest.Service.LoadTestOrchestration() { Depth = 2, UseSmallerTest = true });
+            context.Logger.LogInformation($"volume: {m.Volume} machines: {string.Join(",", m.Hosts)}");
 
             context.Logger.LogInformation($"Counter.TestSuite End");
 

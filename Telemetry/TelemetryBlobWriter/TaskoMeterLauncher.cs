@@ -26,7 +26,7 @@ namespace ReactiveMachine.TelemetryBlobWriter
 #else
                 "Release",
 #endif
-                "ReactiveMachine.Tools.Taskometer.exe");
+                "ReactiveMachine.Taskometer.exe");
 
             taskoMeter.StartInfo.FileName = executable;
             taskoMeter.StartInfo.UseShellExecute = false;

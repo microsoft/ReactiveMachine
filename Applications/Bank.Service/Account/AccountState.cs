@@ -19,45 +19,33 @@ namespace Bank.Service
         public string Owner;
 
         [DataMember]
-        public DateTime? Created;
+        public DateTime Created;
 
         [DataMember]
-        public DateTime? LastModified;
+        public DateTime LastModified;
 
         [DataMember]
         public int Balance;
 
-        [DataMember]
-        AccountType Type;
-
-        public enum AccountType {  Checking, Savings }
 
         public void On(ISubscriptionContext<Guid> context, UserSignedUp evt)
         {
-            Owner = evt.UserId;
-            
+            Owner = evt.UserId;     
             Created = evt.Timestamp;
             LastModified = evt.Timestamp;
-
-            if (evt.CheckingAccountId == context.Key)
-            {
-                Type = AccountType.Checking;
-                Balance = 10;
-            }
-            else if (evt.SavingsAccountId == context.Key)
-            {
-                Type = AccountType.Savings;
-                Balance = 0;
-            }
+            Balance = 0;
         }
 
         public void On(ISubscriptionContext<Guid> context, AmountTransferred evt)
         {
+            // if this account is the source of the transfer, decrease balance by amount
             if (evt.TransferRequest.FromAccount == context.Key)
             {
                 Balance -= evt.TransferRequest.Amount;
             }
-            else if (evt.TransferRequest.ToAccount == context.Key)
+
+            // if this account is the destination of the transfer, increase balance by amount
+            if (evt.TransferRequest.ToAccount == context.Key)
             {
                 Balance += evt.TransferRequest.Amount;
             }

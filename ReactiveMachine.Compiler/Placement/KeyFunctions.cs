@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+using ReactiveMachine.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -71,10 +72,13 @@ namespace ReactiveMachine.Compiler
             {
                 return new Func<string, uint, uint>((o, n) => JumpConsistentHash.Compute(o, n));
             }
+            else if (typeof(ICustomKeyType<T>).IsAssignableFrom(typeof(T)))
+            {
+                return ((ICustomKeyType<T>)Activator.CreateInstance(typeof(T))).JumpConsistentHasher;
+            }
             else
             {
-                throw new BuilderException($"type {typeof(T)} cannot be used as a key");
-                //return new Func<sbyte, uint>((o) => ConsistentHashing.Compute(serializer.SerializeObject(o), num_buckets));
+                throw new BuilderException($"type {typeof(T)} cannot be used as a key.");
             }
         }
 
@@ -124,9 +128,13 @@ namespace ReactiveMachine.Compiler
             {
                 return new Func<T, uint, uint>((o, n) =>  Convert.ToUInt32(o) / chunksize % n);
             }
+            else if (typeof(ICustomKeyType<T>).IsAssignableFrom(typeof(T)))
+            {
+                return ((ICustomKeyType<T>)Activator.CreateInstance(typeof(T))).RoundRobinPlacer;
+            }
             else
             {
-                throw new BuilderException($"type {typeof(T)} does not allow round-robin placement");
+                throw new BuilderException($"type {typeof(T)} does not allow round-robin placement.");
             }
         }
 
@@ -192,9 +200,13 @@ namespace ReactiveMachine.Compiler
             {
                 return new Func<T, T, int>((a, b) => Convert.ToUInt32(a).CompareTo(Convert.ToUInt32(b)));
             }
+            else if (typeof(ICustomKeyType<T>).IsAssignableFrom(typeof(T)))
+            {
+                return ((ICustomKeyType<T>)Activator.CreateInstance(typeof(T))).Comparator;
+            }
             else
             {
-                throw new BuilderException($"type {typeof(T)} cannot be used as a key");
+                throw new BuilderException($"type {typeof(T)} cannot be used as a key.");
             }
         }
     }

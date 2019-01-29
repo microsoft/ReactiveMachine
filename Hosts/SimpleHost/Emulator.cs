@@ -57,7 +57,7 @@ namespace EmulatorHost
             }
             else
             {
-                new MultiThreadedSimulation(configuration, application, deploymentId, deploymentTimestamp, hostLogger).Run(application);
+                new MultiThreadedSimulation(configuration, application, deploymentId, deploymentTimestamp, hostLogger, this).Run(application);
             }
 
             if (Debugger.IsAttached)
@@ -91,8 +91,15 @@ namespace EmulatorHost
             return null;
         }
 
+        public void FlushLog()
+        {
+            if (streamWriter != null)
+                streamWriter.Flush();
+        }
+
         public void Shutdown()
         {
+            FlushLog();
             Environment.Exit(0);
         }
     }

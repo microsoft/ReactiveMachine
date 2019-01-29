@@ -165,8 +165,7 @@ namespace ReactiveMachine.Compiler
         {
             var orchestrationPrefix = GetGenericTypeNamePrefix(typeof(IOrchestration<>));
             var readOrchestrationPrefix = GetGenericTypeNamePrefix(typeof(IReadOrchestration<>));
-            var atLeastOnceActivityPrefix = GetGenericTypeNamePrefix(typeof(IAtLeastOnceActivity<>));
-            var atMostOnceActivityPrefix = GetGenericTypeNamePrefix(typeof(IAtMostOnceActivity<>));
+            var atLeastOnceActivityPrefix = GetGenericTypeNamePrefix(typeof(IActivity<>));
             var updatePrefix = GetGenericTypeNamePrefix(typeof(IUpdate<,>));
             var readPrefix = GetGenericTypeNamePrefix(typeof(IRead<,>));
 
@@ -179,7 +178,7 @@ namespace ReactiveMachine.Compiler
                 {
                     var name = GetGenericTypeNamePrefix(i);
                     if (name == orchestrationPrefix || name == readOrchestrationPrefix ||
-                        name == atLeastOnceActivityPrefix || name == atMostOnceActivityPrefix ||
+                        name == atLeastOnceActivityPrefix || 
                         name == updatePrefix || name == readPrefix)
                     {
                         if (spec != null)
@@ -213,14 +212,7 @@ namespace ReactiveMachine.Compiler
                 else if (specname == atLeastOnceActivityPrefix)
                 {
                     var returntype = spec.GenericTypeArguments[0];
-                    var m = typeof(IServiceBuilder).GetMethod(nameof(IServiceBuilder.DefineAtLeastOnceActivity));
-                    var mg = m.MakeGenericMethod(o, returntype);
-                    mg.Invoke(serviceBuilder, new object[0]);
-                }
-                else if (specname == atMostOnceActivityPrefix)
-                {
-                    var returntype = spec.GenericTypeArguments[0];
-                    var m = typeof(IServiceBuilder).GetMethod(nameof(IServiceBuilder.DefineAtMostOnceActivity));
+                    var m = typeof(IServiceBuilder).GetMethod(nameof(IServiceBuilder.DefineActivity));
                     var mg = m.MakeGenericMethod(o, returntype);
                     mg.Invoke(serviceBuilder, new object[0]);
                 }

@@ -53,7 +53,7 @@ namespace ReactiveMachine
             return this;
         }
 
-        public ICompiledApplication Compile(uint numberProcesses)
+        public virtual ICompiledApplication Compile(uint numberProcesses)
         {
             NumberProcesses = numberProcesses;
 
@@ -61,6 +61,8 @@ namespace ReactiveMachine
 
             // build (and then discard) a process for the sake of catching errors now
             var p = (Process)MakeProcess(0);
+
+            // extract configurations 
             Configurations = p.Configurations;
 
             return this;
@@ -108,7 +110,6 @@ namespace ReactiveMachine
                 Orchestration = orchestration
             };
         }
-
     
     
     }

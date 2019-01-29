@@ -12,6 +12,7 @@ namespace RideSharing.Benchmark
     {
         public void Build(IServiceBuilder builder)
         {
+            builder.BuildService<RideSharingService>();
             builder.ScanThisDLL();
         }
     }

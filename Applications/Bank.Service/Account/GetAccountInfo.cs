@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 namespace Bank.Service
 {
     [DataContract]
-    public class CheckAccount :
-        IRead<AccountState, CheckAccount.Response>,
+    public class GetAccountInfo :
+        IRead<AccountState, GetAccountInfo.Response>,
         IAccountAffinity
     {
         public Guid AccountId { get; set; }
@@ -20,9 +20,6 @@ namespace Bank.Service
         [DataContract]
         public class Response
         {
-            [DataMember]
-            public bool Exists;
-
             [DataMember]
             public int Balance;
 
@@ -32,20 +29,11 @@ namespace Bank.Service
 
         public Response Execute(IReadContext<AccountState> context)
         {
-            var accountInfo = context.State;
-
-            if (!accountInfo.Created.HasValue)
+            return new Response()
             {
-                return null;
-            }
-            else
-            {
-                return new Response()
-                {
-                    Balance = accountInfo.Balance,
-                    Owner = accountInfo.Owner
-                };
-            }
+                Balance = context.State.Balance,
+                Owner = context.State.Owner
+            };
         }
     }
 }

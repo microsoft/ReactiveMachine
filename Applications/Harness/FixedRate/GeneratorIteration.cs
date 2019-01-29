@@ -28,7 +28,7 @@ namespace Harness
         [DataMember]
         public IWorkloadGenerator Workload;
 
-
+        [CreateIfNotExists]
         public UnitType Execute(IUpdateContext<GeneratorState> context)
         {
             if (!context.State.ExperimentIsFinished)

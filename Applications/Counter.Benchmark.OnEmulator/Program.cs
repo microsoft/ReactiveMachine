@@ -59,12 +59,12 @@ namespace Counter.Benchmark.OnEmulator
                 RoundTripProcessStateEvery = int.MaxValue,
                 DeliverStaleExternalsOneOutOf = 1,
 
-                ConsoleLogLevel = LogLevel.Information,
+                ConsoleLogLevel = LogLevel.Debug,
                 FileLogLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.None,
                 LocalLogDirectory = "C:\\logs\\",
 
                 ApplicationLogLevel = LogLevel.Trace, // log through runtime
-                HostLogLevel = LogLevel.Trace,
+                HostLogLevel = LogLevel.Warning,
                 RuntimeLogLevel = LogLevel.Trace
             };
 
@@ -75,11 +75,17 @@ namespace Counter.Benchmark.OnEmulator
                 CollectThroughput = (System.Diagnostics.Debugger.IsAttached || appConfig.IsLoadLoopsExperiment),
             };
 
+            var runtimeLoggingConfig = new LoggingConfiguration()
+            {
+                //SendLogLevel = LogLevel.Trace,
+                //ProgressLogLevel = LogLevel.None,
+            };
 
             var application = new ApplicationCompiler()
               .SetConfiguration(appConfig)
               .SetConfiguration(telemetryConfig)
               .SetConfiguration(hostConfig)
+              .SetConfiguration(runtimeLoggingConfig)
               .AddService<CounterBenchmarkService>()
               .Compile(appConfig.NumberCounterProcesses + appConfig.NumberGeneratorProcesses);
 

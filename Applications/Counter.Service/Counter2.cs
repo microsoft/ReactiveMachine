@@ -29,6 +29,7 @@ namespace Counter.Service
         [DataMember]
         public uint CounterId { get; set; }
 
+        [CreateIfNotExists]
         public int Execute(IUpdateContext<Counter2> context)
         {
             return ++(context.State.Count);

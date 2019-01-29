@@ -56,13 +56,11 @@ namespace ReactiveMachine
             where TState : IState
             where TRequest : IRead<TState, TReturn>;
 
-        IServiceBuilder DefineAtLeastOnceActivity<TRequest, TReturn>()
-            where TRequest : IAtLeastOnceActivity<TReturn>;
+        IServiceBuilder DefineActivity<TRequest, TReturn>()
+            where TRequest : IActivity<TReturn>;
 
-        IServiceBuilder DefineAtMostOnceActivity<TRequest, TReturn>()
-            where TRequest : IAtMostOnceActivity<TReturn>;
+        IServiceBuilder DefineDerived(IDerivedDefiner definer);
 
     }
-
-
+     
 }

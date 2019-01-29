@@ -7,6 +7,7 @@ using ReactiveMachine;
 using ReactiveMachine.Compiler;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,12 +20,12 @@ namespace LocalTests
         {
             var configuration = new EmulatorHost.Configuration()
             {
-                MultiThreaded = true,
+                MultiThreaded = false,
                 RoundTripMessages = true,
                 RoundTripProcessStateEvery = int.MaxValue,
                 DeliverStaleExternalsOneOutOf = 1,
                 ApplicationLogLevel = LogLevel.Trace,
-                RuntimeLogLevel = LogLevel.Trace,
+                RuntimeLogLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Warning,
                 ConsoleLogLevel = LogLevel.Trace,
                 FileLogLevel = LogLevel.Trace,
             };
@@ -32,7 +33,8 @@ namespace LocalTests
             var loggingConfig = new ReactiveMachine.LoggingConfiguration()
             {
                 SendLogLevel = LogLevel.Trace,
-                LockLogLevel = LogLevel.Trace
+                LockLogLevel = LogLevel.Trace,
+                ProgressLogLevel = LogLevel.None,
             };
 
             Console.WriteLine("Building Application...");

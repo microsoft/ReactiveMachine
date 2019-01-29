@@ -3,10 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
 
 namespace ReactiveMachine.Compiler
 {
@@ -16,7 +13,7 @@ namespace ReactiveMachine.Compiler
 
         void ProcessSubscriptions();
 
-        RequestMessage CreateLocalMessage(object local, ulong parent, bool fork);
+        RequestMessage CreateLocalMessage(object local, ulong parent, MessageType mtype);
 
         IAffinityInfo AffinityInfo { get; }
 
@@ -24,13 +21,13 @@ namespace ReactiveMachine.Compiler
 
         IPartitionKey GetPartitionKeyForLocalOperation(object localOperation);
 
-        void DefineExtensions(IServiceBuilder serviceBuilder);
-
+        void DefineExtensions(IServiceBuilder serviceBuilder);      
     }
 
     internal interface IStateInfoWithKey<TKey>
     {
-        IStateInstance GetInstance(TKey key);
+        bool TryGetInstance(TKey key, out IStateInstance instance, bool createIfNotExist, ulong parent = 0);
+        bool IsCreateIfNotExists(Type operationType);
     }
 
     internal interface IStateInfo<TState>
@@ -39,14 +36,21 @@ namespace ReactiveMachine.Compiler
 
     }
 
-    internal class StateInfo<TState, TAffinity, TKey> : IStateInfo, IStateInfo<TState>, IStateInfoWithKey<TKey>
+    internal interface IStateInfoWithStateAndKey<TState, TKey>
+    {
+        void SetInitializationResult(TKey key, TState state);
+    }
+
+    internal class StateInfo<TState, TAffinity, TKey> : IStateInfo, IStateInfo<TState>, IStateInfoWithKey<TKey>, IStateInfoWithStateAndKey<TState, TKey>
        where TState : IState<TAffinity>, new()
        where TAffinity : IAffinitySpec<TAffinity>
     {
         private readonly Process process;
         private readonly Dictionary<TKey, StateContext<TState, TAffinity,TKey>> states = new Dictionary<TKey, StateContext<TState, TAffinity, TKey>>();       
         private readonly AffinityInfo<TAffinity,TKey> keyInfo;
-        private readonly List<IOperationInfo> operations = new List<IOperationInfo>();
+        private readonly Dictionary<Type,IOperationInfo> operations = new Dictionary<Type, IOperationInfo>();
+
+        private bool HasInitializer;
 
         public StateInfo(Process process, AffinityInfo<TAffinity, TKey> keyInfo)
         {
@@ -60,11 +64,12 @@ namespace ReactiveMachine.Compiler
         {
             yield return typeof(TState);
             yield return typeof(StateState<TState>);
-            yield return typeof(ForkLocal<TState>);
-            yield return typeof(RequestLocal<TState>);
+            yield return typeof(ForkUpdate<TState>);
+            yield return typeof(PerformLocal<TState>);
+            yield return typeof(PerformPing<TState>);
             yield return typeof(RespondToLocal);
-            foreach (var o in operations)
-                foreach (var t in o.SerializableTypes())
+            foreach (var kvp in operations)
+                foreach (var t in kvp.Value.SerializableTypes())
                     yield return t;
         }
 
@@ -85,23 +90,65 @@ namespace ReactiveMachine.Compiler
             states.Clear();
         }
 
-        public StateContext<TState, TAffinity, TKey> GetInstance(TKey key)
+        public void Restore(object keyValue, TState state)
         {
+            var key = (TKey)keyValue;
             if (!states.TryGetValue(key, out var instance))
             {
-                states[key] = instance = CreateStateInstance(key);
+                states[key] = instance = new StateContext<TState, TAffinity, TKey>(process, key);
             }
-            return instance;
+            instance.Restore(state);
         }
 
-        IStateInstance IStateInfoWithKey<TKey>.GetInstance(TKey key)
+        bool IStateInfoWithKey<TKey>.TryGetInstance(TKey key, out IStateInstance instance, bool createIfNotExist, ulong parent)
         {
-            return GetInstance(key);
-        }
+            if (states.TryGetValue(key, out var entry))
+            {
+                instance = entry;
+                return true;
+            }
+            else
+            {
+                if (createIfNotExist)
+                {
+                    instance = states[key] = new StateContext<TState, TAffinity, TKey>(process, key);
 
-        public StateContext<TState, TAffinity, TKey> CreateStateInstance(TKey key)
-        {
-            return new StateContext<TState, TAffinity, TKey>(process, key);
+                    if (!HasInitializer)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        var initialization = new Initialization<TState, TKey>()
+                        {
+                            PartitionKey = keyInfo.MakePartitionKey(key),
+                            Singleton = keyInfo.Singleton,
+                        };
+
+                        var orchestrationInfo =
+                            (OrchestrationInfo<Initialization<TState, TKey>, UnitType>)
+                            process.Orchestrations[typeof(Initialization<TState, TKey>)];
+                        var clock = process.OperationCounter;
+                        var orchestrationState = 
+                            new OrchestrationState<Initialization<TState, TKey>, UnitType>(
+                                process,
+                                orchestrationInfo,
+                                process.NextOpid,
+                                initialization,
+                                OrchestrationType.Initialize,
+                                true,
+                                parent,
+                                clock);
+
+                        return false;
+                    }
+                }
+                else
+                {
+                    instance = null;
+                    return false;
+                }
+            }
         }
 
 
@@ -112,6 +159,9 @@ namespace ReactiveMachine.Compiler
             // use reflection to find the interfaces, check the types, and subscribe
             var singletonSubscribeName = typeof(ISubscribe<,>).Name;
             var partitionedSubscribeName = typeof(ISubscribe<,,>).Name;
+            var singletonInitialization = typeof(IInitialize).Name;
+            var partitionedInitialization = typeof(IInitialize<>).Name;
+
             foreach (var i in typeof(TState).GetInterfaces())
                 if (i.Name == singletonSubscribeName || i.Name == partitionedSubscribeName)
                 {
@@ -142,6 +192,28 @@ namespace ReactiveMachine.Compiler
                     }
                     eventInfo.Subscribe(this);
                 }
+                else if (i.Name == singletonInitialization || i.Name == partitionedInitialization)
+                {
+                    if (i.Name == singletonInitialization)
+                    {
+                        if (!keyInfo.Singleton)
+                            throw new BuilderException($"invalid initialization interface on state {typeof(TState).Name}: must use {partitionedInitialization} with keytype parameter");
+                    }
+                    else if (i.Name == partitionedInitialization)
+                    {
+                        if (keyInfo.Singleton)
+                            throw new BuilderException($"invalid initialization interface on state {typeof(TState).Name}: must use {singletonInitialization}");
+                        var keytype = i.GenericTypeArguments[0];
+                        if (keytype != typeof(TKey))
+                        {
+                            throw new BuilderException($"invalid initialization interface on state {typeof(TState).Name}: must use key type {keytype.Name}");
+                        }
+                    }
+                    HasInitializer = true;
+                }
+
+            if (HasInitializer)
+                new OrchestrationInfo<Initialization<TState, TKey>,UnitType>(process);
         }
 
         public IPartitionKey GetPartitionKeyForLocalOperation(object localOperation)
@@ -154,53 +226,63 @@ namespace ReactiveMachine.Compiler
             };
         }
 
-        public void Restore(object keyValue, TState state)
-        {
-            var instance = GetInstance((TKey) keyValue);
-            instance.Restore(state);
-        }
-
         public RequestMessage CreateForkLocalMessage(object op, ulong parent)
         {
-            return new ForkLocal<TState>()
+            return new ForkUpdate<TState>()
             {
-                LocalOperation = op,
+                Operation = op,
                 Parent = parent
             };
         }
 
-        public RequestMessage CreateLocalMessage(object op, ulong parent, bool fork)
+        public RequestMessage CreateLocalMessage(object payload, ulong parent, MessageType mtype)
         {
-            if (fork)
+            switch (mtype)
             {
-                return new ForkLocal<TState>()
-                {
-                    LocalOperation = op,
-                    Parent = parent
-                };
-            }
-            else
-            {
-                return new RequestLocal<TState>()
-                {
-                    LocalOperation = op,
-                    Parent = parent
-                };
+                case MessageType.ForkUpdate:
+                    return new ForkUpdate<TState>()
+                    {
+                        Operation = payload,
+                        Parent = parent
+                    };
+
+                case MessageType.PerformLocal:
+                    return new PerformLocal<TState>()
+                    {
+                        Operation = payload,
+                        Parent = parent
+                    };
+
+                case MessageType.PerformPing:
+                    return new PerformPing<TState>()
+                    {
+                        Key = (IPartitionKey) payload,
+                        Parent = parent
+                    };
+
+                default: throw new Exception("unhandled case");
             }
         }
 
         public void RegisterOperation<TRequest, TReturn>(bool isRead)
         {
-            operations.Add(new OperationInfo<TRequest,TReturn>()
-            {
-                IsRead = isRead
-            });
+            operations.Add(typeof(TRequest), new OperationInfo<TRequest, TReturn>(isRead));
         }
 
         public void DefineExtensions(IServiceBuilder serviceBuilder)
         {
-            foreach (var op in operations)
-                op.DefineExtensions(serviceBuilder);
+            foreach (var kvp in operations)
+                kvp.Value.DefineExtensions(serviceBuilder);
+        }
+
+        public bool IsCreateIfNotExists(Type operationType)
+        {
+            return operations[operationType].CreateIfNotExists;
+        }
+
+        public void SetInitializationResult(TKey key, TState state)
+        {
+            states[key].SetInitializationResult(state);
         }
 
         public interface IOperationInfo
@@ -208,11 +290,25 @@ namespace ReactiveMachine.Compiler
             IEnumerable<Type> SerializableTypes();
 
             void DefineExtensions(IServiceBuilder serviceBuilder);
+
+            bool CreateIfNotExists { get; }
         }
 
         public class OperationInfo<TRequest, TReturn> : IOperationInfo
         {
             public bool IsRead;
+            public bool CreateIfNotExists { get; private set; }
+
+            public OperationInfo(bool isRead)
+            {
+                this.IsRead = isRead;
+
+                var method = typeof(TRequest).GetMethod("Execute");
+                CreateIfNotExists = method.GetCustomAttributes(typeof(CreateIfNotExistsAttribute), false).Count() > 0;
+
+                if (isRead && CreateIfNotExists)
+                    throw new BuilderException($"The attribute {nameof(CreateIfNotExistsAttribute)} is not allowed on read operations. Consider making this an update operation instead.");
+            }
 
             public IEnumerable<Type> SerializableTypes()
             {

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ReactiveMachine.Extensions
 {
     [DataContract]
-    public class ForkedLocalUpdate<TState, TReturn> : IOrchestration<UnitType>
+    public class ForkedUpdate<TState, TReturn> : IOrchestration<UnitType>
             where TState : IState
     {
         [DataMember]
@@ -21,10 +21,7 @@ namespace ReactiveMachine.Extensions
 
         public override string ToString()
         {
-            if (Delay != TimeSpan.Zero)
-                return $"Forked-{Update}";
-            else
-                return $"Forked-{Delay}-{Update}";
+            return $"Scheduled-{Delay}-{Update}";
         }
 
         public async Task<UnitType> Execute(IOrchestrationContext context)

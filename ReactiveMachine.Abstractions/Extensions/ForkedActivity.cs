@@ -13,17 +13,14 @@ namespace ReactiveMachine.Extensions
     public class ForkedActivity<TReturn> : IOrchestration<UnitType>
     {
         [DataMember]
-        public IActivityBase<TReturn> Activity;
+        public IActivity<TReturn> Activity;
 
         [DataMember]
         public TimeSpan Delay;
 
         public override string ToString()
         {
-            if (Delay != TimeSpan.Zero)
-                return $"Forked-{Activity}";
-            else
-                return $"Forked-{Delay}-{Activity}";
+            return $"Scheduled-{Delay}-{Activity}";
         }
 
         public async Task<UnitType> Execute(IOrchestrationContext context)

@@ -129,7 +129,7 @@ namespace FunctionsHost
             }
         }
 
-        private static async Task RunHost(IStaticApplicationInfo applicationInfo, FunctionsHostConfiguration configuration, uint processId,
+        private static async Task RunHost(TStaticApplicationInfo applicationInfo, FunctionsHostConfiguration configuration, uint processId,
                                           ILogger hostlogger, ILogger logger, LeaseManager leaseManager, System.Diagnostics.Stopwatch stopwatch, Guid invocationId)
         {
             try

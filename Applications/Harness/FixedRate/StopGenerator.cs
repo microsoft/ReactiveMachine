@@ -18,6 +18,7 @@ namespace Harness
         [DataMember]
         public uint GeneratorNumber { get; set; }
 
+        [CreateIfNotExists]
         public UnitType Execute(IUpdateContext<GeneratorState> context)
         {
             context.State.ExperimentIsFinished = true;

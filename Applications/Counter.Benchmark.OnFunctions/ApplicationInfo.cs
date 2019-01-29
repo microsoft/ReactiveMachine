@@ -97,7 +97,7 @@ namespace Counter.Benchmark.OnFunctions
             {
                 // connection strings
                 StorageConnectionString = System.Environment.GetEnvironmentVariable("AzureWebJobsStorage"),
-                ehConnectionString = System.Environment.GetEnvironmentVariable("EVENTHUBS_CONNECTION_STRING"),
+                EventHubsConnectionString = System.Environment.GetEnvironmentVariable("EVENTHUBS_CONNECTION_STRING"),
                 AppInsightsInstrumentationKey = System.Environment.GetEnvironmentVariable("APPINSIGHTS_INSTRUMENTATIONKEY"),
 
                 // logging sources : specify levels to be generated
@@ -116,11 +116,6 @@ namespace Counter.Benchmark.OnFunctions
                 TimeLimit = TimeSpan.FromMinutes(4.5),
                 MaxReceiveBatchSize = 10000,
             };
-        }
-
-        public IEnumerable<Type> GetResultTypes()
-        {
-            yield break;
         }
     }
 }

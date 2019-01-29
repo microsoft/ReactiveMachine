@@ -43,21 +43,19 @@ namespace Bank.Service
         [Lock]
         public async Task<UnitType> Execute(IOrchestrationContext context)
         {
-            var t1 = context.PerformRead(new CheckUseridAvailable() { UserId = UserId });
-            var t2 = context.PerformRead(new CheckAccount() { AccountId = CheckingAccountId });
-            var t3 = context.PerformRead(new CheckAccount() { AccountId = SavingsAccountId });
-            var t4 = context.ReadDateTimeUtcNow();
+            // we want to check that none of the ids clash with existing ones
+            var userExists = context.StateExists<UserState,IUserAffinity,string>(UserId);
+            var checkingExists = context.StateExists<AccountState,IAccountAffinity,Guid>(CheckingAccountId);
+            var savingsExists = context.StateExists<AccountState, IAccountAffinity, Guid>(SavingsAccountId);
 
-            var available = await t1;
-            var clash1 = (await t2) != null;
-            var clash2 = (await t3) != null;
-            DateTime timestamp = await t4;
-
-            if (! available)
+            // we want to record a timestamp for the creation
+            var timestamp = await context.ReadDateTimeUtcNow();
+        
+            if (await userExists)
             {
                 throw new Exception("user already exists");
             }
-            if (clash1 || clash2)
+            if (await checkingExists || await savingsExists)
             {
                 throw new Exception("account id already exists");
             }

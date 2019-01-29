@@ -19,7 +19,7 @@ namespace ReactiveMachine
 
         void RegisterSend(Action<uint, IMessage> action);
 
-        void RegisterSerializableType<Type>();
+        void RegisterSerializableType(Type type);
 
         void RegisterGlobalShutdown(Action globalShutdown);
 

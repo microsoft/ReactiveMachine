@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+using ReactiveMachine.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -137,7 +138,7 @@ namespace ReactiveMachine.Compiler
                 {
                     throw new BuilderException($"undefined key {typeof(TAffinity).FullName}");
                 }
-                activityInfo.AffinitizationKey = keyInfo;
+                activityInfo.PlacementAffinity = keyInfo;
             }
             else
                 throw new NotImplementedException();
@@ -153,6 +154,7 @@ namespace ReactiveMachine.Compiler
                     throw new BuilderException($"undefined orchestration {typeof(TOperation).FullName}");
                 }
                orchestrationInfo.PlacementAffinity = null;
+                orchestrationInfo.DistributeRandomly = false;
             }
             else if (typeof(IActivity).IsAssignableFrom(typeof(TOperation)))
             {
@@ -160,7 +162,33 @@ namespace ReactiveMachine.Compiler
                 {
                     throw new BuilderException($"undefined activity {typeof(TOperation).FullName}");
                 }
-                activityInfo.AffinitizationKey = null;
+                activityInfo.PlacementAffinity = null;
+                activityInfo.DistributeRandomly = false;
+            }
+            else
+                throw new NotImplementedException();
+            return this;
+        }
+
+        IPlacementBuilder IPlacementBuilder.PlaceRandomly<TOperation>()
+        {
+            if (typeof(IOrchestration).IsAssignableFrom(typeof(TOperation)))
+            {
+                if (!process.Orchestrations.TryGetValue(typeof(TOperation), out var orchestrationInfo))
+                {
+                    throw new BuilderException($"undefined orchestration {typeof(TOperation).FullName}");
+                }
+                orchestrationInfo.PlacementAffinity = null;
+                orchestrationInfo.DistributeRandomly = true;
+            }
+            else if (typeof(IActivity).IsAssignableFrom(typeof(TOperation)))
+            {
+                if (!process.Activities.TryGetValue(typeof(TOperation), out var activityInfo))
+                {
+                    throw new BuilderException($"undefined activity {typeof(TOperation).FullName}");
+                }
+                activityInfo.PlacementAffinity = null;
+                activityInfo.DistributeRandomly = true;
             }
             else
                 throw new NotImplementedException();

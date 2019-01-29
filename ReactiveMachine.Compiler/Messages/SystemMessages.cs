@@ -9,7 +9,6 @@ using System.Text;
 
 namespace ReactiveMachine.Compiler
 {
-
     [DataContract]
     internal class EnqueueStartup : RequestMessage
     {
@@ -26,7 +25,7 @@ namespace ReactiveMachine.Compiler
             {
                 var opInfo = process.Orchestrations[orchestration.GetType()];
                 var opid = process.NextOpid;
-                opInfo.CanExecuteLocally(orchestration, out var dest);
+                opInfo.CanExecuteLocally(orchestration, opid, out var dest);
                 var msg = opInfo.CreateForkMessage(orchestration);
                 msg.Opid = opid;
                 msg.Clock = 0;
@@ -53,7 +52,7 @@ namespace ReactiveMachine.Compiler
         {
             var opInfo = process.Orchestrations[Orchestration.GetType()];
             var opid = process.NextOpid;
-            opInfo.CanExecuteLocally(Orchestration, out var dest);
+            opInfo.CanExecuteLocally(Orchestration, opid, out var dest);
             var msg = opInfo.CreateForkMessage(Orchestration);
             msg.Opid = opid;
             msg.Clock = 0;
@@ -62,23 +61,4 @@ namespace ReactiveMachine.Compiler
         }
     }
 
-    [DataContract]
-    internal class RespondToActivity : ResultMessage
-    {
-        [DataMember]
-        public Guid InstanceId;
-
-        internal override MessageType MessageType => MessageType.RespondToActivity;
-
-        public override string ToString()
-        {
-            return $"{base.ToString()} RespondToActivity {InstanceId}";
-        }
-
-        internal override void Apply(Process process)
-        {
-            if (process.OrchestrationStates.TryGetValue(Parent, out var orchestrationState))
-                orchestrationState.Continue(Opid, Clock, MessageType.RespondToActivity, Result);
-        }
-    }
 }
