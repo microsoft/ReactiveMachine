@@ -11,7 +11,7 @@ namespace ReactiveMachine
     /// If placed on an orchestration, each instance of that orchestration is executed on a randomly selected process.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class RandomPlacementAttribute : System.Attribute
+    public class DistributeAttribute : System.Attribute
     {
     }
 }

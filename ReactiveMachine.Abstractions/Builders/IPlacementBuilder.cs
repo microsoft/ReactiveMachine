@@ -56,5 +56,8 @@ namespace ReactiveMachine
 
         IPlacementBuilder PlaceOnCaller<TOperation>()
             where TOperation : INonAffineOperation;
+
+        IPlacementBuilder PlaceRandomly<TOperation>()
+            where TOperation : INonAffineOperation;
     }
 }
