@@ -19,3 +19,47 @@ Typically, events are forked rather than performed. However, sometimes orchestra
 ```csharp
 await context.PerformEvent(new SomeEvent());   
 ```
+
+
+## Event Subscriptions
+
+State classes can also implement special subscription interfaces that allow them to be updated automatically in response to subscribed events.
+
+### Example 2: Global Counter
+
+Consider that we would like to maintain a single global counter to count some sort of rare event. Because the state is just one piece in this case, we define a singleton affinity:
+
+```c#
+public interface IGlobalCounterAffinity : ISingletonAffinity<IGlobalCounterAffinity>  {  }
+```
+
+Next, we define an event class. The event has to implement `IGlobalCounterAffinity` to let the runtime know that this event has an effect on that affinity.
+
+```csharp
+public class SomeEvent : IEvent, IGlobalCounterAffinity
+{
+    ...
+}
+```
+
+Finally, we define the state, including a subscription to the event:
+
+```csharp
+public class GlobalCounterState :
+    ISingletonState<IGlobalCounterAffinity>,
+    ISubscribe<SomeEvent, IGlobalCounterAffinity>
+{
+    public int Count;
+
+    public void On(ISubscriptionContext context, SomeEvent evt)
+    {
+        Count++;
+    }
+}
+```
+
+To fire off the event in an orchestration, we construct an object and call ForkEvent.
+
+```csharp
+context.ForkEvent(new SomeEvent());
+```
