@@ -1,26 +1,30 @@
 ---
 title: "States"
 description: store information durably
-weight: 23
+weight: 24
 menu:
   main: 
     parent: "Programming Model"
-    weight: 23
+    weight: 24
 ---
 
 States are used to store information durably and scalably. To use state in a reactive machine application, you
 
-- must define how the state should be distributed, by declaring an **affinity**.
+- must define how the state should be partitioned, by declaring an **affinity**.
 - must define the **state** to be stored.
+
+Then, there are a variety of options about how the state should be managed and accessed. You
+
 - may define **read** operations that can access the state and return a value
 - may define **update** operations that can read and update the state and return a value
+- may define an **initialize** orchestration that is called when the state is initialized
 - may define event **subscriptions** that can update the state in response to an event
 
 ### Example 1: Account State
 
-Suppose we are implementing a service whose customers have some sort of account, containing some form of currency. Conceptually, the type of our data is something like `Dictionary<Guid,AccountState>`, but we want this dictionary to be partitioned over the machines in a cluster, so we can handle very large numbers of accounts, and we want it durably persisted in cloud storage.  
+Suppose we are implementing a service whose customers have some sort of account, containing some form of currency. Conceptually, we need something like `Dictionary<Guid,AccountState>`; however, a simple dictionary is not good enough: the runtime should durably persist the data, and distribute it over all the machines in the cluster.
 
-First, we need to define an **affinity**, i.e. the "type of the key". We do this by defining a new interface that implements `IPartitionedAffinity`:
+First, we define a **partitioned affinity**, i.e. the "type of the key", by defining an interface `IAccountAffinity`:
 
 ```csharp
 public interface IAccountAffinity : IPartitionedAffinity<IAccountAffinity,Guid>
@@ -29,16 +33,19 @@ public interface IAccountAffinity : IPartitionedAffinity<IAccountAffinity,Guid>
 }
 ```
 
-Second, we define the **state** of the account, i.e. the "type of the value". We do this by defining a new serializable class that implements `IPartitionedState`:
+Second, we define the **state** of the account, i.e. the "type of the value". We do this by defining a class
 
 ```csharp
 public class AccountState : IPartitionedState<IAccountAffinity,Guid>
 {
+    public string Owner;
     public int Balance;
 }
 ```
 
-Finally, we want to define operations that can read and update the account state. As for orchestrations and activites, read and update operations are defined as serializable classes with an `Execute` method.
+Note that it is not necessary to include the `AccountId` in the state.
+
+Next, we define operations to access the account state. Read and update operations are defined as serializable classes with an `Execute` method. The execute method provides a `context` object that contains the current state as a property `context.State`.
 
 For example, we can define a **read operation** that returns an integer (the balance) by defining a new serializable class that implements `IRead`:
 
@@ -46,22 +53,24 @@ For example, we can define a **read operation** that returns an integer (the bal
 public class ReadBalance : IRead<AccountState, int>, IAccountAffinity
 {
     public Guid AccountId { get; set; }
+
     public int Execute(IReadContext<AccountState> context)
     {
-        return context.State.Balance;
+        context.Logger.LogInformation($"now reading account with id {AccountId}");
+        return context.State.Balance; 
     }
 }
 ```
 
-Note that the class must also implement the `IAccountAffinity` interface, so that the runtime can determine which account is being targeted by this operation by getting the `AccountId` property. Inside the `Execute` method, we can use the `context` object to access the state and read the balance. A read operation *must not* modify the state.
+This class implements `IAccountAffinity`, so that the runtime can determine which account is being targeted by getting the `AccountId` property. Inside the `Execute` method, we can use the `context` object to access the state and read the balance. A read operation *must not* modify the state -- doing so can corrupt the runtime.
 
-To execute the read operation from within an orchestration, we construct a read operation and call `PerformRead`:
+To *execute this read* operation from within an orchestration, we construct it and pass it as an argument to `context.PerformRead`:
 
 ```csharp
 int balance = await context.PerformRead(new ReadBalance() { AccountId = accountId });
 ```
 
-To define an **update operation**, we do something similar, but we add another input (the amount to be withdrawn), we check to see if there is sufficient balance before withdrawing the amount, and we return a boolean indicating whether we did indeed withdraw:
+To define an **update operation**, we do something similar, but to make this example more interesting, we add another parameter (the amount to be withdrawn), and then we check to see if there is sufficient balance before withdrawing the amount. We return a boolean indicating whether we did indeed withdraw:
 
 ```csharp
 public class TryWithdraw : IUpdate<AccountState, bool>, IAccountAffinity
@@ -78,7 +87,7 @@ public class TryWithdraw : IUpdate<AccountState, bool>, IAccountAffinity
 }
 ```
 
-To execute the update operation from within an orchestration, we construct it and call `PerformUpdate`:
+Again, *to execute this update operation* from within an orchestration, we construct it and pass it as an argument to `context.PerformUpdate`:
 
 ```csharp
 bool withdrawSuccessful = await context.PerformUpdate(new TryWithdraw()
@@ -90,52 +99,31 @@ bool withdrawSuccessful = await context.PerformUpdate(new TryWithdraw()
 
 Note that calling multiple withdrawal operations concurrently never produces unsafe interleavings, because all operations on a state are always serialized.
 
-### Example 2: Global Counter
+## Initialization
 
-Consider that we would like to maintain a single global counter to count some sort of rare event. Because the state is just one piece in this case, we define a singleton affinity:
+A class defining a state must be serializable, and have a parameterless default constructor. This constructor is used to create the initial state.
 
-```c#
-public interface IGlobalCounterAffinity : ISingletonAffinity<IGlobalCounterAffinity>  {  }
-```
+Read operations that access a non-existent state always throw a `KeyNotFound` exception. The same is true for update operations, by default. However, this behavior can be changed by specifying the `[CreateIfNotExist]` attribute on the execute method.
 
-Next, we define an event class. The event has to implement `IGlobalCounterAffinity` to let the runtime know that this event has an effect on that affinity.
+For example, performing the following update operation ensures a state exists:
 
 ```csharp
-public class SomeEvent : IEvent, IGlobalCounterAffinity
+public class EnsureAccountExists : IUpdate<AccountState, UnitType>, IAccountAffinity
 {
-    ...
-}
-```
-
-Finally, we define the state, including a subscription to the event:
-
-```csharp
-public class GlobalCounterState :
-    ISingletonState<IGlobalCounterAffinity>,
-    ISubscribe<SomeEvent, IGlobalCounterAffinity>
-{
-    public int Count;
-
-    public void On(ISubscriptionContext context, SomeEvent evt)
+    public Guid AccountId { get; set; }
+ 
+    [CreateIfNotExist]
+    public UnitType Execute(IUpdateContext<AccountState> context)
     {
-        Count++;
+        return UnitType.Value;
     }
 }
 ```
 
-To fire off the event in an orchestration, we construct an object and call ForkEvent.
+The state object is created using the default constructor. This constructor must be deterministic! For example, it must not use timestamps, random Guids, sequence numbers obtained from static counters, etc.
+However, it is often desirable to do more initialization than what can be done in a default constructor. Thus, we support a special declaration for intializer orchestrations.
 
-```csharp
-context.ForkEvent(new SomeEvent());
-```
-
-## Initial State
-
-There is no operation for creating a state. Rather, states are created lazily *when needed*, i.e. when they are accessed for the first time by a read, update, or event. 
-
-All states must be serializable, and have a parameterless constructor. This constructor is used to create the initial state and must be deterministic.
-
-Sometimes, it may be desirable to do additional work when initializing the state, such as logging, or forking operations. Also, for partitioned states, it is often desirable to make the initial state depend on the partition key. Thus, we support interfaces `IInitialize` (for singleton states) and `IInitialize<TKey>` (for partitioned states). If a state declares that interface, then the `OnInitialize` method is guaranteed to be called right before any other operations are applied to this state.
+The interfaces `IInitialize` (for singleton states) and `IInitialize<TKey>` (for partitioned states) can be used for this purpose. If a state declares that interface, then the `OnInitialize` method is guaranteed to be called exactly once, before any other operations are applied to this state.
 
 ```csharp
 public class AccountState :
@@ -171,3 +159,4 @@ public class GlobalCounterState :
     }
 }
 ```
+

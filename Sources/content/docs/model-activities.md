@@ -8,12 +8,14 @@ menu:
     weight: 22
 ---
 
+Activities define how to execute some task, given some input, and return some value. The runtime logs all activity results, so the outcome is deterministically replayable even if the activity code is nondeterministic and/or performs arbitrary I/O.
 
-Activities are classes that define how to execute some task in an `Execute` method, and may include nondeterminism and I/O.
+Activities are declared as a C# class that implements the `IAtLeastOnceActivity<TResult>` or `IAtMostOnceActivity<TResult>` interface. They implement an `Execute` method that gets called with an `IActivityContext` argument and returns a `TResult`.
 
 ### Example 1 : Calling an External Service
 
 We can define an activity that reads the contents of a blob from Azure Storage:
+
 ```c#
 public class ReadBlob : IAtLeastOnceActivity<string>
 {
@@ -32,9 +34,30 @@ public class ReadBlob : IAtLeastOnceActivity<string>
     }
 }
 ```
+
 **Timeouts**. Activities must specify a TimeLimit property. A timer is automatically started when the activity starts executing. If the activity does not finish before the time limit is reached, a `System.TimeoutException` is thrown. In general, using timeouts is helpful to guarantee that orchestrations can make progress.
 
 **Context object**. Just like for orchestrations, the `Execute` method is passed a context. However, this context has a lot fewer methods. Essentially, it just supports logging (via `context.Logger`) and accessing configuration information (via `context.GetConfiguration<TConfiguration>()`).
+
+## Guidelines
+
+Activities "determinize" nondeterministic, external, fallible, or otherwise unpredictable tasks, by logging the outcome. Under replay, activities are not repeated if the log has already recorded a result (a returned value or exception) for this activity: instead, the recorded result is used. Thus, the activity has become *deterministically replayable*.  
+
+ Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
+
+### Activites vs. Orchestrations
+
+Activities complement orchestrations in terms of what you are allowed to do inside `Execute`:
+
+|                    | Activity  |  Orchestration |
+|--------------------|-----------|----------------|
+| Nondeterminism            | ✓  | ❌ |
+| External Calls            | ✓  | ❌ |
+| Any type of I/O           | ✓  | ❌ |
+| Long-running computations | ✓  | ❌ |
+| Perform an operation      | ❌ | ✓  |
+| Fork an operation         | ❌ | ✓  |
+| Schedule an operation     | ❌ | ✓  |
 
 ### Example 2: Performing a CPU-intensive computation
 
@@ -67,26 +90,6 @@ namespace Miner.Service
     }
 }
 ```
-
-## Guidelines
-
-Activities "determinize" nondeterministic, external, fallible, or otherwise unpredictable tasks, by logging the outcome. Under replay, activities are not repeated if the log has already recorded a result (a returned value or exception) for this activity: instead, the recorded result is used. Thus, the activity has become *deterministically replayable*.  
-
- Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.
-
-### Activites vs. Orchestrations
-
-Activities complement orchestrations in terms of what you are allowed to do inside `Execute`:
-
-|                    | Activity  |  Orchestration |
-|--------------------|-----------|----------------|
-| Nondeterminism            | ✓  | ❌ |
-| External Calls            | ✓  | ❌ |
-| Any type of I/O           | ✓  | ❌ |
-| Long-running computations | ✓  | ❌ |
-| Perform an operation      | ❌ | ✓  |
-| Fork an operation         | ❌ | ✓  |
-| Schedule an operation     | ❌ | ✓  |
 
 ### At-least-once vs. At-most-once
 

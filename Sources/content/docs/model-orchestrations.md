@@ -8,10 +8,11 @@ menu:
     weight: 21
 ---
 
-Orchestrations are classes that define how to execute of one or more operations in their `Execute` method.
-Typically, orchestrations are executed by a service application to handle external requests or events. 
+Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations are written in async/await style, and may return a result value. Typically, orchestrations are executed by a service application to handle external requests or events.
 
-Internally, the state of an orchestration is tracked by recording the operations it performs, and the `Execute` method must therefore be deterministically replayable, and not directly call any I/O or async methods.
+Orchestrations are declared as a C# class that implements the `IOrchestration<TResult>` interface, by providing an `Execute` method that gets called with an `IOrchestrationContext` argument and returns a `TResult`.
+
+The code inside the `Execute` method must be deterministically replayable (more on this below). For example, it must not call any I/O or async methods other than the ones provided by the `IOrchestrationContext` argument.
 
 
 ### Example 1: BlobBackup
