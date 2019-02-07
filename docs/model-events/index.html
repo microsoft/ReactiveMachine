@@ -112,11 +112,11 @@ The Reactive Machine | Events
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-states/">States</a>
+                    <a href="/docs/model-affinities/">Affinities</a>
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-affinities/">Affinities</a>
+                    <a href="/docs/model-states/">States</a>
                 </li>
         
                 <li class="is-active">
@@ -142,10 +142,41 @@ The Reactive Machine | Events
 
 <div class="container docs-container">
   <div class="content">
-    <p style="color:red; font-size:20pt">(section needs work)</p>
+    
+
+<p style="color:red; font-size:20pt">(section needs work)</p>
 
 <p>Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</p>
 
+<p>Typically, events are forked rather than performed. However, sometimes orchestrations want to wait for all effects of an event to have been applied; in that case, they can perform the event and await the task.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformEvent</span><span class="p">(</span><span class="k">new</span> <span class="n">SomeEvent</span><span class="p">());</span>   </code></pre></div>
+<h2 id="event-subscriptions">Event Subscriptions</h2>
+
+<p>State classes can also implement special subscription interfaces that allow them to be updated automatically in response to subscribed events.</p>
+
+<h3 id="example-2-global-counter">Example 2: Global Counter</h3>
+
+<p>Consider that we would like to maintain a single global counter to count some sort of rare event. Because the state is just one piece in this case, we define a singleton affinity:</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">IGlobalCounterAffinity</span> <span class="p">:</span> <span class="n">ISingletonAffinity</span><span class="p">&lt;</span><span class="n">IGlobalCounterAffinity</span><span class="p">&gt;</span>  <span class="p">{</span>  <span class="p">}</span></code></pre></div>
+<p>Next, we define an event class. The event has to implement <code>IGlobalCounterAffinity</code> to let the runtime know that this event has an effect on that affinity.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">SomeEvent</span> <span class="p">:</span> <span class="n">IEvent</span><span class="p">,</span> <span class="n">IGlobalCounterAffinity</span>
+<span class="p">{</span>
+    <span class="p">...</span>
+<span class="p">}</span></code></pre></div>
+<p>Finally, we define the state, including a subscription to the event:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">GlobalCounterState</span> <span class="p">:</span>
+    <span class="n">ISingletonState</span><span class="p">&lt;</span><span class="n">IGlobalCounterAffinity</span><span class="p">&gt;,</span>
+    <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">SomeEvent</span><span class="p">,</span> <span class="n">IGlobalCounterAffinity</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Count</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">SomeEvent</span> <span class="n">evt</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Count</span><span class="p">++;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>To fire off the event in an orchestration, we construct an object and call ForkEvent.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="n">context</span><span class="p">.</span><span class="n">ForkEvent</span><span class="p">(</span><span class="k">new</span> <span class="n">SomeEvent</span><span class="p">());</span></code></pre></div>
   </div>
 </div>
 
@@ -156,7 +187,7 @@ The Reactive Machine | Events
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>

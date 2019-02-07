@@ -111,12 +111,12 @@ The Reactive Machine | States
                     <a href="/docs/model-activities/">Activities</a>
                 </li>
         
-                <li class="is-active">
-                    <a href="/docs/model-states/">States</a>
-                </li>
-        
                 <li class="">
                     <a href="/docs/model-affinities/">Affinities</a>
+                </li>
+        
+                <li class="is-active">
+                    <a href="/docs/model-states/">States</a>
                 </li>
         
                 <li class="">
@@ -144,102 +144,124 @@ The Reactive Machine | States
   <div class="content">
     
 
-<p>States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.</p>
+<p>States are used to store information durably and scalably. To use state in a reactive machine application, you</p>
 
-<p style="color:red; font-size:20pt">(section needs work)</p>
+<ul>
+<li>must define how the state should be partitioned, by declaring an <strong>affinity</strong>.</li>
+<li>must define the <strong>state</strong> to be stored.</li>
+</ul>
 
-<h2 id="example-1-bank-customer-state">Example 1: Bank Customer State</h2>
+<p>Then, there are a variety of options about how the state should be managed and accessed. You</p>
 
-<p>We start by defining an affinity for how our data should be partitioned.  To do this, we implement an affinity based on the users identity.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
+<ul>
+<li>may define <strong>read</strong> operations that can access the state and return a value</li>
+<li>may define <strong>update</strong> operations that can read and update the state and return a value</li>
+<li>may define an <strong>initialize</strong> orchestration that is called when the state is initialized</li>
+<li>may define event <strong>subscriptions</strong> that can update the state in response to an event</li>
+</ul>
+
+<h3 id="example-1-account-state">Example 1: Account State</h3>
+
+<p>Suppose we are implementing a service whose customers have some sort of account, containing some form of currency. Conceptually, we need something like <code>Dictionary&lt;Guid,AccountState&gt;</code>; however, a simple dictionary is not good enough: the runtime should durably persist the data, and distribute it over all the machines in the cluster.</p>
+
+<p>First, we define a <strong>partitioned affinity</strong>, i.e. the &ldquo;type of the key&rdquo;, by defining an interface <code>IAccountAffinity</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">interface</span> <span class="n">IAccountAffinity</span> <span class="p">:</span> <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span><span class="n">Guid</span><span class="p">&gt;</span>
 <span class="p">{</span>
-    <span class="k">public</span> <span class="k">interface</span> <span class="n">IUserAffinity</span> <span class="p">:</span> 
-        <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">IUserAffinity</span><span class="p">,</span><span class="kt">string</span><span class="p">&gt;</span>
+    <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Second, we define the <strong>state</strong> of the account, i.e. the &ldquo;type of the value&rdquo;. We do this by defining a class</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">AccountState</span> <span class="p">:</span> <span class="n">IPartitionedState</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span><span class="n">Guid</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Owner</span><span class="p">;</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Balance</span><span class="p">;</span>
+<span class="p">}</span></code></pre></div>
+<p>Note that it is not necessary to include the <code>AccountId</code> in the state.</p>
+
+<p>Next, we define operations to access the account state. Read and update operations are defined as serializable classes with an <code>Execute</code> method. The execute method provides a <code>context</code> object that contains the current state as a property <code>context.State</code>.</p>
+
+<p>For example, we can define a <strong>read operation</strong> that returns an integer (the balance) by defining a new serializable class that implements <code>IRead</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">ReadBalance</span> <span class="p">:</span> <span class="n">IRead</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">,</span> <span class="kt">int</span><span class="p">&gt;,</span> <span class="n">IAccountAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IReadContext</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;now reading account with id {AccountId}&#34;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">context</span><span class="p">.</span><span class="n">State</span><span class="p">.</span><span class="n">Balance</span><span class="p">;</span> 
     <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
-<p>We create an event that our state will subscribe to: the <code>UserSignedUp</code> event.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
-<span class="p">{</span><span class="na">
-</span><span class="na">    [DataContract]</span>
-    <span class="k">public</span> <span class="k">class</span> <span class="nc">UserSignedUp</span> <span class="p">:</span> 
-        <span class="n">IEvent</span><span class="p">,</span>
-        <span class="n">IUserAffinity</span><span class="p">,</span>
-        <span class="n">IMultiple</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span><span class="n">Guid</span><span class="p">&gt;</span>
-    <span class="p">{</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">FullName</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">InitialCredentials</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="n">DateTime</span> <span class="n">Timestamp</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="n">Guid</span> <span class="n">SavingsAccountId</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="n">Guid</span> <span class="n">CheckingAccountId</span><span class="p">;</span>
+<p>This class implements <code>IAccountAffinity</code>, so that the runtime can determine which account is being targeted by getting the <code>AccountId</code> property. Inside the <code>Execute</code> method, we can use the <code>context</code> object to access the state and read the balance. A read operation <em>must not</em> modify the state &ndash; doing so can corrupt the runtime.</p>
 
-        <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;</span> <span class="n">DeclareAffinities</span><span class="p">()</span>
-        <span class="p">{</span>
-            <span class="k">yield</span> <span class="k">return</span> <span class="n">SavingsAccountId</span><span class="p">;</span>
-            <span class="k">yield</span> <span class="k">return</span> <span class="n">CheckingAccountId</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span></code></pre></div>
-<p>Now, we can create a partitioned state that&rsquo;s derived from the <code>UserSignedUp</code> events.  These events are subscribed to by implementing the <code>ISubscribe</code> interface and specifying which events you wish to subscribe to.  The <code>IPartitionedState</code> interface designates how the partitioning key should be used to partition the state across the nodes.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
-<span class="p">{</span><span class="na">
-</span><span class="na">    [DataContract]</span>
-    <span class="k">public</span> <span class="k">class</span> <span class="nc">UserState</span> <span class="p">:</span>
-         <span class="n">IPartitionedState</span><span class="p">&lt;</span><span class="n">IUserAffinity</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;,</span>
-         <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">UserSignedUp</span><span class="p">,</span> <span class="n">IUserAffinity</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span>
-    <span class="p">{</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="n">DateTime</span><span class="p">?</span> <span class="n">Created</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">FullName</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">InitialCredentials</span><span class="p">;</span><span class="na">
-</span><span class="na">
-</span><span class="na">        [DataMember]</span>
-        <span class="k">public</span> <span class="n">HashSet</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;</span> <span class="n">Accounts</span> <span class="p">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;();</span>
+<p>To <em>execute this read</em> operation from within an orchestration, we construct it and pass it as an argument to <code>context.PerformRead</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="kt">int</span> <span class="n">balance</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformRead</span><span class="p">(</span><span class="k">new</span> <span class="n">ReadBalance</span><span class="p">()</span> <span class="p">{</span> <span class="n">AccountId</span> <span class="p">=</span> <span class="n">accountId</span> <span class="p">});</span></code></pre></div>
+<p>To define an <strong>update operation</strong>, we do something similar, but to make this example more interesting, we add another parameter (the amount to be withdrawn), and then we check to see if there is sufficient balance before withdrawing the amount. We return a boolean indicating whether we did indeed withdraw:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">TryWithdraw</span> <span class="p">:</span> <span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">,</span> <span class="kt">bool</span><span class="p">&gt;,</span> <span class="n">IAccountAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Amount</span><span class="p">;</span>
 
-        <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">,</span> <span class="n">UserSignedUp</span> <span class="n">evt</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="n">Created</span> <span class="p">=</span> <span class="n">evt</span><span class="p">.</span><span class="n">Timestamp</span><span class="p">;</span>
-            <span class="n">FullName</span> <span class="p">=</span> <span class="n">evt</span><span class="p">.</span><span class="n">FullName</span><span class="p">;</span>
-            <span class="n">InitialCredentials</span> <span class="p">=</span> <span class="n">evt</span><span class="p">.</span><span class="n">InitialCredentials</span><span class="p">;</span>
-            <span class="n">Accounts</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">evt</span><span class="p">.</span><span class="n">SavingsAccountId</span><span class="p">);</span>
-            <span class="n">Accounts</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">evt</span><span class="p">.</span><span class="n">CheckingAccountId</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span></code></pre></div>
-<p>We can now create an operation for reading the state.  To do this, we implement the <code>IRead</code> interface.  We specify that we are reading <code>UserState</code> and returning a <code>bool</code>.  Our operation implements the <code>IUserAffinity</code> partitioning key, and therefore needs to carry a <code>UserId</code> for routing to the correct partition.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Bank.Service</span>
-<span class="p">{</span><span class="na">
-</span><span class="na">    [DataContract]</span>
-    <span class="k">public</span> <span class="k">class</span> <span class="nc">CheckUseridAvailable</span> <span class="p">:</span>
-        <span class="n">IRead</span><span class="p">&lt;</span><span class="n">UserState</span><span class="p">,</span> <span class="kt">bool</span><span class="p">&gt;,</span>
-        <span class="n">IUserAffinity</span>
+    <span class="k">public</span> <span class="kt">bool</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IUpdateContext</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="k">public</span> <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">State</span><span class="p">.</span><span class="n">Balance</span> <span class="p">&lt;</span> <span class="n">Amount</span><span class="p">)</span> <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">State</span><span class="p">.</span><span class="n">Balance</span> <span class="p">-=</span> <span class="n">Amount</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Again, <em>to execute this update operation</em> from within an orchestration, we construct it and pass it as an argument to <code>context.PerformUpdate</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="kt">bool</span> <span class="n">withdrawSuccessful</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformUpdate</span><span class="p">(</span><span class="k">new</span> <span class="n">TryWithdraw</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">AccountId</span> <span class="p">=</span> <span class="n">accountId</span><span class="p">,</span>
+    <span class="n">Amount</span> <span class="p">=</span> <span class="m">20</span>
+<span class="p">});</span></code></pre></div>
+<p>Note that calling multiple withdrawal operations concurrently never produces unsafe interleavings, because all operations on a state are always serialized.</p>
 
-        <span class="k">public</span> <span class="kt">bool</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IReadContext</span><span class="p">&lt;</span><span class="n">UserState</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="k">return</span> <span class="p">!</span> <span class="n">context</span><span class="p">.</span><span class="n">State</span><span class="p">.</span><span class="n">Created</span><span class="p">.</span><span class="n">HasValue</span><span class="p">;</span>
-        <span class="p">}</span>
+<h2 id="initialization">Initialization</h2>
+
+<p>A class defining a state must be serializable, and have a parameterless default constructor. This constructor is used to create the initial state.</p>
+
+<p>Read operations that access a non-existent state always throw a <code>KeyNotFound</code> exception. The same is true for update operations, by default. However, this behavior can be changed by specifying the <code>[CreateIfNotExist]</code> attribute on the execute method.</p>
+
+<p>For example, performing the following update operation ensures a state exists:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">EnsureAccountExists</span> <span class="p">:</span> <span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">,</span> <span class="n">UnitType</span><span class="p">&gt;,</span> <span class="n">IAccountAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
+</span><span class="na"> 
+</span><span class="na">    [CreateIfNotExist]</span>
+    <span class="k">public</span> <span class="n">UnitType</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IUpdateContext</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>The state object is created using the default constructor. This constructor must be deterministic! For example, it must not use timestamps, random Guids, sequence numbers obtained from static counters, etc.
+However, it is often desirable to do more initialization than what can be done in a default constructor. Thus, we support a special declaration for intializer orchestrations.</p>
+
+<p>The interfaces <code>IInitialize</code> (for singleton states) and <code>IInitialize&lt;TKey&gt;</code> (for partitioned states) can be used for this purpose. If a state declares that interface, then the <code>OnInitialize</code> method is guaranteed to be called exactly once, before any other operations are applied to this state.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">AccountState</span> <span class="p">:</span>
+    <span class="n">IPartitionedState</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span> <span class="n">Guid</span><span class="p">&gt;,</span>
+    <span class="n">IInitialize</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Balance</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">OnInitialize</span><span class="p">(</span><span class="n">IInitializationContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">Guid</span> <span class="n">key</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;initializing account {key}&#34;</span><span class="p">);</span>
+        <span class="n">Balance</span> <span class="p">=</span> <span class="m">10</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div><div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">GlobalCounterState</span> <span class="p">:</span>
+    <span class="n">ISingletonState</span><span class="p">&lt;</span><span class="n">IGlobalCounterAffinity</span><span class="p">&gt;,</span>
+    <span class="n">ISubscribe</span><span class="p">&lt;</span><span class="n">SomeEvent</span><span class="p">,</span> <span class="n">IGlobalCounterAffinity</span><span class="p">&gt;,</span>
+    <span class="n">IInitialize</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Count</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">On</span><span class="p">(</span><span class="n">ISubscriptionContext</span> <span class="n">context</span><span class="p">,</span> <span class="n">SomeEvent</span> <span class="n">evt</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Count</span><span class="p">++;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="n">OnInitialize</span><span class="p">(</span><span class="n">IInitializationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;initializing GlobalCounterState&#34;</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
   </div>
@@ -252,7 +274,7 @@ The Reactive Machine | States
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>

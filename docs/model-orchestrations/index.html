@@ -112,11 +112,11 @@ The Reactive Machine | Orchestrations
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-states/">States</a>
+                    <a href="/docs/model-affinities/">Affinities</a>
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-affinities/">Affinities</a>
+                    <a href="/docs/model-states/">States</a>
                 </li>
         
                 <li class="">
@@ -144,27 +144,47 @@ The Reactive Machine | Orchestrations
   <div class="content">
     
 
-<p>Orchestrations are classes that define how to execute of one or more operations in their <code>Execute</code> method.</p>
+<p>Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations are written in async/await style, and may return a result value. Typically, orchestrations are executed by a service application to handle external requests or events.</p>
 
-<p>Orchestrations can easily express sequential and parallel composition as straight-line code. For example:</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">SequentialOrchestration</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span>
+<p>Orchestrations are declared as a C# class that implements the <code>IOrchestration&lt;TResult&gt;</code> interface, by providing an <code>Execute</code> method that gets called with an <code>IOrchestrationContext</code> argument and returns a <code>TResult</code>.</p>
+
+<p>The code inside the <code>Execute</code> method must be deterministically replayable (more on this below). For example, it must not call any I/O or async methods other than the ones provided by the <code>IOrchestrationContext</code> argument.</p>
+
+<h3 id="example-1-blobbackup">Example 1: BlobBackup</h3>
+
+<p>Consider a simple orchestration that reads the content of one blob, prepends a timestamp, and then writes it to another blob. The code is shown below.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">BlobBackup</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span>
 <span class="p">{</span>
-    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">From</span><span class="p">;</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">To</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
     <span class="p">{</span>
-        <span class="kt">int</span> <span class="n">result1</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">first</span> <span class="n">operation</span><span class="p">...);</span>
-        <span class="kt">int</span> <span class="n">result2</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">second</span> <span class="n">operation</span><span class="p">...);</span>
-        <span class="k">return</span> <span class="n">result1</span> <span class="p">+</span> <span class="n">result2</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span></code></pre></div><div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">ParallelOrchestration</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span>
-<span class="p">{</span>
-    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
-    <span class="p">{</span>
-        <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">task1</span> <span class="p">=</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">first</span> <span class="n">operation</span><span class="p">...);</span>
-        <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">task2</span> <span class="p">=</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">second</span> <span class="n">operation</span><span class="p">...);</span>
-        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="n">task1</span><span class="p">)</span> <span class="p">+</span> <span class="p">(</span><span class="k">await</span> <span class="n">task2</span><span class="p">);</span>
+        <span class="c1">// read content from a blob
+</span><span class="c1"></span>        <span class="kt">var</span> <span class="n">content</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">ReadBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">From</span> <span class="p">});</span>
+
+        <span class="c1">// append the current time
+</span><span class="c1"></span>        <span class="kt">var</span> <span class="n">time</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">ReadDateTimeUtcNow</span><span class="p">();</span>
+        <span class="n">content</span> <span class="p">=</span> <span class="n">time</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&#34;o&#34;</span><span class="p">)</span> <span class="p">+</span> <span class="s">&#34;\n&#34;</span> <span class="p">+</span> <span class="n">content</span><span class="p">;</span>
+
+        <span class="c1">// write a message to the log
+</span><span class="c1"></span>        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Writing content to {To} at time {time:o}&#34;</span><span class="p">);</span>
+
+        <span class="c1">// write the modified content to a blob
+</span><span class="c1"></span>        <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">WriteBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">To</span><span class="p">,</span> <span class="n">Content</span> <span class="p">=</span> <span class="n">content</span><span class="p">});</span>
+
+        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
-<p>Of course, it does not end there. Orchestrations are plain C# code with async/await, so we enjoy a rich language support that lets us express anything from simple loops to subtle nested exception handlers with pattern matching.</p>
+<p>Note the following:</p>
+
+<ul>
+<li>The input to the orchestrations are the names of the source and destination blob, represented by the fields <code>From</code> and <code>To</code>.</li>
+<li>This orchestration is not intended to return a value. However, our framework requires that all orchestrations do return <em>some</em> value, so we use the type <code>UnitType</code> (cf. <code>void</code> in C#, or <code>unit</code> in F#). It is a type we have already defined for this purpose; it has a single value <code>UnitType.Value</code>, which we return at the end of <code>Execute</code>.</li>
+<li>Reading a blob is asynchronous and nondeterministic. Thus we cannot call Azure storage directly inside the <code>Execute</code> method. Rather, we encapsulate those calls inside a <code>ReadBlob</code> activity (defined in a separate class) and execute it via <code>context.PerformActivity</code>. This makes it deterministically replayable.</li>
+<li>Similarly, we encapsulate the Azure storage calls for writing a the blob in a <code>WriteBlob</code> activity.</li>
+<li>The timestamp is nondeterministic. Thus we cannot simply call <code>DateTime.UtcNow</code>. Instead, we call the specially provided method <code>context.ReadDateTimeUtcNow</code>. This makes the timestamp deterministically replayable.</li>
+</ul>
 
 <h2 id="requirements">Requirements</h2>
 
@@ -187,41 +207,27 @@ The Reactive Machine | Orchestrations
 
 <p>These rules are required so we can replay orchestrations deterministically.</p>
 
-<h3 id="example">Example</h3>
+<h3 id="sequential-vs-parallel-operations">Sequential vs. Parallel Operations</h3>
 
-<p>Consider a simple orchestration that reads the content of one blob, prepends a timestamp, and then writes it to another blob. The code is shown below.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">CopyBlob</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span>
+<p>Orchestrations can easily express both sequential and parallel composition as straight-line code. For example:</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">SequentialOrchestration</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span>
 <span class="p">{</span>
-    <span class="k">public</span> <span class="kt">string</span> <span class="n">From</span><span class="p">;</span>
-    <span class="k">public</span> <span class="kt">string</span> <span class="n">To</span><span class="p">;</span>
-
-    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
-    <span class="p">{</span>    
-        <span class="c1">// read content from a blob
-</span><span class="c1"></span>        <span class="kt">var</span> <span class="n">content</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">ReadBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">From</span> <span class="p">});</span>
-
-        <span class="c1">// append the current time
-</span><span class="c1"></span>        <span class="kt">var</span> <span class="n">time</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">ReadDateTimeUtcNow</span><span class="p">();</span>
-        <span class="n">content</span> <span class="p">=</span> <span class="n">time</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&#34;o&#34;</span><span class="p">)</span> <span class="p">+</span> <span class="s">&#34;\n&#34;</span> <span class="p">+</span> <span class="n">content</span><span class="p">;</span>
-        
-        <span class="c1">// write a message to the log
-</span><span class="c1"></span>        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Writing content to {To} at time {time:o}&#34;</span><span class="p">);</span>
-
-        <span class="c1">// write the modified content to a blob
-</span><span class="c1"></span>        <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformActivity</span><span class="p">(</span><span class="k">new</span> <span class="n">WriteBlob</span><span class="p">()</span> <span class="p">{</span> <span class="n">Path</span> <span class="p">=</span> <span class="n">To</span><span class="p">,</span> <span class="n">Content</span> <span class="p">=</span> <span class="n">content</span><span class="p">});</span>
-
-        <span class="k">return</span> <span class="n">UnitType</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">result1</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">first</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="kt">int</span> <span class="n">result2</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">second</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="k">return</span> <span class="n">result1</span> <span class="p">+</span> <span class="n">result2</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div><div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">ParallelOrchestration</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">task1</span> <span class="p">=</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">first</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="n">Task</span><span class="p">&lt;</span><span class="kt">int</span><span class="p">&gt;</span> <span class="n">task2</span> <span class="p">=</span> <span class="n">context</span><span class="p">.</span><span class="n">Perform</span><span class="p">(...</span><span class="n">second</span> <span class="n">operation</span><span class="p">...);</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="n">task1</span><span class="p">)</span> <span class="p">+</span> <span class="p">(</span><span class="k">await</span> <span class="n">task2</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
-<p>Note the following:</p>
-
-<ul>
-<li>The input to the orchestrations are the names of the source and destination blob, represented by the fields <code>From</code> and <code>To</code>.</li>
-<li>This orchestration is not intended to return a value. However, our framework requires that all orchestrations do return <em>some</em> value, so we use the type <code>UnitType</code> (cf. <code>void</code> in C#, or <code>unit</code> in F#). It is a type we have already defined for this purpose; it has a single value <code>UnitType.Value</code>, which we return at the end of <code>Execute</code>.</li>
-<li>Reading a blob is asynchronous and nondeterministic. Thus we cannot call Azure storage directly inside the <code>Execute</code> method. Rather, we encapsulate those calls inside a <code>ReadBlob</code> activity (defined in a separate class) and execute it via <code>context.PerformActivity</code>. This makes it deterministically replayable.</li>
-<li>Similarly, we encapsulate the Azure storage calls for writing a the blob in a <code>WriteBlob</code> activity.</li>
-<li>The timestamp is nondeterministic. Thus we cannot simply call <code>DateTime.UtcNow</code>. Instead, we call the specially provided method <code>context.ReadDateTimeUtcNow</code>. This makes the timestamp deterministically replayable.</li>
-</ul>
+<p>Of course, it does not end there. Orchestrations are plain C# code with async/await, so we enjoy a rich language support that lets us express anything from simple loops to subtle nested exception handlers with pattern matching.</p>
 
 <h2 id="the-orchestration-context">The Orchestration Context</h2>
 
@@ -286,7 +292,7 @@ This is particularly common for events, which are intended to decouple the produ
 <thead>
 <tr>
 <th>Nondeterminism Source</th>
-<th>Solution</th>
+<th>Correct Solution</th>
 </tr>
 </thead>
 
@@ -357,7 +363,7 @@ This is particularly common for events, which are intended to decouple the produ
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>

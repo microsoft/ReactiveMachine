@@ -16,8 +16,9 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/model/</guid>
-      <description>Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations can
- perform Activities which encapsulate calls to external services, or any other nondeterministic behavior. perform Read or Update operations that target a particular state. raise Events that atomically update all subscribed states. specify one or more partition Locks that should be held during execution  States represent a small piece of information (like a key-value pair, or virtual actor).</description>
+      <description>The application logic is expressed declaratively, by defining various classes that server a specialized purpose, Orchestrations, Activities, States, Affinities, Reads, Updates, and Events.
+Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations can
+ perform Activities which encapsulate calls to external services, or any other nondeterministic behavior. perform Read or Update operations that target a particular state. raise Events that atomically update all subscribed states.</description>
     </item>
     
     <item>
@@ -27,7 +28,8 @@
       
       <guid>http://reactive-machine.org/docs/model-events/</guid>
       <description>(section needs work)
-Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</description>
+Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.
+Typically, events are forked rather than performed. However, sometimes orchestrations want to wait for all effects of an event to have been applied; in that case, they can perform the event and await the task.</description>
     </item>
     
     <item>
@@ -96,9 +98,8 @@ Events To begin designing our distributed counter, we start by modeling events t
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/model-orchestrations/</guid>
-      <description>Orchestrations are classes that define how to execute of one or more operations in their Execute method.
-Orchestrations can easily express sequential and parallel composition as straight-line code. For example:
-public class SequentialOrchestration : IOrchestration&amp;lt;int&amp;gt; { public async Task&amp;lt;int&amp;gt; Execute(IOrchestrationContext context) { int result1 = await context.Perform(...first operation...); int result2 = await context.Perform(...second operation...); return result1 + result2; } }public class ParallelOrchestration : IOrchestration&amp;lt;int&amp;gt; { public async Task&amp;lt;int&amp;gt; Execute(IOrchestrationContext context) { Task&amp;lt;int&amp;gt; task1 = context.</description>
+      <description>Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations are written in async/await style, and may return a result value. Typically, orchestrations are executed by a service application to handle external requests or events.
+Orchestrations are declared as a C# class that implements the IOrchestration&amp;lt;TResult&amp;gt; interface, by providing an Execute method that gets called with an IOrchestrationContext argument and returns a TResult.</description>
     </item>
     
     <item>
@@ -107,21 +108,9 @@ public class SequentialOrchestration : IOrchestration&amp;lt;int&amp;gt; { publi
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/model-activities/</guid>
-      <description>Activities are classes that define how to execute some task in an Execute method, and may include nondeterminism and I/O.
-Example 1 : Calling an External Service We can define an activity that reads the contents of a blob from Azure Storage:
-public class ReadBlob : IAtLeastOnceActivity&amp;lt;string&amp;gt; { // the input to the activity  public string Path; // must specify a time limit  public TimeSpan TimeLimit =&amp;gt; TimeSpan.</description>
-    </item>
-    
-    <item>
-      <title>States</title>
-      <link>http://reactive-machine.org/docs/model-states/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://reactive-machine.org/docs/model-states/</guid>
-      <description>States represent a small piece of information (cf. key-value pair, or a grain, or virtual actor) that can be atomically accessed via a specified set of read and update operations.
-(section needs work)
-Example 1: Bank Customer State We start by defining an affinity for how our data should be partitioned. To do this, we implement an affinity based on the users identity.
-namespace Bank.Service { public interface IUserAffinity : IPartitionedAffinity&amp;lt;IUserAffinity,string&amp;gt; { string UserId { get; } } } We create an event that our state will subscribe to: the UserSignedUp event.</description>
+      <description>Activities define how to execute some task, given some input, and return some value. The runtime logs all activity results, so the outcome is deterministically replayable even if the activity code is nondeterministic and/or performs arbitrary I/O.
+Activities are declared as a C# class that implements the IAtLeastOnceActivity&amp;lt;TResult&amp;gt; or IAtMostOnceActivity&amp;lt;TResult&amp;gt; interface. They implement an Execute method that gets called with an IActivityContext argument and returns a TResult.
+Example 1 : Calling an External Service We can define an activity that reads the contents of a blob from Azure Storage:</description>
     </item>
     
     <item>
@@ -130,9 +119,20 @@ namespace Bank.Service { public interface IUserAffinity : IPartitionedAffinity&a
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://reactive-machine.org/docs/model-affinities/</guid>
-      <description>Affinities define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.
-(section needs work)
-Singletons If we wish to place an object in only one location, the ISingletonAffinity interface can be used to force placement only at a single partition.</description>
+      <description>Affinities are used to declare a partitioning scheme. Affinity partitions provide an abstract notion of locality. They have several important applications:
+ Partitions allow state to be stored and accessed scalably, because they can be load-balanced automatically across multiple host machines. Partitions are identified by partition keys.
+ Partitions can be locked. This allows orchestrations to perform multiple read and update operations consistently, which is often important (yet nontrivial to implement without locks).</description>
+    </item>
+    
+    <item>
+      <title>States</title>
+      <link>http://reactive-machine.org/docs/model-states/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://reactive-machine.org/docs/model-states/</guid>
+      <description>States are used to store information durably and scalably. To use state in a reactive machine application, you
+ must define how the state should be partitioned, by declaring an affinity. must define the state to be stored.  Then, there are a variety of options about how the state should be managed and accessed. You
+ may define read operations that can access the state and return a value may define update operations that can read and update the state and return a value may define an initialize orchestration that is called when the state is initialized may define event subscriptions that can update the state in response to an event  Example 1: Account State Suppose we are implementing a service whose customers have some sort of account, containing some form of currency.</description>
     </item>
     
     <item>

@@ -118,31 +118,33 @@ The Reactive Machine
 
 <h2 id="programming-model">Programming Model</h2>
 
-<p>The application logic is expressed by defining classes that represent certain entitities, including <em>Orchestrations</em>, <em>Activities</em>, <em>States</em>, <em>Affinities</em>, <em>Reads</em>, <em>Updates</em>, and <em>Events</em>.</p>
+<p>The application logic is expressed declaratively, by defining various classes that server a specialized purpose, <em>Orchestrations</em>, <em>Activities</em>, <em>States</em>, <em>Affinities</em>, <em>Reads</em>, <em>Updates</em>, and <em>Events</em>.</p>
 
-<p>All application and execution state is backed by durable storage, and is recovered automatically on failures. Also, the application logic does not fix the number of host machines, but allows the application to be distributed on a cluster of varying size.</p>
+<p><strong>Orchestrations</strong> define how to execute of one or more operations in a sequence, or in parallel. Orchestrations are written in async/await style, and may return a result value. Typically, orchestrations are executed by a service application to handle external requests or events.</p>
 
-<p><strong>Orchestrations</strong> define how to execute of one or more operations in a sequence, or in parallel. Orchestrations are written in async/await style, and may return a result value.</p>
+<p><strong>States</strong> represent a small piece of information, like a key-value pair, or virtual actor. For each state you can define a partition key, read operations, update operations, and event subscriptions. States are passive: they do not initiate activity on their own, but can be read and modified by orchestrations.</p>
 
-<p><strong>States</strong> represent a small piece of information, like a key-value pair, or virtual actor. For each state you can define a partition key, read operations, update operations, and event subscriptions.</p>
+<p>The application logic does not need to deal with machine or connection failures, as those are taken care of automatically by the hosting layer. Also, the application logic does not need to assume a fixed number of host machines, but remains flexible in that regard, allowing deployment on a cluster of varying size (including a single machine).</p>
 
 <h2 id="hosts">Hosts</h2>
 
 <p>The reactive machine compiler first transforms the application logic into an intermediate representation,  a <em>deterministically replayable distributed state machine</em>. This state machine is then be hosted on a back-end that provides exactly-once messaging and processing, using some variation of snapshot and replay.</p>
 
-<p>Currently, the repository contains two hosts. We plan on adding more hosts soon, and welcome community-contributed hosts. Different back-end hosts always provide the same application semantics, and are therefore easily interchangeable. But they can exhibit large differences in cost, scalability, latency, throughput, and recovery speed.</p>
+<p>The hosting layer guarantees that all the application and execution state is backed by some combination of durable storage and/or durable queues, and can recover automatically from failures.</p>
 
-<p>The local <strong>EmulatorHost</strong> is meant for debugging and local profiling. It emulates the reactive machine processes in a single process, using either a single thread or multiple threads.</p>
+<p>Currently, the repository contains two hosts. We plan on adding more hosts soon, and welcome community-contributed hosts.</p>
 
-<p>The <strong>FunctionsHost</strong> is implemented on top of Azure Functions, Azure EventHubs, and Azure Blobs. It uses EventHubs to launch the reactive machine processes inside Azure functions, and to implement reliable communication between the processes. State snapshots are stored in Azure Blobs.</p>
+<ul>
+<li><p>The local <strong>EmulatorHost</strong> is meant for debugging and local profiling. It emulates the reactive machine processes in a single process, using either a single thread or multiple threads.</p></li>
 
-<h2 id="languages">Languages</h2>
+<li><p>The <strong>FunctionsHost</strong> is implemented on top of Azure Functions, Azure EventHubs, and Azure Blobs. It uses EventHubs to launch the reactive machine processes inside Azure functions, and to implement reliable communication between the processes. State snapshots are stored in Azure Blobs.</p></li>
+</ul>
 
-<p>Everything is written in C# .NET Standard 2.0. Support for other languages is conceivable, but not on our immediate Radar.</p>
+<p>Different back-end hosts always provide the same application semantics, and are therefore easily interchangeable. But they can exhibit large differences in cost, scalability, latency, throughput, and recovery speed.</p>
 
-<h2 id="status-and-plan">Status and Plan</h2>
+<h2 id="status">Status</h2>
 
-<p>We are currently at 1.0.0-alpha, meaning that this is preview which should give you a pretty good idea of what this is all about once finished. What we have is:</p>
+<p>We are currently at <strong>1.0.0-alpha</strong>, meaning that this is preview which should give you an idea of what this is all about once finished. What we have is:</p>
 
 <ul>
 <li>A C# implementation of the reactive machine programming model and compiler</li>
@@ -151,16 +153,35 @@ The Reactive Machine
 <li>A Hello World sample to demonstrate how to use the 2 hosts</li>
 </ul>
 
-<p>Before we can release 1.0.0-beta, we need to:</p>
+<p>Before we can release 1.0.0-beta, we still need to do some significant work:</p>
 
 <ul>
-<li>Plug holes in the documentation</li>
+<li>Add an Ambrosia Host</li>
+<li>Plug the many gaping holes in the documentation</li>
 <li>Implement support for code updates, placement updates, and changing the number of processes</li>
 <li>Fix known bugs in existing tests</li>
 <li>Build and test on Linux</li>
 </ul>
 
-<p>Moving from 1.0.0-beta to 1.0.0 is then a matter of stability, i.e. we will remove the &lsquo;beta&rsquo; tag once we feel comfortable with users placing trust on the stability of the code in a production environment.</p>
+<p>Further in the future, we will consider moving from 1.0.0-beta to 1.0.0 as a matter of stability, i.e. we will remove the &lsquo;beta&rsquo; tag once we feel comfortable with users placing trust on the stability of the code in a production environment.</p>
+
+<h2 id="languages">Languages</h2>
+
+<p>Everything is written in C# .NET Standard 2.0. Support for other languages is conceivable, but not on our immediate Radar.</p>
+
+<h2 id="contributing">Contributing</h2>
+
+<p>This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit <a href="https://cla.microsoft.com">https://cla.microsoft.com</a>.</p>
+
+<p>When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.</p>
+
+<p>This project has adopted the <a href="https://opensource.microsoft.com/codeofconduct/">Microsoft Open Source Code of Conduct</a>.
+For more information see the <a href="https://opensource.microsoft.com/codeofconduct/faq/">Code of Conduct FAQ</a> or
+contact <a href="mailto:opencode@microsoft.com">opencode@microsoft.com</a> with any additional questions or comments.</p>
 
   </div>
 </div>
@@ -172,7 +193,7 @@ The Reactive Machine
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>

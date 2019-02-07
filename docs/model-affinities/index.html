@@ -54,7 +54,7 @@ The Reactive Machine | Affinities
         Affinities
       </p>
       <p class="subtitle is-size-3 is-size-4-mobile has-text-weight-light">
-        express locality of state and operations
+        define partitions
       </p>
     </div>
   </div>
@@ -111,12 +111,12 @@ The Reactive Machine | Affinities
                     <a href="/docs/model-activities/">Activities</a>
                 </li>
         
-                <li class="">
-                    <a href="/docs/model-states/">States</a>
-                </li>
-        
                 <li class="is-active">
                     <a href="/docs/model-affinities/">Affinities</a>
+                </li>
+        
+                <li class="">
+                    <a href="/docs/model-states/">States</a>
                 </li>
         
                 <li class="">
@@ -144,26 +144,170 @@ The Reactive Machine | Affinities
   <div class="content">
     
 
-<p>Affinities define locality, by specifying keys that can be used to place state, orchestrations, and activities. These keys are also used for synchronization (locking). Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.</p>
+<p>Affinities are used to declare a partitioning scheme. Affinity partitions provide an abstract notion of locality. They have several important applications:</p>
 
-<p style="color:red; font-size:20pt">(section needs work)</p>
+<ol>
+<li><p>Partitions allow state to be stored and accessed scalably, because they can be load-balanced automatically across multiple host machines. Partitions are identified by <strong>partition keys</strong>.</p></li>
 
-<h2 id="singletons">Singletons</h2>
+<li><p>Partitions can be <strong>locked</strong>. This allows orchestrations to perform multiple read and update operations consistently, which is often important (yet nontrivial to implement without locks). For example:</p>
 
-<p>If we wish to place an object in only one location, the <code>ISingletonAffinity</code> interface can be used to force placement only at a single partition.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">ICounterAffinity</span> <span class="p">:</span>
-    <span class="n">ISingletonAffinity</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">&gt;</span>
+<ul>
+<li><p>An orchestration can lock a partition to test if a state exists before creating it, without risking buggy races.</p></li>
+
+<li><p>An orchestration can implement an atomic balance transfer between two accounts by locking both accounts, checking the available balance, and then updating the balance in both accounts.</p></li>
+</ul></li>
+
+<li><p>Partitions can be used to <strong>place</strong> orchestrations and activities. Judicious placement can improve performance. For example, if an orchestration accesses multiple states that reside in the same partition, then it is a good idea to place that orchestration on the same partition, because it reduces delay incurred when sending messages across the network.</p></li>
+</ol>
+
+<h2 id="declaring-affinities">Declaring Affinities</h2>
+
+<p>There are two types of affinities. Both are declared as a C# interfaces.</p>
+
+<p><strong>Singleton Affinities</strong> declare a single partition. These are appropriate for states that do not have a natural internal partitioning, and do not need to scale (in terms of memory or load) beyond what is easily provided by a single core on a single machine.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">ICounterAffinity</span> <span class="p">:</span> <span class="n">ISingletonAffinity</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">&gt;</span>
 <span class="p">{</span>
 <span class="p">}</span></code></pre></div>
-<h2 id="partitioned-by-key">Partitioned by key</h2>
+<p>The interface must implement <code>ISingletonAffinity</code> with one generic type parameter which is the same as the interface being declared.</p>
 
-<p>Events in the reactive machine can be partitioned based on a partitioning key.  Here, we use the <code>IPartitionedAffinity</code> interface, and specify that the key is an unsigned integer.  We use the round robin placement strategy for how counters should be assigned to partitions.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">ICounterAffinity</span> <span class="p">:</span>
-    <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">ICounterAffinity</span><span class="p">,</span> <span class="kt">uint</span><span class="p">&gt;</span>
-<span class="p">{</span><span class="na">
-</span><span class="na">    [RoundRobinPlacement]</span>
-    <span class="kt">uint</span> <span class="n">CounterId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+<p><strong>Partitioned Affinities</strong> define a key name and type to be used for identifying partitions. It is best to pick keys that are naturally present in the application logic: for example, for state that represents user information, we can choose the unique user id to be the partition key. Or, for bank account information, we can use a unique Guid identifying the account.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">interface</span> <span class="n">IUserAffinity</span> <span class="p">:</span> <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">IUserAffinity</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="kt">string</span> <span class="n">UserId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span></code></pre></div><div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">interface</span> <span class="n">IAccountAffinity</span> <span class="p">:</span> <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span><span class="n">Guid</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
+<p>The interface must contain a single property with a getter. This property provides a name  for the partition key, and a type. The interface must implement <code>IPartitionedAffinity</code> with 2 generic type parameters, the first one being the same as the interface being declared, and the second one being the type of the partition key.</p>
+
+<h2 id="implementing-affinities">Implementing Affinities</h2>
+
+<p>The classes that define orchestrations, activities, read operations, update operations, or events can implement an affinity (or even multiple affinities). This means any object of that class becomes associated with one or more partitions. There are several reasons to associate objects with specific partitions:</p>
+
+<ul>
+<li><p>A read or update operation must be associated with the partition it is reading or updating.</p></li>
+
+<li><p>An event must be associated with all the partitions that it is influencing, i.e. states that are subscribing to it.</p></li>
+
+<li><p>An orchestration or activity that is associated with one or more partitions can lock them all prior to execution (the &ldquo;lock set&rdquo;).</p></li>
+
+<li><p>An orchestration or activity associated with a single partition is executed on the same host as that partition, which can improve performance.</p></li>
+</ul>
+
+<h3 id="example-1-update-operation">Example 1: Update Operation</h3>
+
+<p>Consider an update operation called <code>Deposit</code> that targets an account state that is partitioned by <code>IAccountAffinity</code>. To indicate which account is targeted, we implement the <code>IAccountAffinity</code> interface, by supplying a getter for the property <code>AccountId</code>. Therefore, any instance of this operation can be targeted at the correct account partition.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">Deposit</span> <span class="p">:</span> 
+    <span class="n">IUpdate</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">,</span> <span class="n">UnitType</span><span class="p">&gt;,</span> 
+    <span class="n">IAccountAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">int</span> <span class="n">Amount</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="n">UnitType</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IUpdateContext</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">&gt;</span> <span class="n">context</span><span class="p">)</span> <span class="p">{</span>  <span class="p">...</span>  <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h3 id="example-2-event-targeting-multiple-partitions">Example 2: Event Targeting Multiple Partitions</h3>
+
+<p>Consider an event representing a money transfer between two accounts, issued by some user. Conceivably, this event influences both account states (corresponding to source and destination) as well as a user state (corresponding to the initiator). As before, we can associate the object with a user by implementing IUserAffinity. However, for the accounts we need more than one: thus we implement <code>IMultiple&lt;AccountAffinity, Guid&gt;</code>, which allows us to enumerate the associated partition keys.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">TransferEvent</span> <span class="p">:</span> 
+    <span class="n">IEvent</span><span class="p">,</span>
+    <span class="n">IUserAffinity</span><span class="p">,</span>
+    <span class="n">IMultiple</span><span class="p">&lt;</span><span class="n">IAccountAffinity</span><span class="p">,</span> <span class="n">Guid</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">InitiatedBy</span><span class="p">;</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">FromAccount</span><span class="p">;</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">ToAccount</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="n">UserId</span> <span class="p">=&gt;</span> <span class="n">InitiatedBy</span><span class="p">;</span>                   <span class="c1">// implements IUserAffinity
+</span><span class="c1"></span>    <span class="k">public</span> <span class="n">IEnumerable</span><span class="p">&lt;</span><span class="n">Guid</span><span class="p">&gt;</span> <span class="n">DeclareAffinities</span><span class="p">()</span>    <span class="c1">// implements IMultiple&lt;IAccountAffinity,Guid&gt;
+</span><span class="c1"></span>    <span class="p">{</span>
+        <span class="k">yield</span> <span class="k">return</span> <span class="n">FromAccount</span><span class="p">;</span>
+        <span class="k">yield</span> <span class="k">return</span> <span class="n">ToAccount</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h1 id="locked-execution">Locked Execution</h1>
+
+<p>An orchestration or activity can use the <code>Locked</code> attribute on its Execute method to indicate that all the associated partitions should be locked prior to execution (and released afterwards).</p>
+
+<h3 id="example-3-locked-orchestration">Example 3: Locked Orchestration</h3>
+
+<p>If we need to check a condition before performing an orchestration, we can do so under a lock to prevent races. For example, we can check if an account exists before calling an orchestration that initializes it:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">CreateAccount</span> <span class="p">:</span> <span class="n">IOrchestration</span><span class="p">&lt;</span><span class="kt">bool</span><span class="p">&gt;,</span> <span class="n">IAccountAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">Guid</span> <span class="n">AccountId</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
+</span><span class="na">
+</span><span class="na">    [Lock]</span>
+    <span class="k">public</span> <span class="k">async</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">bool</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IOrchestrationContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">exists</span> <span class="p">=</span> <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">StateExists</span><span class="p">&lt;</span><span class="n">AccountState</span><span class="p">,</span> <span class="n">IAccountAffinity</span><span class="p">,</span> <span class="n">Guid</span><span class="p">&gt;(</span><span class="n">AccountId</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">exists</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">await</span> <span class="n">context</span><span class="p">.</span><span class="n">PerformOrchestration</span><span class="p">(</span><span class="k">new</span> <span class="n">CreateAccount</span><span class="p">()</span> <span class="p">{</span> <span class="n">AccountId</span> <span class="p">=</span> <span class="n">AccountId</span> <span class="p">});</span>
+            <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Note that for this type of situation, it is often more convenient to use an initializer orchestration, which can execute automatically when accessing a non-existent state. However, here we also want to return a boolean indicating whether the creation happened or not.</p>
+
+<h3 id="example-4-locked-activities">Example 4: Locked Activities</h3>
+
+<p>Consider activities that can read and write external cloud storage (e.g. blobs). By declaring them locked, we ensure that no concurrent read or writes can target the same path.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">interface</span> <span class="n">IPathAffinity</span> <span class="p">:</span> <span class="n">IPartitionedAffinity</span><span class="p">&lt;</span><span class="n">IPathAffinity</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span>
+<span class="p">{</span>
+    <span class="kt">string</span> <span class="n">Path</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">ReadBlob</span> <span class="p">:</span> <span class="n">IActivity</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;,</span> <span class="n">IPathAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Path</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span><span class="na">
+</span><span class="na">
+</span><span class="na">    [Lock]</span>
+    <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Reading From {Path}&#34;</span><span class="p">);</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">public</span> <span class="k">class</span> <span class="nc">WriteBlob</span> <span class="p">:</span> <span class="n">IActivity</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;,</span> <span class="n">IPathAffinity</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Path</span> <span class="p">{</span> <span class="k">get</span><span class="p">;</span> <span class="k">set</span><span class="p">;</span> <span class="p">}</span>
+    <span class="k">public</span> <span class="kt">string</span> <span class="n">Content</span><span class="p">;</span><span class="na">
+</span><span class="na">
+</span><span class="na">    [Lock]</span>
+    <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">UnitType</span><span class="p">&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IContext</span> <span class="n">context</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Writing {Content.Length} Characters to {Path}&#34;</span><span class="p">);</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p>Note that this is a different method than using e-tags; here, storage conflicts are not just detected after the fact, but prevented before they happen. This is also called &ldquo;pessimistic&rdquo; concurrency control, as opposed to &ldquo;optimistic&rdquo; concurrency control.</p>
+
+<h1 id="synchronization-rules">Synchronization Rules</h1>
+
+<p>In most cases, locks are automatically acquired when performing an operation that requires locks. However, there are two exceptions:</p>
+
+<ul>
+<li>An orchestration cannot call a locked activity unless it already holds all associated locks.</li>
+<li>An orchestration cannot call <code>IOrchestrationContext.StateExists</code> unless it already holds the associated lock.</li>
+</ul>
+
+<p>Also, there are additional rules that limit what you can do from within a locked orchestration. Essentially, they force orchestrations to acquire all the needed locks upfront. This ensures that no deadlocks can result from cyclic wait dependencies.</p>
+
+<ul>
+<li>A locked orchestration can perform a read or write operation only if it already holds the associated lock.</li>
+<li>A locked orchestration can perform an event only if it already holds all associated locks.</li>
+<li>A locked orchestration can perform a locked activity only if it already holds all associated locks.</li>
+<li>A locked orchestration can perform a locked orchestration only if it already holds all associated locks.</li>
+<li>A locked orchestration cannot perform an unlocked orchestration.</li>
+<li>A locked orchestration can however always fork anything (as opposed to perform)</li>
+</ul>
+
   </div>
 </div>
 
@@ -174,7 +318,7 @@ The Reactive Machine | Affinities
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>
