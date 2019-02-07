@@ -111,11 +111,11 @@ The Reactive Machine | Programming Model
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-states/">States</a>
+                    <a href="/docs/model-affinities/">Affinities</a>
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-affinities/">Affinities</a>
+                    <a href="/docs/model-states/">States</a>
                 </li>
         
                 <li class="">
@@ -142,29 +142,32 @@ The Reactive Machine | Programming Model
 
 <div class="container docs-container">
   <div class="content">
-    <p><strong>Orchestrations</strong> define how to execute of one or more operations in a sequence, or in parallel. Orchestrations can</p>
+    <p>The application logic is expressed declaratively, by defining various classes that server a specialized purpose, <em>Orchestrations</em>, <em>Activities</em>, <em>States</em>, <em>Affinities</em>, <em>Reads</em>, <em>Updates</em>, and <em>Events</em>.</p>
+
+<p><strong>Orchestrations</strong> define how to execute of one or more operations in a sequence, or in parallel. Orchestrations can</p>
 
 <ul>
 <li>perform <strong>Activities</strong> which encapsulate calls to external services, or any other nondeterministic behavior.</li>
 <li>perform <strong>Read</strong> or <strong>Update</strong> operations that target a particular state.</li>
 <li>raise <strong>Events</strong> that atomically update all subscribed states.</li>
-<li>specify one or more partition <strong>Locks</strong> that should be held during execution</li>
-</ul>
-
-<p><strong>States</strong> represent a small piece of information (like a key-value pair, or virtual actor). For each state, one can</p>
-
-<ul>
-<li>choose an <strong>Affinity</strong> that defines the desired partitioning scheme</li>
-<li>define <strong>Read</strong> or <strong>Update</strong> operations that access a state partition, and can return a value or exception</li>
-<li>define subscriptions to <strong>Events</strong> that update a state partition</li>
+<li>specify one or more affinity locks that should be held during execution</li>
 </ul>
 
 <p><strong>Affinities</strong> describe an elastic partitioning scheme, i.e. a key type and placement attributes. Affinities can be used to</p>
 
 <ul>
 <li>partition <strong>States</strong> using a partition key</li>
-<li>place <strong>Orchestrations</strong> so they execute on a particular partition</li>
-<li>enable fine-grained concurrency control via per-partition <strong>Locks</strong></li>
+<li>place <strong>Orchestrations</strong> so they execute on a particular affinity</li>
+<li>enable fine-grained concurrency control via affinity locking</li>
+</ul>
+
+<p><strong>States</strong> represent a small piece of information (like a key-value pair, or virtual actor). For each state, one can</p>
+
+<ul>
+<li>choose an <strong>Affinity</strong> that defines the desired partitioning scheme</li>
+<li>define <strong>Read</strong> or <strong>Update</strong> operations that access a state, and can return a value or exception</li>
+<li>define an <strong>Initialization</strong> orchestration</li>
+<li>define subscriptions to <strong>Events</strong> that update a state</li>
 </ul>
 
   </div>
@@ -177,7 +180,7 @@ The Reactive Machine | Programming Model
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>

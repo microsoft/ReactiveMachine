@@ -112,11 +112,11 @@ The Reactive Machine | Activities
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-states/">States</a>
+                    <a href="/docs/model-affinities/">Affinities</a>
                 </li>
         
                 <li class="">
-                    <a href="/docs/model-affinities/">Affinities</a>
+                    <a href="/docs/model-states/">States</a>
                 </li>
         
                 <li class="">
@@ -144,7 +144,9 @@ The Reactive Machine | Activities
   <div class="content">
     
 
-<p>Activities are classes that define how to execute some task in an <code>Execute</code> method, and may include nondeterminism and I/O.</p>
+<p>Activities define how to execute some task, given some input, and return some value. The runtime logs all activity results, so the outcome is deterministically replayable even if the activity code is nondeterministic and/or performs arbitrary I/O.</p>
+
+<p>Activities are declared as a C# class that implements the <code>IAtLeastOnceActivity&lt;TResult&gt;</code> or <code>IAtMostOnceActivity&lt;TResult&gt;</code> interface. They implement an <code>Execute</code> method that gets called with an <code>IActivityContext</code> argument and returns a <code>TResult</code>.</p>
 
 <h3 id="example-1-calling-an-external-service">Example 1 : Calling an External Service</h3>
 
@@ -169,35 +171,13 @@ The Reactive Machine | Activities
 
 <p><strong>Context object</strong>. Just like for orchestrations, the <code>Execute</code> method is passed a context. However, this context has a lot fewer methods. Essentially, it just supports logging (via <code>context.Logger</code>) and accessing configuration information (via <code>context.GetConfiguration&lt;TConfiguration&gt;()</code>).</p>
 
-<h3 id="example-2-performing-a-cpu-intensive-activity">Example 2: Performing a CPU-intensive activity</h3>
+<h2 id="guidelines">Guidelines</h2>
 
-<p>In the <code>Applications/Miner.Service</code> project, we demonstrate a hash-space mining application.  Searching for a hash collision is CPU intensive, so we use an orchestration to break the search space into small portions, and then run an activity for searching each portion. The runtime runs each portion on the thread pool.</p>
-<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Miner.Service</span>
-<span class="p">{</span>
-    <span class="k">public</span> <span class="k">class</span> <span class="nc">SearchPortion</span> <span class="p">:</span> <span class="n">IAtLeastOnceActivity</span><span class="p">&lt;</span><span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;&gt;</span>
-    <span class="p">{</span>
-        <span class="k">public</span> <span class="n">TimeSpan</span> <span class="n">TimeLimit</span> <span class="p">=&gt;</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromSeconds</span><span class="p">(</span><span class="m">30</span><span class="p">);</span>
- 
-        <span class="k">public</span> <span class="kt">int</span> <span class="n">Target</span><span class="p">;</span>
-        <span class="k">public</span> <span class="kt">long</span> <span class="n">Start</span><span class="p">;</span>
-        <span class="k">public</span> <span class="kt">long</span> <span class="n">Count</span><span class="p">;</span>
+<p>Activities &ldquo;determinize&rdquo; nondeterministic, external, fallible, or otherwise unpredictable tasks, by logging the outcome. Under replay, activities are not repeated if the log has already recorded a result (a returned value or exception) for this activity: instead, the recorded result is used. Thus, the activity has become <em>deterministically replayable</em>.</p>
 
-        <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IContext</span> <span class="n">context</span><span class="p">)</span>
-        <span class="p">{</span>
-            <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Starting portion [{Start},{Start + Count})&#34;</span><span class="p">);</span>
-            <span class="kt">var</span> <span class="n">results</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;();</span>
-            <span class="c1">// search given range for a hash collision
-</span><span class="c1"></span>            <span class="k">for</span> <span class="p">(</span><span class="kt">var</span> <span class="n">i</span> <span class="p">=</span> <span class="n">Start</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">Start</span> <span class="p">+</span> <span class="n">Count</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span>
-            <span class="p">{</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">GetHashCode</span><span class="p">()</span> <span class="p">==</span> <span class="n">Target</span><span class="p">)</span>
-                    <span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Finished portion [{Start},{Start + Count})&#34;</span><span class="p">);</span>
-            <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span></code></pre></div>
-<h2 id="activites-vs-orchestrations">Activites vs. Orchestrations</h2>
+<p>Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.</p>
+
+<h3 id="activites-vs-orchestrations">Activites vs. Orchestrations</h3>
 
 <p>Activities complement orchestrations in terms of what you are allowed to do inside <code>Execute</code>:</p>
 
@@ -255,15 +235,39 @@ The Reactive Machine | Activities
 </tbody>
 </table>
 
-<p>Activities also provide parallelism: they always run on the .NET thread pool, and are therefore appropriate for long-running CPU-intensive tasks.</p>
+<h3 id="example-2-performing-a-cpu-intensive-computation">Example 2: Performing a CPU-intensive computation</h3>
 
+<p>In the <code>Applications/Miner.Service</code> project, we demonstrate a hash-space mining application.  Searching for a hash collision is CPU intensive, so we use an orchestration to break the search space into small portions, and then run an activity for searching each portion. The runtime runs each portion on the thread pool.</p>
+<div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">namespace</span> <span class="nn">Miner.Service</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">SearchPortion</span> <span class="p">:</span> <span class="n">IAtLeastOnceActivity</span><span class="p">&lt;</span><span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;&gt;</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="n">TimeSpan</span> <span class="n">TimeLimit</span> <span class="p">=&gt;</span> <span class="n">TimeSpan</span><span class="p">.</span><span class="n">FromSeconds</span><span class="p">(</span><span class="m">30</span><span class="p">);</span>
+ 
+        <span class="k">public</span> <span class="kt">int</span> <span class="n">Target</span><span class="p">;</span>
+        <span class="k">public</span> <span class="kt">long</span> <span class="n">Start</span><span class="p">;</span>
+        <span class="k">public</span> <span class="kt">long</span> <span class="n">Count</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="n">Task</span><span class="p">&lt;</span><span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;&gt;</span> <span class="n">Execute</span><span class="p">(</span><span class="n">IContext</span> <span class="n">context</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Starting portion [{Start},{Start + Count})&#34;</span><span class="p">);</span>
+            <span class="kt">var</span> <span class="n">results</span> <span class="p">=</span> <span class="k">new</span> <span class="n">List</span><span class="p">&lt;</span><span class="kt">long</span><span class="p">&gt;();</span>
+            <span class="c1">// search given range for a hash collision
+</span><span class="c1"></span>            <span class="k">for</span> <span class="p">(</span><span class="kt">var</span> <span class="n">i</span> <span class="p">=</span> <span class="n">Start</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">Start</span> <span class="p">+</span> <span class="n">Count</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span>
+            <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">GetHashCode</span><span class="p">()</span> <span class="p">==</span> <span class="n">Target</span><span class="p">)</span>
+                    <span class="n">results</span><span class="p">.</span><span class="n">Add</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">context</span><span class="p">.</span><span class="n">Logger</span><span class="p">.</span><span class="n">LogInformation</span><span class="p">(</span><span class="s">$&#34;Finished portion [{Start},{Start + Count})&#34;</span><span class="p">);</span>
+            <span class="k">return</span> <span class="n">Task</span><span class="p">.</span><span class="n">FromResult</span><span class="p">(</span><span class="n">results</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
 <h3 id="at-least-once-vs-at-most-once">At-least-once vs. At-most-once</h3>
 
-<p>Activites allow nondeterminism to be effectively &ldquo;determinized.&rdquo;  Activities are logged by the system prior to starting execution, and the return values of activities are logged when the operation completes.  Under replay, requests are not reissued if they have already been issued and a value returned: instead, the return value in the log is used as the return value for the operation.</p>
+<p>If a host recovers after failing while executing an activity, the system detects in the log that the activity did not complete. However, it is not possible to know how far the activity progressed before the failure; it may have already achieved its objective, or it may have failed before the activity even got really started. The right thing to do in this case may depend on the specific purpose of the activity, i.e. it is application-dependent.</p>
 
-<p>If a host resumes after failing in the middle of executing an activity, the system detects in the log that the activity started, but did not complete. The right thing to do in this case may depend on the specific purpose of the activity, i.e. it is application-dependent.</p>
-
-<p>In most cases, the right thing to do is to simply restart the activity. By using the interface <code>IAtLeastOnceActivity&lt;string&gt;</code>, we indicate to the runtime that this is always the desired course of action.</p>
+<p>In most cases, the right thing to do is to simply restart the activity, at the risk of executing it a second time. By using the interface <code>IAtLeastOnceActivity&lt;string&gt;</code>, we indicate to the runtime that this is always the desired course of action.</p>
 
 <p>Sometimes, it is desirable to take some special action rather than just restarting an activity. The interface <code>IAtMostOnceActivity&lt;TReturn&gt;</code> can be used for that:</p>
 <div class="highlight"><pre class="chroma"><code class="language-c#" data-lang="c#"><span class="k">public</span> <span class="k">class</span> <span class="nc">MyActivity</span> <span class="p">:</span> <span class="n">IAtMostOnceActivity</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">&gt;</span>
@@ -278,7 +282,7 @@ The Reactive Machine | Activities
          <span class="p">...</span> <span class="c1">// custom handling
 </span><span class="c1"></span>    <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
-<p>The <code>AfterFault</code> handler is called when the runtime, during recovery, detects that this activity was previously started but did not complete. Inside the handler, we can take an appropriate action to deal with this situation. For example, we can perform some tests to figure out if the desired effect of the activity (e.g. creating a blob) has already taken place (i.e. the blob already exists), and re-execute it only if those tests indicate so.</p>
+<p>The <code>AfterFault</code> handler is called when the runtime, during recovery, detects that this activity may have been previously executed but did not complete. Inside the handler, we can take an appropriate action to deal with this situation. For example, we can perform some tests to figure out if the desired effect of the activity (e.g. creating a blob) has already taken place (i.e. the blob already exists), and re-execute it only if those tests indicate so.</p>
 
 <p>Conceptually, the <code>AfterFault</code> handler provides us with a mechanism that can wrap external calls that are not idempotent or not exactly idempotent into a truly idempotent activity.</p>
 
@@ -292,7 +296,7 @@ The Reactive Machine | Activities
 <footer class="footer has-background-dark">
   <div class="container has-text-centered">
     <p class="is-size-5 is-size-6-mobile has-text-white-bis">
-      &copy; 2018 Microsoft Corporation
+      &copy; 2019 Microsoft Corporation
     </p>
   </div>
 </footer>
