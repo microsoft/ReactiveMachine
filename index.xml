@@ -2,20 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Reactive Machine</title>
-    <link>http://reactive-machine.org/</link>
+    <link>https://microsoft.github.io/ReactiveMachine/</link>
     <description>Recent content on Reactive Machine</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     
-	<atom:link href="http://reactive-machine.org/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://microsoft.github.io/ReactiveMachine/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Programming Model</title>
-      <link>http://reactive-machine.org/docs/model/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/model/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/model/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/model/</guid>
       <description>The application logic is expressed declaratively, by defining various classes that server a specialized purpose, Orchestrations, Activities, States, Affinities, Reads, Updates, and Events.
 Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations can
  perform Activities which encapsulate calls to external services, or any other nondeterministic behavior. perform Read or Update operations that target a particular state. raise Events that atomically update all subscribed states.</description>
@@ -23,10 +23,10 @@ Orchestrations define how to execute of one or more operations in a sequence, or
     
     <item>
       <title>Events</title>
-      <link>http://reactive-machine.org/docs/model-events/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/model-events/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/model-events/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/model-events/</guid>
       <description>(section needs work)
 Events provide reliable, consistent pub-sub. When an event is raised by an orchestration, all the states that subscribe to it are modified. Events appear to be globally ordered and virtually synchronous.
 Typically, events are forked rather than performed. However, sometimes orchestrations want to wait for all effects of an event to have been applied; in that case, they can perform the event and await the task.</description>
@@ -34,49 +34,49 @@ Typically, events are forked rather than performed. However, sometimes orchestra
     
     <item>
       <title>Hosts</title>
-      <link>http://reactive-machine.org/docs/hosts/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/hosts/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/hosts/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/hosts/</guid>
       <description>(section needs work)</description>
     </item>
     
     <item>
       <title>Examples</title>
-      <link>http://reactive-machine.org/docs/examples/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/examples/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/examples/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/examples/</guid>
       <description>Examples We have several example applications written using the Reactive Machine.
  Hello World The Hello World example serves to verify that you’ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model. Echo Service The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.</description>
     </item>
     
     <item>
       <title>Motivation</title>
-      <link>http://reactive-machine.org/docs/motivation/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/motivation/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/motivation/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/motivation/</guid>
       <description>Motivation &amp;amp; Vision With the promise of developer agility, independent operations, and elastic scalability, microservice based development has become the &amp;ldquo;new normal&amp;rdquo; in distributed application development. Developers build application services such as dashboards, client services, and user-accesible APIs by &amp;ldquo;composing&amp;rdquo; existing cloud services, such as storage, databases, queues, and other microservices.
 Stateless Microservices However, many modern approaches to elastic scalability rely on an application tier that stateless and volatile. Application state must be loaded at the start of each request, persisted to cloud storage at the end of each request, and cached locally, if the application developer is sure that it will not introduce consistency anomalies.</description>
     </item>
     
     <item>
       <title>Hello World</title>
-      <link>http://reactive-machine.org/docs/examples-hello/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/examples-hello/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/examples-hello/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/examples-hello/</guid>
       <description>Hello World The Hello World example serves to verify that you&amp;rsquo;ve got the Reactive Machine built correctly and can get a basic service up and running. Further examples, like the Echo and Counter examples demonstrate features of the programming model.
 Definining a service We begin by defining a new service: HelloWorld.Service using the Reactive Machine&amp;rsquo;s service builder definition. This builder will scan the current DLL and generate a service based on the definitions included.</description>
     </item>
     
     <item>
       <title>Echo Service</title>
-      <link>http://reactive-machine.org/docs/examples-echo/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/examples-echo/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/examples-echo/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/examples-echo/</guid>
       <description>Echo Service The Echo service example demonstrates how we can build an application that responds to events without the user having to consider failure, partitioning, routing messages or deployment details.
 Affinity We begin by defining an affinity for the client and the server. We use the singleton affinities to route everything to a single node.
 public interface IClientAffinity : ISingletonAffinity&amp;lt;IClientAffinity&amp;gt; { } public interface IServerAffinity : ISingletonAffinity&amp;lt;IServerAffinity&amp;gt; { } Events We define two events:</description>
@@ -84,30 +84,30 @@ public interface IClientAffinity : ISingletonAffinity&amp;lt;IClientAffinity&amp
     
     <item>
       <title>Counter Service</title>
-      <link>http://reactive-machine.org/docs/examples-counter/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/examples-counter/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/examples-counter/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/examples-counter/</guid>
       <description>Counter Service The counter service example shows how you can leverage affinities at the application level for transparently routing messages and partitioning state for scalability without requiring the user to manually route messages or handle the partitioning of data themselves.
 Events To begin designing our distributed counter, we start by modeling events that comprise the counter: increment events. These events are automatically partitioned using the ICounterAffinity affinity which requires that the event supply a partitioning key, CounterId.</description>
     </item>
     
     <item>
       <title>Orchestrations</title>
-      <link>http://reactive-machine.org/docs/model-orchestrations/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/model-orchestrations/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/model-orchestrations/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/model-orchestrations/</guid>
       <description>Orchestrations define how to execute of one or more operations in a sequence, or in parallel. Orchestrations are written in async/await style, and may return a result value. Typically, orchestrations are executed by a service application to handle external requests or events.
 Orchestrations are declared as a C# class that implements the IOrchestration&amp;lt;TResult&amp;gt; interface, by providing an Execute method that gets called with an IOrchestrationContext argument and returns a TResult.</description>
     </item>
     
     <item>
       <title>Activities</title>
-      <link>http://reactive-machine.org/docs/model-activities/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/model-activities/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/model-activities/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/model-activities/</guid>
       <description>Activities define how to execute some task, given some input, and return some value. The runtime logs all activity results, so the outcome is deterministically replayable even if the activity code is nondeterministic and/or performs arbitrary I/O.
 Activities are declared as a C# class that implements the IAtLeastOnceActivity&amp;lt;TResult&amp;gt; or IAtMostOnceActivity&amp;lt;TResult&amp;gt; interface. They implement an Execute method that gets called with an IActivityContext argument and returns a TResult.
 Example 1 : Calling an External Service We can define an activity that reads the contents of a blob from Azure Storage:</description>
@@ -115,10 +115,10 @@ Example 1 : Calling an External Service We can define an activity that reads the
     
     <item>
       <title>Affinities</title>
-      <link>http://reactive-machine.org/docs/model-affinities/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/model-affinities/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/model-affinities/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/model-affinities/</guid>
       <description>Affinities are used to declare a partitioning scheme. Affinity partitions provide an abstract notion of locality. They have several important applications:
  Partitions allow state to be stored and accessed scalably, because they can be load-balanced automatically across multiple host machines. Partitions are identified by partition keys.
  Partitions can be locked. This allows orchestrations to perform multiple read and update operations consistently, which is often important (yet nontrivial to implement without locks).</description>
@@ -126,10 +126,10 @@ Example 1 : Calling an External Service We can define an activity that reads the
     
     <item>
       <title>States</title>
-      <link>http://reactive-machine.org/docs/model-states/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/model-states/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/model-states/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/model-states/</guid>
       <description>States are used to store information durably and scalably. To use state in a reactive machine application, you
  must define how the state should be partitioned, by declaring an affinity. must define the state to be stored.  Then, there are a variety of options about how the state should be managed and accessed. You
  may define read operations that can access the state and return a value may define update operations that can read and update the state and return a value may define an initialize orchestration that is called when the state is initialized may define event subscriptions that can update the state in response to an event  Example 1: Account State Suppose we are implementing a service whose customers have some sort of account, containing some form of currency.</description>
@@ -137,37 +137,37 @@ Example 1 : Calling an External Service We can define an activity that reads the
     
     <item>
       <title>EmulatorHost</title>
-      <link>http://reactive-machine.org/docs/hosts-emulatorhost/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/hosts-emulatorhost/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/hosts-emulatorhost/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/hosts-emulatorhost/</guid>
       <description>(section needs work)</description>
     </item>
     
     <item>
       <title>FunctionsHost</title>
-      <link>http://reactive-machine.org/docs/hosts-functionshost/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/hosts-functionshost/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/hosts-functionshost/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/hosts-functionshost/</guid>
       <description>(section needs work)</description>
     </item>
     
     <item>
       <title>ApplicationBuilder</title>
-      <link>http://reactive-machine.org/docs/hosts-applicationbuilder/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/hosts-applicationbuilder/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/hosts-applicationbuilder/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/hosts-applicationbuilder/</guid>
       <description>(section needs work)</description>
     </item>
     
     <item>
       <title>Serialization</title>
-      <link>http://reactive-machine.org/docs/hosts-serialization/</link>
+      <link>https://microsoft.github.io/ReactiveMachine/docs/hosts-serialization/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://reactive-machine.org/docs/hosts-serialization/</guid>
+      <guid>https://microsoft.github.io/ReactiveMachine/docs/hosts-serialization/</guid>
       <description>(section needs work)
 In the code, all of the entities (Orchestrations, States, Affinities, Activities, Reads, Updates, Events) and all return value types must be serializable classes. This allows the runtim to perform Serialization as needed to persist all states and orchestration progress durably and recover them automatically after machine or connection failures.</description>
     </item>

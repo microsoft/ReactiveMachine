@@ -3,75 +3,75 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://reactive-machine.org/docs/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/model/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/model/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/model-events/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/model-events/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/hosts/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/hosts/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/examples/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/examples/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/motivation/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/motivation/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/examples-hello/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/examples-hello/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/examples-echo/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/examples-echo/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/examples-counter/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/examples-counter/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/model-orchestrations/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/model-orchestrations/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/model-activities/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/model-activities/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/model-affinities/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/model-affinities/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/model-states/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/model-states/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/hosts-emulatorhost/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/hosts-emulatorhost/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/hosts-functionshost/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/hosts-functionshost/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/hosts-applicationbuilder/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/hosts-applicationbuilder/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/docs/hosts-serialization/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/docs/hosts-serialization/</loc>
   </url>
   
   <url>
-    <loc>http://reactive-machine.org/</loc>
+    <loc>https://microsoft.github.io/ReactiveMachine/</loc>
     <priority>0</priority>
   </url>
   
