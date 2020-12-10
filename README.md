@@ -1,6 +1,6 @@
 # The Reactive Machine website and documentation
 
-This branch contains the assets used to build the website at https://reactive-machine.org, including the project's documentation.
+This branch contains the assets used to build the website at https://microsoft.github.io/ReactiveMachine, including the project's documentation.
 
 The documentation is generated from markdown using the Hugo tool. Both the markdown and the generated html are checked into GitHub.
 
